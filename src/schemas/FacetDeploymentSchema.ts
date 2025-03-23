@@ -1,18 +1,28 @@
 import { z } from 'zod';
 
+// Match the structure of IFacetsToDeploy['facetName']['versions'][versionNumber]
 export const VersionInfoSchema = z.object({
   deployInit: z.string().optional(),
   upgradeInit: z.string().optional(),
-  fromVersions: z.array(z.union([z.string(), z.number()])).optional()
+  fromVersions: z.array(z.number()).optional(),
+  callback: z.function()
+    .args(z.any()) // for INetworkDeployInfo — can be refined
+    .returns(z.promise(z.boolean()))
+    .optional(),
+  deployInclude: z.array(z.string()).optional()
 });
 
+// Match the structure of IFacetsToDeploy['facetName']
 export const FacetDeploymentSchema = z.object({
   priority: z.number(),
-  versions: z.record(VersionInfoSchema).optional()
+  libraries: z.array(z.string()).optional(),
+  versions: z.record(z.coerce.number(), VersionInfoSchema).optional()
 });
 
+// Match the full IFacetsToDeploy type
 export const AllFacetsSchema = z.record(FacetDeploymentSchema);
 
+// Infer types
 export type VersionInfo = z.infer<typeof VersionInfoSchema>;
 export type FacetDeployment = z.infer<typeof FacetDeploymentSchema>;
 export type AllFacets = z.infer<typeof AllFacetsSchema>;

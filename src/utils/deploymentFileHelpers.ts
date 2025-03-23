@@ -1,67 +1,71 @@
 import fs from "fs";
 import { join, resolve } from "path";
-import { INetworkDeployInfo, IFacetsToDeploy } from "./types";
+import { INetworkDeployInfo, IFacetsToDeploy } from "../types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-// import { createPublicClient, http, getContract } from "viem";
-// import { GetContractReturnType } from "viem";
+import { loadFacets, saveFacets, updateFacet, deleteFacet, validateFacets } from './jsonFileHandler';
+import { readDeployInfo, writeDeployInfo } from "./jsonFileHandler";
+import { pathExistsSync } from "fs-extra";
 
-export function loadExistingDeployment(networkName: string, diamondName: string, deploymentFilesPath: string) : INetworkDeployInfo  {
-    let initialDeployInfo: INetworkDeployInfo;
-    const deploymentPath = join(
-        deploymentFilesPath,
-        networkName + ".json"
-    );
-    if (fs.existsSync(deploymentPath)) {
-        initialDeployInfo = JSON.parse(fs.readFileSync(deploymentPath).toString());
-    } else {
-      // defaults to the DiamondCutFacet and DiamondLoupeFacet as a minimum for a Diamond 
-      initialDeployInfo = {
-        DiamondAddress: "",
-        DeployerAddress: "",
-        FacetDeployedInfo: {
-          "DiamondCutFacet": {
-            address: "",
-            tx_hash: "",
-          },
-          "DiamondLoupeFacet": {
-            address: "",
-            tx_hash: "",
-          }
-        }
-      };
-    }
-    return initialDeployInfo;
+export function loadExistingDeployment(
+  networkName: string,
+  diamondName: string,
+  deploymentFilesPath: string
+): INetworkDeployInfo {
+  const deploymentPath = join(deploymentFilesPath, diamondName,`${networkName}.json`);
+
+  if (pathExistsSync(deploymentPath)) {
+    return readDeployInfo(deploymentPath);
+  }
+
+  const defaultDeployment: INetworkDeployInfo = {
+    DiamondAddress: "",
+    DeployerAddress: "",
+    FacetDeployedInfo: {
+      DiamondCutFacet: {
+        address: "",
+        tx_hash: "",
+      },
+      DiamondLoupeFacet: {
+        address: "",
+        tx_hash: "",
+      },
+    },
+  };
+
+  writeDeployInfo(deploymentPath, defaultDeployment);
+  return defaultDeployment;
 }
 
-export function loadFacetsToDeploy(diamondName: string, facetsDeploymentPath: string) : IFacetsToDeploy {
-    let facetsToDeploy: IFacetsToDeploy;
-    const facetsDeploymentConfig = join(
-        facetsDeploymentPath,
-        diamondName,
-        "facets.json"
-    );
-    if (fs.existsSync(facetsDeploymentConfig)) {
-      return facetsToDeploy = JSON.parse(fs.readFileSync(facetsDeploymentPath).toString());
-    }
-    // defaults to only include the DiamondCutFacet IFacetsToDeploy object
-    facetsToDeploy = {
-      "DiamondCutFacet": {
-        priority: 0,
+export async function loadFacetsToDeploy(
+  diamondName: string,
+  facetsDeploymentPath: string
+): Promise<IFacetsToDeploy> {
+  const file = join(facetsDeploymentPath, diamondName, 'facets.json');
+  const valid = validateFacets(file);
+
+  // TODO: This is defaulting to the empty facets if the file is invalid. This decision may not be correct in all cases since it assumes this is a new deployment. If the file was made invalid by a user error, this is not the correct behavior.
+  if (!valid) {
+    return {
+      DiamondCutFacet: {
+        priority: 10,
         versions: {
-          0.0: {}
+          0.0: {},
         },
       },
-      "DiamondLoupeFacet": {
-        priority: 1,
+      DiamondLoupeFacet: {
+        priority: 20,
         versions: {
-          0.0: {}
+          0.0: {},
         },
-      }
-    }; 
-            
-    return facetsToDeploy;
+      },
+    };
+  }
+
+  const facets = await loadFacets(file);
+  return facets;
 }
 
+// TODO This helper is a first draft attempt to read the compiled artifact and uses viem to create a contract interface instead of typeschain. This is a work in progress and may not be the best approach.
 // /**
 //  * This helper reads the compiled artifact and uses viem to create a contract instance.
 //  *

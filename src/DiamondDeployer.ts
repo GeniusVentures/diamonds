@@ -9,35 +9,14 @@ import {
   // getDiamondContractViem, 
   loadExistingDeployment, 
   loadFacetsToDeploy 
-} from "./helpers";
+} from "./utils/deploymentFileHelpers";
 import { DiamondDeploymentManager } from "./DiamondDeploymentManager";
 import { DeploymentInfo,  INetworkDeployInfo, IFacetsToDeploy, IDeployments } from "./types";
 import { error } from "console";
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { join, resolve } from 'path';
-import { loadFacets, saveFacets, updateFacet, deleteFacet, validateFacets } from './utils/jsonFileHandler';
-  
-export async function getDiamondContract(diamondName: string,
-  typechainDir: string = "typechain-types"
-): Promise<any> {
-    // // Get the typechain configuration (default to "typechain-types" if not defined)
-    // const typechainConfig = hre.config.typechain;
-    // // Resolve the outDir relative to the project's root path
-    // const outDir = typechainConfig?.outDir ?? "typechain-types";
-    // const baseDir = resolve(hre.config.paths.root, outDir);
-    
-    const baseDir = typechainDir;
-    // Construct the absolute path to the Diamond type.
-    // The exact location depends on your TypeChain configuration and naming.
-    // Here, we assume the file is named 'ProxyDiamond.ts' under the typechain-types directory:
-    const diamondPath = join(baseDir, diamondName);
 
-    // Dynamically import the ProxyDiamond types.
-    // The module should export the contract type (e.g. as ProxyDiamond).
-    const diamondModule = await import(diamondPath);
-    
-    return diamondModule.Diamond;
-  } 
+
 
 
 // This class is a factory of singletons (Multiton) that coordinates the deployment of a diamond contract and its facets.
@@ -72,11 +51,6 @@ export class DiamondDeployer {
     this.deploymentsPath = config.deploymentsPath;
     this.facetsPath = config.facetsPath;
 
-    const DiamondType = getDiamondContract(this.diamondName);
-    
-    // Setup the ethers provider on multichain
-    // hre.ethers.provider = this.provider;
-    
     // Establish deployer from current deployments info or signer 0
     initialDeployInfo = loadExistingDeployment(this.networkName, this.diamondName, this.deploymentsPath);
     if (!initialDeployInfo.DeployerAddress) {
@@ -90,8 +64,9 @@ export class DiamondDeployer {
     this.deployInfo = initialDeployInfo;
     
     // Load the facet deployment info for this diamond
+    // TODO the validation should kick an error not return a null. That should be handled here as well so that the facetsToDeploy does not get set to an empty object.
     const facetsConfigPath = this.facetsPath
-    this.facetsToDeploy = loadFacetsToDeploy(this.diamondName, facetsConfigPath);
+    this.facetsToDeploy = loadFacetsToDeploy(this.diamondName, facetsConfigPath) || {};
     
     config.deployer = this.deployer;
     this.deploymentKey = this.networkName + this.diamondName;
