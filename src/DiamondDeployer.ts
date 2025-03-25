@@ -5,13 +5,13 @@ import { BaseContract, Signer } from "ethers";
 import { assert } from "chai";
 // import { ProxyDiamond } from "../typechain-types";
 // import { loadExistingDeployment, loadFacetsToDeploy, getDiamondContract } from "./helpers";
-import { 
+import {
   // getDiamondContractViem, 
-  loadExistingDeployment, 
-  loadFacetsToDeploy 
+  loadExistingDeployment,
+  loadFacetsToDeploy
 } from "./utils/deploymentFileHelpers";
 import { DiamondDeploymentManager } from "./DiamondDeploymentManager";
-import { DeploymentInfo,  INetworkDeployInfo, IFacetsToDeploy, IDeployments } from "./types";
+import { IDeployConfig, INetworkDeployInfo, IFacetsToDeploy, IDeployments } from "./types";
 import { error } from "console";
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { join, resolve } from 'path';
@@ -37,12 +37,12 @@ export class DiamondDeployer {
   private deploymentsPath: string
   private facetsPath: string = "facets";
   private facetsToDeploy: IFacetsToDeploy;
-  
+
   private diamond!: any;
-  
+
   private manager: DiamondDeploymentManager;
-  
-  private constructor(config: DeploymentInfo) {
+
+  private constructor(config: IDeployConfig) {
     let initialDeployInfo: INetworkDeployInfo;
     this.networkName = config.networkName;
     this.chainId = config.chainId;
@@ -62,12 +62,12 @@ export class DiamondDeployer {
       initialDeployInfo = initialDeployInfo;
     }
     this.deployInfo = initialDeployInfo;
-    
+
     // Load the facet deployment info for this diamond
     // TODO the validation should kick an error not return a null. That should be handled here as well so that the facetsToDeploy does not get set to an empty object.
     // TODO Does not include the callback function system loading needs to be separately implemented.
     this.facetsToDeploy = loadFacetsToDeploy(this.deploymentsPath, this.diamondName, this.facetsPath);
-    
+
     config.deployer = this.deployer;
     this.deploymentKey = this.networkName + this.diamondName;
     this.manager = DiamondDeploymentManager.getInstance(
@@ -76,11 +76,11 @@ export class DiamondDeployer {
     );
   }
 
-  static getInstance(deploymentInfo: DeploymentInfo): DiamondDeployer {
-    const chainId = deploymentInfo.chainId.toString();
-    const _deploymentKey = this.normalizeDeploymentKey(chainId, deploymentInfo.diamondName);
+  static getInstance(deployConfig: IDeployConfig): DiamondDeployer {
+    const chainId = deployConfig.chainId.toString();
+    const _deploymentKey = this.normalizeDeploymentKey(chainId, deployConfig.diamondName);
     if (!this.instances.has(_deploymentKey)) {
-      this.instances.set(_deploymentKey, new DiamondDeployer(deploymentInfo));
+      this.instances.set(_deploymentKey, new DiamondDeployer(deployConfig));
     }
     return this.instances.get(_deploymentKey)!;
   }
@@ -113,7 +113,7 @@ export class DiamondDeployer {
       }
       return this.deployInfo ? this.deployInfo : error("The deploy info is null");
     }
- 
+
     this.deployInProgress = true;
     try {
 
@@ -141,7 +141,7 @@ export class DiamondDeployer {
 
       // Perform any post-deploy initialization steps. This is not a thing.
       // await this.manager.afterDeployCallbacks();
-      
+
       if (!this.deployInfo!.DiamondAddress) {
         throw new Error("DiamondAddress is undefined");
       }
@@ -183,9 +183,9 @@ export class DiamondDeployer {
         console.log("Diamond not deployed. Needs deployment first.");
         // await this.deploy();
       }
-      
+
       // Load Facet Callbacks (initializers) from files
-      
+
       // Impersonate and fund deployer account on hardhat and forked networks.
       // TODO This is for test deployments only. This should be done before the deploy() or upgrade method is called in a test.
       await this.impersonateAndFundAccount(this.deployInfo!.DeployerAddress);
@@ -225,32 +225,32 @@ export class DiamondDeployer {
   public getDiamond<T extends BaseContract>(): Promise<T> {
     return Promise.resolve(this.diamond as T);
   }
-  
+
   public getDeployment(): INetworkDeployInfo | null {
     return this.deployInfo;
   }
-  
+
   // This doesn't work because hardhat=-typechain causes the parent project to error out if it is included included in this node module as well.  Since it is deprecated and this functionality is only needed in the parent project it will not be included.
-// export async function getDiamondContract(diamondName: string,
-//     hre: HardhatRuntimeEnvironment
-//   ): Promise<any> {
-//     // Get the typechain configuration (default to "typechain-types" if not defined)
-//     const typechainConfig = hre.config.typechain;
-//     // Resolve the outDir relative to the project's root path
-//     const outDir = typechainConfig?.outDir ?? "typechain-types";
-//     const baseDir = resolve(hre.config.paths.root, outDir);
-  
-//     // Construct the absolute path to the Diamond type.
-//     // The exact location depends on your TypeChain configuration and naming.
-//     // Here, we assume the file is named 'ProxyDiamond.ts' under the typechain-types directory:
-//     const diamondPath = join(baseDir, diamondName);
-  
-//     // Dynamically import the ProxyDiamond types.
-//     // The module should export the contract type (e.g. as ProxyDiamond).
-//     const diamondModule = await import(diamondPath);
-    
-//     return diamondModule.Diamond;
-//   }
+  // export async function getDiamondContract(diamondName: string,
+  //     hre: HardhatRuntimeEnvironment
+  //   ): Promise<any> {
+  //     // Get the typechain configuration (default to "typechain-types" if not defined)
+  //     const typechainConfig = hre.config.typechain;
+  //     // Resolve the outDir relative to the project's root path
+  //     const outDir = typechainConfig?.outDir ?? "typechain-types";
+  //     const baseDir = resolve(hre.config.paths.root, outDir);
+
+  //     // Construct the absolute path to the Diamond type.
+  //     // The exact location depends on your TypeChain configuration and naming.
+  //     // Here, we assume the file is named 'ProxyDiamond.ts' under the typechain-types directory:
+  //     const diamondPath = join(baseDir, diamondName);
+
+  //     // Dynamically import the ProxyDiamond types.
+  //     // The module should export the contract type (e.g. as ProxyDiamond).
+  //     const diamondModule = await import(diamondPath);
+
+  //     return diamondModule.Diamond;
+  //   }
 }
 
 export default DiamondDeployer;

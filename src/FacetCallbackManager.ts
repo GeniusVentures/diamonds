@@ -1,21 +1,29 @@
 import * as fs from "fs";
 import { resolve } from "path";
 import { Signer } from "ethers";
-import { INetworkDeployInfo } from "./types"; // Adjust the path as needed
-
-interface CallbackArgs {
-
-  deployer: Signer;
-  networkName: string;
-  chainId: number;
-  deployInfo: INetworkDeployInfo;
-}
+import { CallbackArgs } from "./types"; // Adjust the path as needed
 
 class FacetCallbackManager {
+  public static instances: Map<string, FacetCallbackManager> = new Map();
   private callbacks: { [facetName: string]: { [callbackName: string]: (args: CallbackArgs) => Promise<void> } } = {};
 
   constructor(facetCallbacksPath: string) {
     this.loadCallbacks(facetCallbacksPath);
+  }
+
+  /**
+   * Retrieves a FacetCallManager instance for a specific key (i.e. diamondName).
+   * Creates it if not already present.
+   */
+  public static getInstance(_diamondName: string, _facetCallbacksPath: string): FacetCallbackManager {
+    const _deploymentKey = _diamondName;
+    if (!FacetCallbackManager.instances.has(_deploymentKey)) {
+      FacetCallbackManager.instances.set(
+        _deploymentKey,
+        new FacetCallbackManager(_facetCallbacksPath)
+      );
+    }
+    return FacetCallbackManager.instances.get(_deploymentKey)!;
   }
 
   private loadCallbacks(facetCallbacksPath: string): void {

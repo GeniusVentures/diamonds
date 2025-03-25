@@ -1,24 +1,25 @@
 import "@nomiclabs/hardhat-ethers";
 import hre from "hardhat";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { Signer, ContractFactory, BigNumber, Contract } from "ethers";
+import { Signer, ContractFactory } from "ethers";
 import { AdminClient } from "@openzeppelin/defender-admin-client";
 import { Network } from "@openzeppelin/defender-base-client";
 import debug from "debug";
 import * as fs from "fs";
-import * as util from "util";
+// import * as util from "util";
 import { glob } from 'glob';
 import { readFileSync } from "fs";
 import { join, resolve } from "path";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { 
-  INetworkDeployInfo, 
-  IFacetsToDeploy, 
-  FacetDeploymentInfo, 
+// import { HardhatRuntimeEnvironment } from "hardhat/types";
+import {
+  INetworkDeployInfo,
+  IFacetsToDeploy,
+  FacetDeploymentInfo,
   FacetsDeployment,
-  DeploymentInfo
+  IDeployConfig,
+  CallbackArgs
 } from "./types";
-
+import FacetCallbackManager from "./FacetCallbackManager";
 const log = debug("DiamondDeploymentManager:log");
 
 /**
@@ -29,35 +30,40 @@ export class DiamondDeploymentManager {
   public static instances: Map<string, DiamondDeploymentManager> = new Map();
 
   // In-memory store of the Diamond address etc. for the current instance.
-  private deploymentInfo: INetworkDeployInfo;
+  private initConfig: IDeployConfig;
+  private initDeployInfo: INetworkDeployInfo;
+  private deployInfo: INetworkDeployInfo;
   private networkName: string;
   private diamondName: string;
   private deploymentKey: string;
   private deployer: Signer | undefined;
   private provider: JsonRpcProvider;
   private defenderClient: AdminClient | undefined;
-  private ethers = require("ethers") as typeof hre.ethers;;
+  // private ethers = require("ethers") as typeof hre.ethers;
   private deployerAddress: string | undefined;
   private contractsPath: string;
   private facetsConfigPath: string;
   private facetDeployInfo: FacetsDeployment;
   private facetCallbacksPath: string;
-  
-  private constructor(config: DeploymentInfo, deployInfo: INetworkDeployInfo) {
+  private facetCallbackManager: FacetCallbackManager;
+
+  private constructor(config: IDeployConfig, _deployInfo: INetworkDeployInfo) {
+    this.initConfig = config;
     this.diamondName = config.diamondName;
     this.contractsPath = config.contractsPath;
     this.networkName = config.networkName;
     this.deployer = config.deployer;
     this.deploymentKey = config.networkName.toLowerCase + "-" + config.diamondName.toLowerCase;
-    this.deploymentInfo = deployInfo;
+    this.initDeployInfo = _deployInfo;
+    this.deployInfo = _deployInfo;
     // TODO this should probably just use a helper resolver to the absolute path of based.
     this.provider = config.provider;
-    
+
     // Load Facet Config from facet.json file
     this.facetsConfigPath = config.facetsPath || config.deploymentsPath;
     const facetDeployFilePath = join(this.facetsConfigPath, this.diamondName, 'facets.json');
     this.facetDeployInfo = this.loadFacetDeployments(facetDeployFilePath);
-    
+
     // Load Facet Callbacks Registry
     this.facetCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetCallbacks');
     const files = fs.readdirSync(this.facetCallbacksPath);
@@ -67,13 +73,14 @@ export class DiamondDeploymentManager {
       const callback = require(resolve(this.facetCallbacksPath, file));
       callbacks[callbackName] = callback;
     }
-    const callbackManager = new FacetCallbackManager(callbacks);
-    
+
+    this.facetCallbackManager = FacetCallbackManager.getInstance(this.diamondName, this.facetCallbacksPath);
+
     // TODO verify and load the Facet Post Deployment Callbacks referenced in the facetDeployInfo
     // Load Facet Deployment Callback  from files
     const facetPostDeployCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetPostDeployCallbacks');
-    this.loadFacetPostDeployCallbacks( facetPostDeployCallbacksPath);
-    log(`Multiton instance of DiamondDeploymentManager created on ${this.networkName} for ${this.diamondName}`);
+    this.loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath);
+    log(`Singleton instance of DiamondDeploymentManager created on ${this.networkName} for ${this.diamondName}`);
   }
 
   /**
@@ -81,7 +88,7 @@ export class DiamondDeploymentManager {
    * Creates it if not already present.
    */
   public static getInstance(
-    config: DeploymentInfo,
+    config: IDeployConfig,
     deployInfo: INetworkDeployInfo,
   ): DiamondDeploymentManager {
     const _chainId = config.chainId;
@@ -95,7 +102,7 @@ export class DiamondDeploymentManager {
     }
     return DiamondDeploymentManager.instances.get(_deploymentKey)!;
   }
-  
+
   // TODO this would probably be better in a utility class, it is used in DiamondDeployer as well.
   private static normalizeDeploymentKey(chainId: string, diamondName: string): string {
     return chainId.toLowerCase() + "-" + diamondName.toLowerCase();
@@ -107,8 +114,8 @@ export class DiamondDeploymentManager {
   private async setupDeployerAddress(): Promise<void> {
     if (!this.deployer) throw new Error("Deployer not resolved");
     this.deployerAddress = await this.deployer.getAddress();
-    if (this.deploymentInfo.DeployerAddress !== this.deployerAddress) {
-      this.deploymentInfo.DeployerAddress = this.deployerAddress;
+    if (this.deployInfo.DeployerAddress !== this.deployerAddress) {
+      this.deployInfo.DeployerAddress = this.deployerAddress;
     }
   }
 
@@ -122,14 +129,14 @@ export class DiamondDeploymentManager {
     log(`🚀Deploying Diamond: {$this.diamondName} on {this.networkName}...`);
 
     const diamondCutFacetKey = "DiamondCutFacet";
-    if (!this.deploymentInfo.FacetDeployedInfo[diamondCutFacetKey]?.address) {
+    if (!this.deployInfo.FacetDeployedInfo[diamondCutFacetKey]?.address) {
       const DiamondCutFacet = await hre.ethers.getContractFactory(
         "DiamondCutFacet",
         this.deployer
       );
       const facet = await DiamondCutFacet.deploy();
       await facet.deployed();
-      this.deploymentInfo.FacetDeployedInfo[diamondCutFacetKey] = {
+      this.deployInfo.FacetDeployedInfo[diamondCutFacetKey] = {
         address: facet.address,
         tx_hash: facet.deployTransaction.hash,
         version: 0.0,
@@ -139,7 +146,7 @@ export class DiamondDeploymentManager {
     }
 
     //Check if Diamond is deployed
-    if (!this.deploymentInfo.DiamondAddress) {
+    if (!this.deployInfo.DiamondAddress) {
       const diamondPath = `${this.contractsPath}/${this.diamondName}.sol:${this.diamondName}`;
       const DiamondFactory = await hre.ethers.getContractFactory(
         diamondPath,
@@ -148,13 +155,13 @@ export class DiamondDeploymentManager {
       const contractOwnerAddress = await this.deployer.getAddress();
       const diamond = await DiamondFactory.deploy(
         contractOwnerAddress,
-        this.deploymentInfo.FacetDeployedInfo[diamondCutFacetKey]?.address
+        this.deployInfo.FacetDeployedInfo[diamondCutFacetKey]?.address
       );
       await diamond.deployed();
-      this.deploymentInfo.DiamondAddress = diamond.address;
+      this.deployInfo.DiamondAddress = diamond.address;
       log(`Diamond deployed at ${diamond.address}`);
     } else {
-       log(`Diamond already deployed at ${this.deploymentInfo.DiamondAddress}`);
+      log(`Diamond already deployed at ${this.deployInfo.DiamondAddress}`);
     }
   }
 
@@ -172,7 +179,7 @@ export class DiamondDeploymentManager {
     );
 
     for (const facetName of facetsPriority) {
-      const existing = this.deploymentInfo.FacetDeployedInfo[facetName];
+      const existing = this.deployInfo.FacetDeployedInfo[facetName];
       const facetData = facetsToDeploy[facetName];
       const versions = facetData.versions
         ? Object.keys(facetData.versions).map((v) => +v).sort((a, b) => b - a)
@@ -185,9 +192,9 @@ export class DiamondDeploymentManager {
       // If out of date or missing
       if (deployedVersion !== highestVersion) {
         const externalLibs: any = {};
-        if (this.deploymentInfo.ExternalLibraries && facetData.libraries) {
+        if (this.deployInfo.ExternalLibraries && facetData.libraries) {
           for (const lib of facetData.libraries) {
-            externalLibs[lib] = this.deploymentInfo.ExternalLibraries[lib];
+            externalLibs[lib] = this.deployInfo.ExternalLibraries[lib];
           }
         }
         const FacetCF: ContractFactory = await hre.ethers.getContractFactory(
@@ -202,7 +209,7 @@ export class DiamondDeploymentManager {
         const facetContract = await FacetCF.deploy();
         await facetContract.deployed();
 
-        this.deploymentInfo.FacetDeployedInfo[facetName] = {
+        this.deployInfo.FacetDeployedInfo[facetName] = {
           address: facetContract.address,
           tx_hash: facetContract.deployTransaction.hash,
           version: highestVersion,
@@ -225,7 +232,7 @@ export class DiamondDeploymentManager {
   ): Promise<void> {
     await this.setupDeployerAddress();
     if (!this.deployer) throw new Error("Signer not resolved");
-    const diamondAddress = this.deploymentInfo.DiamondAddress;
+    const diamondAddress = this.deployInfo.DiamondAddress;
     if (!diamondAddress) throw new Error("No diamond address found");
 
     // Get the diamondCut function from the already-deployed diamond ABI
@@ -256,7 +263,7 @@ export class DiamondDeploymentManager {
     log(`Calling init function on facet ${facetAddress}, sig ${initSig}`);
     // Send a raw transaction
     const tx = await this.deployer.sendTransaction({
-      to: this.deploymentInfo.DiamondAddress,
+      to: this.deployInfo.DiamondAddress,
       data: initSig // e.g., the encoded function signature + arguments of the init function
     });
     await tx.wait();
@@ -286,7 +293,7 @@ export class DiamondDeploymentManager {
     if (!this.defenderClient) {
       throw new Error("Defender client not configured. Call configureDefender first.");
     }
-    if (!this.deploymentInfo.DiamondAddress) {
+    if (!this.deployInfo.DiamondAddress) {
       throw new Error("No diamond address found.");
     }
 
@@ -298,7 +305,7 @@ export class DiamondDeploymentManager {
 
     const response = await this.defenderClient.createProposal({
       contract: {
-        address: this.deploymentInfo.DiamondAddress,
+        address: this.deployInfo.DiamondAddress,
         network: this.provider.network.name as Network
       },
       title: "Diamond Cut Proposal",
@@ -328,11 +335,11 @@ export class DiamondDeploymentManager {
 
     log(`Defender proposal created: ${response.proposalId}`);
   }
-  
+
   /**
    * Set Facet Post Deploy Callbacks
    */
-  public loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath: string, ): void {
+  public loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath: string,): void {
     // Get all the callbacks listed in the facetDeployInfo
     const facetNames = Object.keys(this.facetDeployInfo);
     for (const facetName of facetNames) {
@@ -343,7 +350,7 @@ export class DiamondDeploymentManager {
       }
     }
   }
-  
+
   /**
    * Set Facet Deployments
    */
@@ -354,38 +361,14 @@ export class DiamondDeploymentManager {
 
     return facetsDeployments;
   }
-  
+
   /**
    * Retrieve the current deployment info for saving or logging.
    */
   public getDeploymentInfo(): INetworkDeployInfo {
-    return this.deploymentInfo;
+    return this.deployInfo;
   }
-  
-}
 
-interface CallbackArgs {
-    deployer: Signer;
-    deployerAddress: string;
-    networkName: string;
-    chainId: number;
-    deployInfo: INetworkDeployInfo;
-  }
-  
-class FacetCallbackManager {
-    private callbacks: { [key: string]: (args: CallbackArgs) => Promise<void> };
-  
-    constructor(callbacks: { [key: string]: (args: CallbackArgs) => Promise<void> }) {
-      this.callbacks = callbacks;
-    }
-  
-    public async executeCallback(callbackName: string, args: CallbackArgs) {
-      const callback = this.callbacks[callbackName];
-      if (!callback) {
-        throw new Error(`Callback "${callbackName}" not found.`);
-      }
-      await callback(args);
-    }
-  }
+}
 
 export default DiamondDeploymentManager;

@@ -2,49 +2,49 @@ import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
 export interface IDeployments {
-    [networkName: string]: INetworkDeployInfo;
-  }
-  
+  [networkName: string]: INetworkDeployInfo;
+}
+
 /**
  * Interface for globally tracking function selectors that have already been deployed.
  */
 export interface IDeployedFuncSelectors {
-    facets: { [selector: string]: string };
-    contractFacets: { [facetName: string]: string[] };
-  }
-  
+  facets: { [selector: string]: string };
+  contractFacets: { [facetName: string]: string[] };
+}
+
 /**
  * Interface for the deployments on various blockchain networks info.
  */
 export interface INetworkDeployInfo {
-DiamondAddress?: string;
-DeployerAddress: string;
-FacetDeployedInfo: {
+  DiamondAddress?: string;
+  DeployerAddress: string;
+  FacetDeployedInfo: {
     [facetName: string]: {
-    address: string;
-    tx_hash: string;
-    version?: number;
-    funcSelectors?: string[];
+      address: string;
+      tx_hash: string;
+      version?: number;
+      funcSelectors?: string[];
     };
-};
-ExternalLibraries?: { [key: string]: string };
-protocolVersion?: number;
+  };
+  ExternalLibraries?: { [key: string]: string };
+  protocolVersion?: number;
 }
 
-export interface DeploymentInfo {
-diamondName: string;
-deploymentsPath: string;
-facetsPath: string;
-contractsPath: string;
-provider: JsonRpcProvider;
-networkName: string;
-chainId: number;
-deployer?: Signer;
+export interface IDeployConfig {
+  diamondName: string;
+  deploymentsPath: string;
+  facetsPath: string;
+  contractsPath: string;
+  provider: JsonRpcProvider;
+  networkName: string;
+  chainId: number;
+  deployer?: Signer;
 }
 
-  /**
- * Interface describing the structure of facets to deploy and their metadata.
- */
+/**
+* Interface describing the structure of facets to deploy and their metadata.
+*/
 export interface IFacetsToDeploy {
   [facetName: string]: {
     priority: number;
@@ -60,7 +60,7 @@ export interface IFacetsToDeploy {
     };
   };
 }
-  
+
 /**
  * Original Interface for the deployment information of a facet.
  */
@@ -127,14 +127,6 @@ export interface IAfterDeployInit {
 }
 
 /**
- * Interface for globally tracking function selectors that have already been deployed.
- */
-export interface IDeployedFuncSelectors {
-  facets: { [selector: string]: string };
-  contractFacets: { [facetName: string]: string[] };
-}
-
-/**
  * Interface for post deployment initialization callbacks.
  */
 export type AfterDeployInit = (
@@ -142,19 +134,14 @@ export type AfterDeployInit = (
 ) => Promise<void | boolean>;
 
 /**
- * Interface for the deployments on various blockchain networks info.
+ * Interface for globally tracking function selectors that have already been deployed.
  */
-export interface INetworkDeployInfo {
-    DiamondAddress?: string;
-    DeployerAddress: string;
-    FacetDeployedInfo: {
-        [facetName: string]: {
-        address: string;
-        tx_hash: string;
-        version?: number;
-        funcSelectors?: string[];
-        };
-    };
-    ExternalLibraries?: { [key: string]: string };
-    protocolVersion?: number;
-    }
+export interface IDeployedFuncSelectors {
+  facets: { [selector: string]: string };
+  contractFacets: { [facetName: string]: string[] };
+}
+
+export interface CallbackArgs {
+  initConfig: IDeployConfig;
+  deployInfo: INetworkDeployInfo;
+}
