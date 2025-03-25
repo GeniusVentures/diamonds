@@ -1,7 +1,10 @@
 import { ethers } from "hardhat";
 import { Contract, ContractInterface, utils, BigNumber } from "ethers";
 import { Interface } from "@ethersproject/abi";
-import { INetworkDeployInfo, FacetSelectorsDeployed } from "./types";
+import { 
+  INetworkDeployInfo, 
+  // FacetSelectorsDeployed 
+} from "./types";
 // import { DiamondLoupeFacet } from "../typechain-types/DiamondLoupeFacet";
 
 export enum FacetCutAction {
@@ -119,6 +122,7 @@ export function getInterfaceID(contractInterface: utils.Interface) {
   return interfaceID;
 }
 
+// TODO this might be useful.
 // export async function getDeployedFuncSelectors(networkDeployInfo: INetworkDeployInfo): Promise<FacetSelectorsDeployed> {
 
 //   let ethersMultichain: typeof ethers = ethers;

@@ -19,10 +19,27 @@ export const FacetDeploymentSchema = z.object({
   versions: z.record(z.coerce.number(), VersionInfoSchema).optional()
 });
 
-// Match the full IFacetsToDeploy type
-export const AllFacetsSchema = z.record(FacetDeploymentSchema);
-
 // Infer types
 export type VersionInfo = z.infer<typeof VersionInfoSchema>;
 export type FacetDeployment = z.infer<typeof FacetDeploymentSchema>;
 export type AllFacets = z.infer<typeof AllFacetsSchema>;
+
+// Match the full IFacetsToDeploy type
+export const AllFacetsSchema = z.record(FacetDeploymentSchema);
+
+export const FacetVersionSchema = z.object({
+  deployInit: z.string().optional(),
+  upgradeInit: z.string().optional(),
+  fromVersions: z.array(z.number()).optional(),
+});
+
+export const FacetInfoSchema = z.object({
+  priority: z.number(),
+  versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
+});
+
+export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
+
+export type FacetVersion = z.infer<typeof FacetVersionSchema>;
+export type FacetInfo = z.infer<typeof FacetInfoSchema>;
+export type FacetsDeployment = z.infer<typeof FacetsDeploymentSchema>;

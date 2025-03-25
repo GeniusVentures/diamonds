@@ -65,8 +65,8 @@ export class DiamondDeployer {
     
     // Load the facet deployment info for this diamond
     // TODO the validation should kick an error not return a null. That should be handled here as well so that the facetsToDeploy does not get set to an empty object.
-    const facetsConfigPath = this.facetsPath
-    this.facetsToDeploy = loadFacetsToDeploy(this.diamondName, facetsConfigPath) || {};
+    // TODO Does not include the callback function system loading needs to be separately implemented.
+    this.facetsToDeploy = loadFacetsToDeploy(this.deploymentsPath, this.diamondName, this.facetsPath);
     
     config.deployer = this.deployer;
     this.deploymentKey = this.networkName + this.diamondName;
@@ -85,13 +85,13 @@ export class DiamondDeployer {
     return this.instances.get(_deploymentKey)!;
   }
 
-  // TODO this would probably be better in a utility class
+  // TODO this would probably be better in a utility class/helper because it is used elseware
   private static normalizeDeploymentKey(networkName: string, diamondName: string): string {
     return networkName.toLowerCase() + "-" + diamondName.toLowerCase();
   }
 
   // The new deploy() now delegates to the DiamondDeploymentManager instance.
-  // TODO this should not be null and void.  Needs cleanup
+  // TODO this should not be null and void.  Needs cleanup.  Also, async?
   async deploy(): Promise<INetworkDeployInfo | null | void> {
     // Check if a previous deployment has been loaded.
     if (this.deployInfo?.DiamondAddress || this.deployCompleted) {
@@ -192,7 +192,7 @@ export class DiamondDeployer {
 
       await this.manager.deployFacets(this.facetsToDeploy);
       // TODO: Perform DiamondCut as needed here...
-      // await this.manager.performDiamondCut([], "0x0000000000000000000000000000000000000000", "0x");
+      await this.manager.performDiamondCut([], "0x0000000000000000000000000000000000000000", "0x");
 
       console.log(`Upgrade completed for ${this.networkName}`);
       this.upgradeCompleted = true;

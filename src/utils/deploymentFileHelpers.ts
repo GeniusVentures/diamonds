@@ -36,11 +36,12 @@ export function loadExistingDeployment(
   return defaultDeployment;
 }
 
-export async function loadFacetsToDeploy(
+export function loadFacetsToDeploy(
+  deploymentsPath: string,
   diamondName: string,
-  facetsDeploymentPath: string
-): Promise<IFacetsToDeploy> {
-  const file = join(facetsDeploymentPath, diamondName, 'facets.json');
+  facetsDeploymentPath?: string
+): IFacetsToDeploy {
+  const file = join(deploymentsPath, diamondName, 'facets.json');
   const valid = validateFacets(file);
 
   // TODO: This is defaulting to the empty facets if the file is invalid. This decision may not be correct in all cases since it assumes this is a new deployment. If the file was made invalid by a user error, this is not the correct behavior.
@@ -60,8 +61,9 @@ export async function loadFacetsToDeploy(
       },
     };
   }
-
-  const facets = await loadFacets(file);
+  
+  // TODO This does not load the callbacks.  This needs to be done separately.
+  const facets = loadFacets(file);
   return facets;
 }
 

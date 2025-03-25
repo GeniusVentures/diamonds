@@ -6,6 +6,14 @@ export interface IDeployments {
   }
   
 /**
+ * Interface for globally tracking function selectors that have already been deployed.
+ */
+export interface IDeployedFuncSelectors {
+    facets: { [selector: string]: string };
+    contractFacets: { [facetName: string]: string[] };
+  }
+  
+/**
  * Interface for the deployments on various blockchain networks info.
  */
 export interface INetworkDeployInfo {
@@ -74,21 +82,25 @@ export interface IDeployedContractFacetSelectors {
   contractFacets: Record<string, string[]>;
 }
 
-export type FacetSelectorsDeployed = IDeployedFacetSelectors &
-  IDeployedContractFacetSelectors;
-  
-export interface FacetVersion {
-deployInit?: string;
-upgradeInit?: string;
-fromVersions?: number[];
-}
+import { z } from "zod";
 
-export interface FacetInfo {
-priority: number;
-versions?: Record<string, FacetVersion>;  // Versions can have dynamic keys
-}
+export const FacetVersionSchema = z.object({
+  deployInit: z.string().optional(),
+  upgradeInit: z.string().optional(),
+  callback: z.string().optional(),
+  fromVersions: z.array(z.number()).optional(),
+});
 
-export type FacetsDeployment = Record<string, FacetInfo>;  // Object with facet names as keys
+export const FacetInfoSchema = z.object({
+  priority: z.number(),
+  versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
+});
+
+export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
+
+export type FacetVersion = z.infer<typeof FacetVersionSchema>;
+export type FacetInfo = z.infer<typeof FacetInfoSchema>;
+export type FacetsDeployment = z.infer<typeof FacetsDeploymentSchema>;
 
 /**
  * Type for the diamond cut “action”.
@@ -121,6 +133,13 @@ export interface IDeployedFuncSelectors {
   facets: { [selector: string]: string };
   contractFacets: { [facetName: string]: string[] };
 }
+
+/**
+ * Interface for post deployment initialization callbacks.
+ */
+export type AfterDeployInit = (
+  networkDeployInfo: INetworkDeployInfo,
+) => Promise<void | boolean>;
 
 /**
  * Interface for the deployments on various blockchain networks info.

@@ -19,19 +19,6 @@ import {
   DeploymentInfo
 } from "./types";
 
-
-
-/**
- * Interface for globally tracking function selectors that have already been deployed.
- */
-export interface IDeployedFuncSelectors {
-  facets: { [selector: string]: string };
-  contractFacets: { [facetName: string]: string[] };
-}
-
-/**
- * A simple debug logger.
- */
 const log = debug("DiamondDeploymentManager:log");
 
 /**
@@ -52,7 +39,10 @@ export class DiamondDeploymentManager {
   private ethers = require("ethers") as typeof hre.ethers;;
   private deployerAddress: string | undefined;
   private contractsPath: string;
-  private facetsPath: string;
+  private facetsConfigPath: string;
+  private facetDeployInfo: FacetsDeployment;
+  private facetCallbacksPath: string;
+  
   private constructor(config: DeploymentInfo, deployInfo: INetworkDeployInfo) {
     this.diamondName = config.diamondName;
     this.contractsPath = config.contractsPath;
@@ -60,8 +50,29 @@ export class DiamondDeploymentManager {
     this.deployer = config.deployer;
     this.deploymentKey = config.networkName.toLowerCase + "-" + config.diamondName.toLowerCase;
     this.deploymentInfo = deployInfo;
-    this.facetsPath = config.facetsPath || config.deploymentsPath;
+    // TODO this should probably just use a helper resolver to the absolute path of based.
     this.provider = config.provider;
+    
+    // Load Facet Config from facet.json file
+    this.facetsConfigPath = config.facetsPath || config.deploymentsPath;
+    const facetDeployFilePath = join(this.facetsConfigPath, this.diamondName, 'facets.json');
+    this.facetDeployInfo = this.loadFacetDeployments(facetDeployFilePath);
+    
+    // Load Facet Callbacks Registry
+    this.facetCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetCallbacks');
+    const files = fs.readdirSync(this.facetCallbacksPath);
+    const callbacks: { [key: string]: (args: CallbackArgs) => Promise<void> } = {};
+    for (const file of files) {
+      const callbackName = file.split(".")[0];
+      const callback = require(resolve(this.facetCallbacksPath, file));
+      callbacks[callbackName] = callback;
+    }
+    const callbackManager = new FacetCallbackManager(callbacks);
+    
+    // TODO verify and load the Facet Post Deployment Callbacks referenced in the facetDeployInfo
+    // Load Facet Deployment Callback  from files
+    const facetPostDeployCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetPostDeployCallbacks');
+    this.loadFacetPostDeployCallbacks( facetPostDeployCallbacksPath);
     log(`Multiton instance of DiamondDeploymentManager created on ${this.networkName} for ${this.diamondName}`);
   }
 
@@ -108,7 +119,7 @@ export class DiamondDeploymentManager {
     if (!this.deployer) throw new Error("Deployer not resolved");
     await this.setupDeployerAddress();
 
-    log(`🚀Deploying Diamond: {$this.diamondName}...`);
+    log(`🚀Deploying Diamond: {$this.diamondName} on {this.networkName}...`);
 
     const diamondCutFacetKey = "DiamondCutFacet";
     if (!this.deploymentInfo.FacetDeployedInfo[diamondCutFacetKey]?.address) {
@@ -154,12 +165,6 @@ export class DiamondDeploymentManager {
     !this.deployerAddress ? this.setupDeployerAddress() : null;
     if (!this.deployer) throw new Error("Signer not resolved");
     log("Deploying (or upgrading) Facets...");
-    
-    // Load Facet Deployment Info from files
-    // TODO this probably doesn't need to be done until the facets are deployed
-    // Could also be loaded in the constructor.
-    const facetsDeploymentsPath = `${this.facetsPath}/facets`;
-    const facetPostDeployCallbacks = this.loadFacetDeployments(facetsDeploymentsPath);
 
     // Sort facets by priority
     const facetsPriority = Object.keys(facetsToDeploy).sort(
@@ -239,7 +244,7 @@ export class DiamondDeploymentManager {
    * This replaces some functionality from FacetSelectors.ts.
    */
   public async getSelectors(contractAddress: string): Promise<string[]> {
-    // TODO: replace the dummy array.
+    // TODO: replace the dummy array. This is in FacetSelectors.ts
     return ["0x12345678"];
   }
 
@@ -252,7 +257,7 @@ export class DiamondDeploymentManager {
     // Send a raw transaction
     const tx = await this.deployer.sendTransaction({
       to: this.deploymentInfo.DiamondAddress,
-      data: initSig // e.g., the encoded function signature + arguments
+      data: initSig // e.g., the encoded function signature + arguments of the init function
     });
     await tx.wait();
     log("Initialization function call completed.");
@@ -325,25 +330,26 @@ export class DiamondDeploymentManager {
   }
   
   /**
-   * Import individual Facet Deployment files
+   * Set Facet Post Deploy Callbacks
    */
-  public async loadFacetsToDeploy(facetDeploymentsPath: string): Promise<void> {
-    const imports = glob.sync(join(__dirname, facetDeploymentsPath, '*.ts'));
-    for (const file of imports) {
-      const deployLoad = file.replace(__dirname, '.').replace('.ts', '');
-      await import(deployLoad);
+  public loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath: string, ): void {
+    // Get all the callbacks listed in the facetDeployInfo
+    const facetNames = Object.keys(this.facetDeployInfo);
+    for (const facetName of facetNames) {
+      const facetInfo = this.facetDeployInfo[facetName];
+      if (facetInfo.versions?.callback) {
+        const deployLoad = this.facetsConfigPath + "/facetCallbacks/" + facetInfo.versions.callback;
+        import(deployLoad);
+      }
     }
   }
   
   /**
    * Set Facet Deployments
    */
-  public loadFacetDeployments(facetsDeploymentsPath: string): FacetsDeployment {
-    // Resolve the absolute path relative to the TypeScript project root
-    const absolutePath = resolve(__dirname, facetsDeploymentsPath, 'facets.json');
-
+  public loadFacetDeployments(facetsDeployFilePath: string): FacetsDeployment {
     // Read and parse JSON
-    const jsonData = readFileSync(absolutePath, 'utf-8');
+    const jsonData = readFileSync(facetsDeployFilePath, 'utf-8');
     const facetsDeployments: FacetsDeployment = JSON.parse(jsonData);
 
     return facetsDeployments;
@@ -356,20 +362,30 @@ export class DiamondDeploymentManager {
     return this.deploymentInfo;
   }
   
-  /**
-   * Write the deployment info to a file.
-   * @param deployments
-   * @param path
-   * @returns
-   */
-  private writeDeployedInfo(deployments: { [key: string]: INetworkDeployInfo }) {
-    // TODO Configure the path in hardhat.config.ts
-    let deploymentData = "";
-    
-    // This should use deployments path from the config and write a file using the chainId and diamondName for the name of the file to store the deployment info in json.
-     
+}
+
+interface CallbackArgs {
+    deployer: Signer;
+    deployerAddress: string;
+    networkName: string;
+    chainId: number;
+    deployInfo: INetworkDeployInfo;
   }
   
-}
+class FacetCallbackManager {
+    private callbacks: { [key: string]: (args: CallbackArgs) => Promise<void> };
+  
+    constructor(callbacks: { [key: string]: (args: CallbackArgs) => Promise<void> }) {
+      this.callbacks = callbacks;
+    }
+  
+    public async executeCallback(callbackName: string, args: CallbackArgs) {
+      const callback = this.callbacks[callbackName];
+      if (!callback) {
+        throw new Error(`Callback "${callbackName}" not found.`);
+      }
+      await callback(args);
+    }
+  }
 
 export default DiamondDeploymentManager;
