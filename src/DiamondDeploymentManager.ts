@@ -76,10 +76,10 @@ export class DiamondDeploymentManager {
 
     this.facetCallbackManager = FacetCallbackManager.getInstance(this.diamondName, this.facetCallbacksPath);
 
-    // TODO verify and load the Facet Post Deployment Callbacks referenced in the facetDeployInfo
-    // Load Facet Deployment Callback  from files
-    const facetPostDeployCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetPostDeployCallbacks');
-    this.loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath);
+    // // TODO verify and load the Facet Post Deployment Callbacks referenced in the facetDeployInfo
+    // // Load Facet Deployment Callback  from files
+    // const facetPostDeployCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetPostDeployCallbacks');
+    // this.loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath);
     log(`Singleton instance of DiamondDeploymentManager created on ${this.networkName} for ${this.diamondName}`);
   }
 
@@ -124,11 +124,11 @@ export class DiamondDeploymentManager {
    */
   public async deployDiamond(): Promise<void> {
     if (!this.deployer) throw new Error("Deployer not resolved");
-    await this.setupDeployerAddress();
 
     log(`🚀Deploying Diamond: {$this.diamondName} on {this.networkName}...`);
-
+    await this.setupDeployerAddress();
     const diamondCutFacetKey = "DiamondCutFacet";
+    // Check if DiamondCutFacet is deployed and deploy if not
     if (!this.deployInfo.FacetDeployedInfo[diamondCutFacetKey]?.address) {
       const DiamondCutFacet = await hre.ethers.getContractFactory(
         "DiamondCutFacet",
@@ -329,27 +329,27 @@ export class DiamondDeploymentManager {
         ],
       },
       functionInputs: [diamondCutFunctionInputs, initAddress, initData],
-      via: "<YOUR_DEFENDER_RELAY_ADDRESS>",
+      via: "<DEFENDER_RELAY_ADDRESS>",
       viaType: "Safe" // or Defender Relay, etc.
     });
 
     log(`Defender proposal created: ${response.proposalId}`);
   }
 
-  /**
-   * Set Facet Post Deploy Callbacks
-   */
-  public loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath: string,): void {
-    // Get all the callbacks listed in the facetDeployInfo
-    const facetNames = Object.keys(this.facetDeployInfo);
-    for (const facetName of facetNames) {
-      const facetInfo = this.facetDeployInfo[facetName];
-      if (facetInfo.versions?.callback) {
-        const deployLoad = this.facetsConfigPath + "/facetCallbacks/" + facetInfo.versions.callback;
-        import(deployLoad);
-      }
-    }
-  }
+  // /**
+  //  * Set Facet Post Deploy Callbacks
+  //  */
+  // public loadFacetPostDeployCallbacks(facetPostDeployCallbacksPath: string,): void {
+  //   // Get all the callbacks listed in the facetDeployInfo
+  //   const facetNames = Object.keys(this.facetDeployInfo);
+  //   for (const facetName of facetNames) {
+  //     const facetInfo = this.facetDeployInfo[facetName];
+  //     if (facetInfo.versions?.callback) {
+  //       const deployLoad = this.facetsConfigPath + "/facetCallbacks/" + facetInfo.versions.callback;
+  //       import(deployLoad);
+  //     }
+  //   }
+  // }
 
   /**
    * Set Facet Deployments
