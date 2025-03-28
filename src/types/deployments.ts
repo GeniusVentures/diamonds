@@ -1,5 +1,6 @@
 import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
+import { INetworkDeployInfo } from "../schemas";
 
 export interface IDeployments {
   [networkName: string]: INetworkDeployInfo;
@@ -13,23 +14,24 @@ export interface IDeployedFuncSelectors {
   contractFacets: { [facetName: string]: string[] };
 }
 
-/**
- * Interface for the deployments on various blockchain networks info.
- */
-export interface INetworkDeployInfo {
-  DiamondAddress?: string;
-  DeployerAddress: string;
-  FacetDeployedInfo: {
-    [facetName: string]: {
-      address: string;
-      tx_hash: string;
-      version?: number;
-      funcSelectors?: string[];
-    };
-  };
-  ExternalLibraries?: { [key: string]: string };
-  protocolVersion?: number;
-}
+// TODO This needs to be rectified against the current schema
+// /**
+//  * Interface for the deployments on various blockchain networks info.
+//  */
+// export interface INetworkDeployInfo {
+//   DiamondAddress?: string;
+//   DeployerAddress: string;
+//   FacetDeployedInfo: {
+//     [facetName: string]: {
+//       address: string;
+//       tx_hash: string;
+//       version?: number;
+//       funcSelectors?: string[];
+//     };
+//   };
+//   ExternalLibraries?: { [key: string]: string };
+//   protocolVersion?: number;
+// }
 
 export interface IDeployConfig {
   diamondName: string;
@@ -45,7 +47,7 @@ export interface IDeployConfig {
 /**
 * Interface describing the structure of facets to deploy and their metadata.
 */
-export interface IFacetsToDeploy {
+export interface IFacetsDeployConfig {
   [facetName: string]: {
     priority: number;
     libraries?: string[];

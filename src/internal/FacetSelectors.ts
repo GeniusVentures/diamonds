@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 import { Contract, ContractInterface, utils, BigNumber } from "ethers";
 import { Interface } from "@ethersproject/abi";
-import { 
-  INetworkDeployInfo, 
+import {
+  INetworkDeployInfo,
   // FacetSelectorsDeployed 
-} from "./types";
+} from "../types";
 // import { DiamondLoupeFacet } from "../typechain-types/DiamondLoupeFacet";
 
 export enum FacetCutAction {
@@ -73,9 +73,9 @@ export class Selectors {
 
 // get function selectors from ABI
 export function getSelector(
-    contract: Contract,
-    funcName: string | null | undefined = null
-): string | null{
+  contract: Contract,
+  funcName: string | null | undefined = null
+): string | null {
   if (funcName === null || funcName === undefined) {
     return null;
   }
@@ -115,8 +115,8 @@ export function findAddressPositionInFacets(
 export function getInterfaceID(contractInterface: utils.Interface) {
   let interfaceID: BigNumber = ethers.constants.Zero;
   const functions: string[] = Object.keys(contractInterface.functions);
-  for (let i=0; i< functions.length; i++) {
-      interfaceID = interfaceID.xor(contractInterface.getSighash(functions[i]));
+  for (let i = 0; i < functions.length; i++) {
+    interfaceID = interfaceID.xor(contractInterface.getSighash(functions[i]));
   }
 
   return interfaceID;

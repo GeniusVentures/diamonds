@@ -3,15 +3,14 @@ import hre from 'hardhat';
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { BaseContract, Signer } from "ethers";
 import { assert } from "chai";
-// import { ProxyDiamond } from "../typechain-types";
-// import { loadExistingDeployment, loadFacetsToDeploy, getDiamondContract } from "./helpers";
 import {
-  // getDiamondContractViem, 
-  loadExistingDeployment,
-  loadFacetsToDeploy
-} from "./utils/deploymentFileHelpers";
-import { DiamondDeploymentManager } from "./DiamondDeploymentManager";
-import { IDeployConfig, INetworkDeployInfo, IFacetsToDeploy, IDeployments } from "./types";
+  loadDeployFile,
+  loadFacetsConfigFile
+} from "../utils/deploymentFileHelpers";
+import DiamondDeployer from "./DiamondDeployer";
+import { Diamond } from "./Diamond";
+import { IFacetsDeployConfig } from "../types";
+import { INetworkDeployInfo } from "../schemas";
 import { error } from "console";
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { join, resolve } from 'path';
@@ -20,69 +19,57 @@ import { join, resolve } from 'path';
 
 
 // This class is a factory of singletons (Multiton) that coordinates the deployment of a diamond contract and its facets.
-export class DiamondDeployer {
+export class DiamondDeploymentManger extends DiamondDeployer {
   private static instances: Map<string, DiamondDeployer> = new Map();
   private networkName: string;
   private diamondName: string;
   private deploymentKey: string;
   private provider: JsonRpcProvider;
-  private deployInfo: INetworkDeployInfo | null = null;
+  private deployInfo: INetworkDeployInfo;
   private deployInProgress = false;
   private upgradeInProgress = false;
   private deployCompleted = false;
   private upgradeCompleted = false;
   private deployer: Signer;
-  // private ethers = hre.ethers;
   private chainId: number;
   private deploymentsPath: string
   private facetsPath: string = "facets";
-  private facetsToDeploy: IFacetsToDeploy;
+  private facetsConfig: IFacetsDeployConfig;
+  private diamond!: Diamond;
 
-  private diamond!: any;
-
-  private manager: DiamondDeploymentManager;
-
-  private constructor(config: IDeployConfig) {
-    let initialDeployInfo: INetworkDeployInfo;
-    this.networkName = config.networkName;
-    this.chainId = config.chainId;
-    this.diamondName = config.diamondName;
-    this.provider = config.provider;
-    this.deploymentsPath = config.deploymentsPath;
-    this.facetsPath = config.facetsPath;
-
-    // Establish deployer from current deployments info or signer 0
-    initialDeployInfo = loadExistingDeployment(this.networkName, this.diamondName, this.deploymentsPath);
-    if (!initialDeployInfo.DeployerAddress) {
-      console.log("No existing deployment info found for", this.networkName);
-      this.deployer = this.provider.getSigner(0);
+  private constructor(diamond: Diamond, provider: JsonRpcProvider) {
+    super(diamond, provider);
+    this.diamond = diamond;
+    if (!diamond.deployer) {
+      this.deployer = hre.ethers.provider.getSigner();
     } else {
-      console.log("Existing deployment info found for", this.networkName);
-      this.deployer = this.provider.getSigner(initialDeployInfo.DeployerAddress);
-      initialDeployInfo = initialDeployInfo;
+      this.deployer = diamond.deployer;
     }
-    this.deployInfo = initialDeployInfo;
+    this.networkName = diamond.networkName;
+    this.chainId = diamond.chainId;
+    this.diamondName = diamond.diamondName;
+    this.provider = provider;
+    this.deploymentsPath = diamond.deploymentsPath;
+    this.facetsPath = diamond.deploymentsPath;
 
-    // Load the facet deployment info for this diamond
-    // TODO the validation should kick an error not return a null. That should be handled here as well so that the facetsToDeploy does not get set to an empty object.
-    // TODO Does not include the callback function system loading needs to be separately implemented.
-    this.facetsToDeploy = loadFacetsToDeploy(this.deploymentsPath, this.diamondName, this.facetsPath);
+    this.deployInfo = diamond.deployInfo;
+    this.facetsConfig = diamond.facetsConfig
 
-    config.deployer = this.deployer;
-    this.deploymentKey = this.networkName + this.diamondName;
-    this.manager = DiamondDeploymentManager.getInstance(
-      config,
-      initialDeployInfo
-    );
+
+    this.deploymentKey = this.diamond.networkName + this.diamond.diamondName;
   }
 
-  static getInstance(deployConfig: IDeployConfig): DiamondDeployer {
-    const chainId = deployConfig.chainId.toString();
-    const _deploymentKey = this.normalizeDeploymentKey(chainId, deployConfig.diamondName);
+  static getInstance(diamond: Diamond, provider: JsonRpcProvider): DiamondDeployer {
+    const chainId = diamond.chainId.toString();
+    const _deploymentKey = this.normalizeDeploymentKey(chainId, diamond.diamondName);
     if (!this.instances.has(_deploymentKey)) {
-      this.instances.set(_deploymentKey, new DiamondDeployer(deployConfig));
+      this.instances.set(_deploymentKey, new DiamondDeployer(diamond, diamond.provider));
     }
     return this.instances.get(_deploymentKey)!;
+  }
+
+  public getInstanceKey(): string {
+    return DiamondDeployer.normalizeDeploymentKey(this.networkName, this.diamondName);
   }
 
   // TODO this would probably be better in a utility class/helper because it is used elseware
@@ -95,19 +82,19 @@ export class DiamondDeployer {
   async deploy(): Promise<INetworkDeployInfo | null | void> {
     // Check if a previous deployment has been loaded.
     if (this.deployInfo?.DiamondAddress || this.deployCompleted) {
-      console.log(`Deployment already completed for ${this.networkName}`);
+      console.log(`Deployment already completed for ${this.diamond.networkName}`);
       return this.deployInfo ? this.deployInfo : error("The deploy info is null");
     }
     // Check for ongoing upgrades.
     if (this.deployInProgress || this.upgradeInProgress) {
-      console.log(`Operation already in progress for ${this.networkName}`);
+      console.log(`Operation already in progress for ${this.diamond.networkName}`);
       while (this.deployInProgress || this.upgradeInProgress) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       return this.deployInfo ? this.deployInfo : error("The deploy info is null");;
     }
     else if (this.upgradeInProgress) {
-      console.log(`Upgrade in progress for ${this.networkName}`);
+      console.log(`Upgrade in progress for ${this.diamond.networkName}`);
       while (this.upgradeInProgress) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
@@ -126,14 +113,14 @@ export class DiamondDeployer {
       }
 
       // Call the deployDiamond process via the manager.
-      await this.manager.deployDiamond();
+      await super.deployDiamond();
 
       // After the diamond is deployed, update our local state.
-      this.deployInfo = this.manager.getDeploymentInfo();
+      this.deployInfo = super.getDeploymentInfo();
       console.log("Diamond deployed at:", this.deployInfo?.DiamondAddress);
 
-      // Deploy (or upgrade) facets. Use Facets object (or a tailored FacetToDeployInfo) as desired.
-      await this.manager.deployFacets(this.facetsToDeploy);
+      // Deploy (or upgrade) facets. Use Facets object as desired.
+      await super.deployFacets(super.facetsDeployConfig);
 
       // Perform the diamond cut to bind new selectors.
       // Here we use an empty diamondCut for simplicity.
@@ -149,7 +136,7 @@ export class DiamondDeployer {
       this.deployCompleted = true;
       return this.deployInfo;
     } catch (error) {
-      console.error(`Deployment failed for ${this.networkName}:`, error);
+      console.error(`Deployment failed for ${this.diamond.networkName}:`, error);
       throw error;
     } finally {
       this.deployInProgress = false;
@@ -159,17 +146,17 @@ export class DiamondDeployer {
   // The new upgrade() method delegates to the manager as well.
   async upgrade(): Promise<boolean> {
     if (this.upgradeCompleted) {
-      console.log(`Upgrade already completed for ${this.networkName}`);
+      console.log(`Upgrade already completed for ${this.diamond.networkName}`);
       return true;
     }
     if (this.deployInProgress) {
-      console.log(`Deployment in progress for ${this.networkName}, waiting to upgrade.`);
+      console.log(`Deployment in progress for ${this.diamond.networkName}, waiting to upgrade.`);
       while (this.deployInProgress) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
     if (this.upgradeInProgress) {
-      console.log(`Upgrade already in progress for ${this.networkName}`);
+      console.log(`Upgrade already in progress for ${this.diamond.networkName}`);
       while (this.upgradeInProgress) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
@@ -177,7 +164,7 @@ export class DiamondDeployer {
     }
     this.upgradeInProgress = true;
     try {
-      console.log(`Starting upgrade for ${this.networkName}`);
+      console.log(`Starting upgrade for ${this.diamond.networkName}`);
       // Ensure diamond deployment exists before upgrade.
       if (!this.deployInfo || !this.deployInfo.DiamondAddress) {
         console.log("Diamond not deployed. Needs deployment first.");
@@ -190,15 +177,15 @@ export class DiamondDeployer {
       // TODO This is for test deployments only. This should be done before the deploy() or upgrade method is called in a test.
       await this.impersonateAndFundAccount(this.deployInfo!.DeployerAddress);
 
-      await this.manager.deployFacets(this.facetsToDeploy);
+      await this.manager.deployFacets(this.facetDeployConfig);
       // TODO: Perform DiamondCut as needed here...
       await this.manager.performDiamondCut([], "0x0000000000000000000000000000000000000000", "0x");
 
-      console.log(`Upgrade completed for ${this.networkName}`);
+      console.log(`Upgrade completed for ${this.diamond.networkName}`);
       this.upgradeCompleted = true;
       return true;
     } catch (error) {
-      console.error(`Upgrade failed for ${this.networkName}:`, error);
+      console.error(`Upgrade failed for ${this.diamond.networkName}:`, error);
       throw error;
     } finally {
       this.upgradeInProgress = false;
@@ -208,9 +195,9 @@ export class DiamondDeployer {
   // Helper: Impersonate and fund deployer account on Hardhat, if necessary.
   async impersonateAndFundAccount(deployerAddress: string): Promise<Signer> {
     try {
-      await this.provider.send("hardhat_impersonateAccount", [deployerAddress]);
-      const deployer = this.provider.getSigner(deployerAddress);
-      await this.provider.send("hardhat_setBalance", [deployerAddress, "0x56BC75E2D63100000"]);
+      await this.diamond.provider!.send("hardhat_impersonateAccount", [deployerAddress]);
+      const deployer = this.diamond.provider!.getSigner(deployerAddress);
+      await this.diamond.provider!.send("hardhat_setBalance", [deployerAddress, "0x56BC75E2D63100000"]);
       return deployer;
     } catch (error) {
       if (error instanceof Error) {
@@ -221,36 +208,6 @@ export class DiamondDeployer {
       throw error;
     }
   }
-
-  public getDiamond<T extends BaseContract>(): Promise<T> {
-    return Promise.resolve(this.diamond as T);
-  }
-
-  public getDeployment(): INetworkDeployInfo | null {
-    return this.deployInfo;
-  }
-
-  // This doesn't work because hardhat=-typechain causes the parent project to error out if it is included included in this node module as well.  Since it is deprecated and this functionality is only needed in the parent project it will not be included.
-  // export async function getDiamondContract(diamondName: string,
-  //     hre: HardhatRuntimeEnvironment
-  //   ): Promise<any> {
-  //     // Get the typechain configuration (default to "typechain-types" if not defined)
-  //     const typechainConfig = hre.config.typechain;
-  //     // Resolve the outDir relative to the project's root path
-  //     const outDir = typechainConfig?.outDir ?? "typechain-types";
-  //     const baseDir = resolve(hre.config.paths.root, outDir);
-
-  //     // Construct the absolute path to the Diamond type.
-  //     // The exact location depends on your TypeChain configuration and naming.
-  //     // Here, we assume the file is named 'ProxyDiamond.ts' under the typechain-types directory:
-  //     const diamondPath = join(baseDir, diamondName);
-
-  //     // Dynamically import the ProxyDiamond types.
-  //     // The module should export the contract type (e.g. as ProxyDiamond).
-  //     const diamondModule = await import(diamondPath);
-
-  //     return diamondModule.Diamond;
-  //   }
 }
 
 export default DiamondDeployer;

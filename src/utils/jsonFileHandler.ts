@@ -6,39 +6,53 @@
  * ability to create an empty file on failure.
  */
 
-import { 
-  readJsonSync, 
-  writeJsonSync, 
-  pathExistsSync, 
-  removeSync, 
-  ensureFileSync, 
-  existsSync 
+import {
+  readJsonSync,
+  writeJsonSync,
+  pathExistsSync,
+  removeSync,
+  ensureFileSync,
+  existsSync
 } from "fs-extra";
-import path from 'path';
-import { FacetsDeployment, FacetsDeploymentSchema, FacetInfo } from '../schemas/FacetDeploymentSchema';
-import { NetworkDeployInfoSchema, INetworkDeployInfo } from "../schemas/DeploymentSchema";
+import { join, resolve } from "path";
+import {
+  FacetsConfigSchema,
+  NetworkDeployInfoSchema,
+  INetworkDeployInfo,
+  FacetsDeployment,
+} from "../schemas/DeploymentSchema";
+import { OK } from "zod";
 
-/**
- * Resolves the absolute path of a file relative to the project root.
- * @param relativePath - The relative path to resolve.
- * @returns The absolute path.
- */
-const resolvePath = (relativePath: string): string => {
-  return path.resolve(process.cwd(), relativePath);
-};
+export function readDeployFilePathDiamondNetwork(
+  networkName: string,
+  diamondName: string,
+  deploymentsPath: string,
+  createNew: boolean = false
+): INetworkDeployInfo {
+  const filePath = join(deploymentsPath, diamondName, `${networkName}.json`);
+  return readDeployFile(filePath, createNew);
+}
 
 /**
  * Reads and validates a JSON file as INetworkDeployInfo
+ * @param path - The path to the deployment file.
+ * @param createIfMissing - If true, creates a new deployment file with default values if 
+ * the file does not exist. Otherwise this will throw an error if the file does not exist.
+ * @returns The parsed and validated deployment object.
  */
-export function readDeployInfo(path: string): INetworkDeployInfo {
-  
-  // TODO should this be false or an error given that the caller should have validated themselves and then if they wanted this they should have created the file. Alternatively we could use ensureFileSync() to automatically create the file.
-  // if (!validateDeploymentFileOnly(path)) {
-  //   return false;
-  // }
-  if (!pathExistsSync(path)) {
+export function readDeployFile(path: string, createNew: boolean = false)
+  : INetworkDeployInfo {
+  // The caller should have already checked for the file's existence,
+  if (!pathExistsSync(path) && !createNew) {
     throw new Error(`Deployment file not found: ${path}`);
+  } else if (!pathExistsSync(path) && createNew) {
+    createNewDeployFile(path);
   }
+
+  // TODO this may be redundant given the failure of the safeParse below into a type.
+  // if (!validateDeploymentFileOnly(path)) {
+  //   throw new Error(`Invalid deployment file: ${path}`);
+  // }
 
   const raw = readJsonSync(path);
   const parsed = NetworkDeployInfoSchema.safeParse(raw);
@@ -48,6 +62,33 @@ export function readDeployInfo(path: string): INetworkDeployInfo {
   }
 
   return parsed.data;
+}
+
+/**
+ * Resolves the absolute path of a file relative to the project root.
+ * @param relativePath - The relative path to resolve.
+ * @returns The absolute path.
+ */
+const resolvePath = (relativePath: string): string => {
+  return resolve(process.cwd(), relativePath);
+};
+
+/**
+ * Creates a new deployment file with default empty values
+ * @param path - The path to the deployment file.
+ */
+export function createNewDeployFile(path: string) {
+  const defaultDeployment: INetworkDeployInfo = {
+    DiamondAddress: "",
+    DeployerAddress: "",
+    FacetDeployedInfo: {}, // Empty object for facets
+    ExternalLibraries: {}, // Empty object for external libraries
+    protocolVersion: 0, // Default protocol version
+  };
+
+  // Validate the default deployment object before writing
+  const validated = NetworkDeployInfoSchema.parse(defaultDeployment);
+  writeJsonSync(path, validated, { spaces: 2 });
 }
 
 /**
@@ -62,7 +103,7 @@ export function writeDeployInfo(path: string, data: INetworkDeployInfo) {
  * Update deployment JSON file
  */
 export function updateDeployInfo(path: string, updater: (data: INetworkDeployInfo) => void) {
-  const data = readDeployInfo(path);
+  const data = readDeployFile(path);
   updater(data);
   writeDeployInfo(path, data);
 }
@@ -81,19 +122,51 @@ export function deleteDeployInfo(path: string) {
  * @param path 
  * @returns 
  */
-export function validateDeploymentFileOnly(path: string): boolean {
-    try {
-      if (!pathExistsSync(path)) {
-        console.log(`Deployment file not found: ${path}`);
-        return false;
-      }
-      const raw = readJsonSync(path);
-      NetworkDeployInfoSchema.parse(raw);
-      return true;
-    } catch {
+export function validateDeployFile(path: string): boolean {
+  try {
+    if (!pathExistsSync(path)) {
+      console.log(`Deployment file not found: ${path}`);
       return false;
     }
+    const raw = readJsonSync(path);
+    NetworkDeployInfoSchema.parse(raw);
+    return true;
+  } catch {
+    return false;
   }
+}
+
+
+export function loadFacetsConfig(
+  deploymentsPath: string,
+  diamondName: string,
+  facetsDeploymentPath?: string
+): FacetsDeployment {
+  const file = join(deploymentsPath, diamondName, 'facets.json');
+  const valid = validateFacetsConfig(file);
+
+  // TODO: This is defaulting empty.  This should be a separate function to createNew().
+  if (!valid) {
+    return {
+      DiamondCutFacet: {
+        priority: 10,
+        versions: {
+          0.0: {},
+        },
+      },
+      DiamondLoupeFacet: {
+        priority: 20,
+        versions: {
+          0.0: {},
+        },
+      },
+    };
+  }
+
+  // TODO This does not load the callbacks.  This needs to be done separately.
+  const facets = readFacetsConfig(file);
+  return facets;
+}
 
 // TODO We choose not to make this  for now, however this could all be loaded earlier as 
 // part of a configuration. This would need to happen before trying to get the first
@@ -105,7 +178,7 @@ export function validateDeploymentFileOnly(path: string): boolean {
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */
-export const loadFacets = (filePath: string): FacetsDeployment => {
+export const readFacetsConfig = (filePath: string): FacetsDeployment => {
   try {
     const fullPath = resolvePath(filePath);
 
@@ -113,7 +186,7 @@ export const loadFacets = (filePath: string): FacetsDeployment => {
     const raw = readJsonSync(fullPath);
 
     // Validate and parse the JSON data
-    return FacetsDeploymentSchema.parse(raw);
+    return FacetsConfigSchema.parse(raw);
   } catch (e) {
     console.error('Failed to load facets:', e);
     throw e;
@@ -125,7 +198,7 @@ export const loadFacets = (filePath: string): FacetsDeployment => {
  * @param filePath - The path to the facets file.
  * @param data - The facets object to save.
  */
-export const saveFacets = (filePath: string, data: FacetsDeployment): void => {
+export const saveFacetsConfig = (filePath: string, data: FacetsDeployment): void => {
   const fullPath = resolvePath(filePath);
   ensureFileSync(fullPath);
   writeJsonSync(fullPath, data, { spaces: 2 });
@@ -138,17 +211,17 @@ export const saveFacets = (filePath: string, data: FacetsDeployment): void => {
  * @param update - The partial update to apply to the facet.
  * @returns The updated facets object.
  */
-export const updateFacet = (
+export const updateFacetConfig = (
   filePath: string,
   facetKey: string,
-  update: Partial<FacetInfo>
+  update: Partial<FacetsDeployment>
 ): FacetsDeployment => {
-  const facets = loadFacets(filePath);
+  const facets = readFacetsConfig(filePath);
   facets[facetKey] = {
     ...(facets[facetKey] || {}),
     ...update,
   };
-  saveFacets(filePath, facets);
+  saveFacetsConfig(filePath, facets);
   return facets;
 };
 
@@ -158,10 +231,10 @@ export const updateFacet = (
  * @param facetKey - The key of the facet to delete.
  * @returns The updated facets object.
  */
-export const deleteFacet =  (filePath: string, facetKey: string): FacetsDeployment => {
-  const facets =  loadFacets(filePath);
+export const deleteFacet = (filePath: string, facetKey: string): FacetsDeployment => {
+  const facets = readFacetsConfig(filePath);
   delete facets[facetKey];
-   saveFacets(filePath, facets);
+  saveFacetsConfig(filePath, facets);
   return facets;
 };
 
@@ -170,7 +243,7 @@ export const deleteFacet =  (filePath: string, facetKey: string): FacetsDeployme
  * @param filePath - The path to the facets file.
  * @returns A boolean indicating whether the file is valid.
  */
-export const validateFacets = (filePath: string): boolean => {
+export const validateFacetsConfig = (filePath: string): boolean => {
   try {
     const fullPath = resolvePath(filePath);
 
@@ -181,10 +254,10 @@ export const validateFacets = (filePath: string): boolean => {
     }
 
     // Read the file and parse it as JSON
-    const raw =  readJsonSync(fullPath);
+    const raw = readJsonSync(fullPath);
 
     // Validate the JSON against the schema
-    FacetsDeploymentSchema.parse(raw);
+    FacetsConfigSchema.parse(raw);
 
     // If all checks pass, return true
     return true;

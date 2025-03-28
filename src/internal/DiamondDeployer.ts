@@ -12,57 +12,58 @@ import { readFileSync } from "fs";
 import { join, resolve } from "path";
 // import { HardhatRuntimeEnvironment } from "hardhat/types";
 import {
-  INetworkDeployInfo,
-  IFacetsToDeploy,
-  FacetDeploymentInfo,
-  FacetsDeployment,
   IDeployConfig,
   CallbackArgs
-} from "./types";
+} from "../types";
+import {
+  INetworkDeployInfo,
+  FacetsConfig
+} from "../schemas";
 import FacetCallbackManager from "./FacetCallbackManager";
+import Diamond from "./Diamond";
 const log = debug("DiamondDeploymentManager:log");
 
 /**
  * Multiton class for each network or chain. 
  * An instance manages deployment, upgrades, and interaction with the Diamond Proxy.
  */
-export class DiamondDeploymentManager {
-  public static instances: Map<string, DiamondDeploymentManager> = new Map();
+export class DiamondDeployer extends Diamond {
+  public static instances: Map<string, DiamondDeployer> = new Map();
 
   // In-memory store of the Diamond address etc. for the current instance.
-  private initConfig: IDeployConfig;
   private initDeployInfo: INetworkDeployInfo;
   private deployInfo: INetworkDeployInfo;
-  private networkName: string;
-  private diamondName: string;
+  // private networkName: string;
+  // private diamondName: string;
   private deploymentKey: string;
-  private deployer: Signer | undefined;
+  public deployer: Signer | undefined;
   private provider: JsonRpcProvider;
   private defenderClient: AdminClient | undefined;
   // private ethers = require("ethers") as typeof hre.ethers;
   private deployerAddress: string | undefined;
-  private contractsPath: string;
+  public contractsPath: string;
   private facetsConfigPath: string;
-  private facetDeployInfo: FacetsDeployment;
+  private facetConfig: FacetsConfig;
   private facetCallbacksPath: string;
   private facetCallbackManager: FacetCallbackManager;
 
-  private constructor(config: IDeployConfig, _deployInfo: INetworkDeployInfo) {
-    this.initConfig = config;
-    this.diamondName = config.diamondName;
-    this.contractsPath = config.contractsPath;
-    this.networkName = config.networkName;
-    this.deployer = config.deployer;
-    this.deploymentKey = config.networkName.toLowerCase + "-" + config.diamondName.toLowerCase;
-    this.initDeployInfo = _deployInfo;
-    this.deployInfo = _deployInfo;
+  constructor(diamond: Diamond) {
+    super();
+    this.diamondName = super.diamondName;
+    this.contractsPath = diamond.contractsPath;
+    this.networkName = diamond.networkName;
+    this.deployer = diamond.deployer;
+    this.deploymentKey = diamond.networkName.toLowerCase + "-" + diamond.diamondName.toLowerCase;
+    this.initDeployInfo = diamond.deployInfo;
+    this.deployInfo = diamond.deployInfo;
     // TODO this should probably just use a helper resolver to the absolute path of based.
-    this.provider = config.provider;
+    this.provider = diamond.provider;
 
     // Load Facet Config from facet.json file
-    this.facetsConfigPath = config.facetsPath || config.deploymentsPath;
+    // TODO needs to be eliminated, refactored, not differentiating anymore
+    this.facetsConfigPath = diamond.deploymentsPath;
     const facetDeployFilePath = join(this.facetsConfigPath, this.diamondName, 'facets.json');
-    this.facetDeployInfo = this.loadFacetDeployments(facetDeployFilePath);
+    this.facetConfig = this.loadFacetDeployments(facetDeployFilePath);
 
     // Load Facet Callbacks Registry
     this.facetCallbacksPath = join(this.facetsConfigPath, this.diamondName, 'facetCallbacks');
@@ -88,19 +89,18 @@ export class DiamondDeploymentManager {
    * Creates it if not already present.
    */
   public static getInstance(
-    config: IDeployConfig,
-    deployInfo: INetworkDeployInfo,
-  ): DiamondDeploymentManager {
-    const _chainId = config.chainId;
-    const _diamondName = config.diamondName;
+    diamond: Diamond
+  ): DiamondDeployer {
+    const _chainId = diamond.chainId;
+    const _diamondName = diamond.diamondName;
     const _deploymentKey = this.normalizeDeploymentKey(_chainId.toString(), _diamondName);
-    if (!DiamondDeploymentManager.instances.has(_deploymentKey)) {
-      DiamondDeploymentManager.instances.set(
+    if (!DiamondDeployer.instances.has(_deploymentKey)) {
+      DiamondDeployer.instances.set(
         _deploymentKey,
-        new DiamondDeploymentManager(config, deployInfo)
+        new DiamondDeployer(diamond)
       );
     }
-    return DiamondDeploymentManager.instances.get(_deploymentKey)!;
+    return DiamondDeployer.instances.get(_deploymentKey)!;
   }
 
   // TODO this would probably be better in a utility class, it is used in DiamondDeployer as well.

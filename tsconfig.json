@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2019",
     "module": "commonjs",
     "declaration": true,
     "declarationMap": true,
@@ -14,5 +14,5 @@
   "include": [
     "./test",
     "./src"
-  ]
+, "src/internal/DiamondDeploymentManager.ts", "src/internal/DiamondDeployer.ts", "src/internal/FacetSelectors.ts", "src/internal/FacetCallbackManager.ts", "src/internal/Diamonds.ts", "src/internal/Diamond.ts"  ]
 }

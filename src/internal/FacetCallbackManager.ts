@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { resolve } from "path";
 import { Signer } from "ethers";
-import { CallbackArgs } from "./types"; // Adjust the path as needed
+import { CallbackArgs } from "../types"; // Adjust the path as needed
 
 class FacetCallbackManager {
   public static instances: Map<string, FacetCallbackManager> = new Map();
