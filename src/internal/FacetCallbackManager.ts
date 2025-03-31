@@ -1,64 +1,60 @@
-import * as fs from "fs";
-import { resolve } from "path";
-import { Signer } from "ethers";
-import { CallbackArgs } from "../types"; // Adjust the path as needed
+// internal/FacetCallbackManager.ts
+import * as fs from "fs-extra";
+import { resolve, join } from "path";
+import { CallbackArgs } from "../types";
 
-class FacetCallbackManager {
-  public static instances: Map<string, FacetCallbackManager> = new Map();
-  private callbacks: { [facetName: string]: { [callbackName: string]: (args: CallbackArgs) => Promise<void> } } = {};
+export class FacetCallbackManager {
+  private static instances: Map<string, FacetCallbackManager> = new Map();
 
-  constructor(facetCallbacksPath: string) {
-    this.loadCallbacks(facetCallbacksPath);
+  private callbacks: Record<string, Record<string, (args: CallbackArgs) => Promise<void>>> = {};
+
+  private constructor(private facetCallbacksPath: string) {
+    this.loadCallbacks();
   }
 
-  /**
-   * Retrieves a FacetCallManager instance for a specific key (i.e. diamondName).
-   * Creates it if not already present.
-   */
-  public static getInstance(_diamondName: string, _facetCallbacksPath: string): FacetCallbackManager {
-    const _deploymentKey = _diamondName;
-    if (!FacetCallbackManager.instances.has(_deploymentKey)) {
-      FacetCallbackManager.instances.set(
-        _deploymentKey,
-        new FacetCallbackManager(_facetCallbacksPath)
-      );
+  public static getInstance(diamondName: string, facetCallbacksPath: string): FacetCallbackManager {
+    if (!this.instances.has(diamondName)) {
+      this.instances.set(diamondName, new FacetCallbackManager(facetCallbacksPath));
     }
-    return FacetCallbackManager.instances.get(_deploymentKey)!;
+    return this.instances.get(diamondName)!;
   }
 
-  private loadCallbacks(facetCallbacksPath: string): void {
-    const files = fs.readdirSync(facetCallbacksPath);
+  private loadCallbacks(): void {
+    if (!fs.existsSync(this.facetCallbacksPath)) {
+      console.error(`Facet callbacks path "${this.facetCallbacksPath}" does not exist.`);
+      return;
+    }
 
-    for (const file of files) {
-      if (!file.endsWith(".ts")) continue; // Only process TypeScript files
-      const facetName = file.split(".")[0]; // Extract facet name from file name
-      const filePath = resolve(facetCallbacksPath, file);
+    const files = fs.readdirSync(this.facetCallbacksPath);
+
+    files.forEach(file => {
+      if (!file.endsWith(".ts") && !file.endsWith(".js")) return;
+
+      const facetName = file.split(".")[0];
+      const filePath = resolve(this.facetCallbacksPath, file);
       const module = require(filePath);
 
       this.callbacks[facetName] = {};
 
-      // Register all functions prefixed with "callback"
-      for (const [key, value] of Object.entries(module)) {
-        if (key.startsWith("callback") && typeof value === "function") {
-          this.callbacks[facetName][key] = value as (args: CallbackArgs) => Promise<void>;
+      Object.entries(module).forEach(([callbackName, callbackFn]) => {
+        if (typeof callbackFn === 'function') {
+          this.callbacks[facetName][callbackName] = callbackFn as (args: CallbackArgs) => Promise<void>;
         }
-      }
-    }
+      });
+    });
   }
 
   public async executeCallback(facetName: string, callbackName: string, args: CallbackArgs): Promise<void> {
     const facetCallbacks = this.callbacks[facetName];
     if (!facetCallbacks) {
-      throw new Error(`No callbacks found for facet "${facetName}".`);
+      throw new Error(`Callbacks for facet "${facetName}" not found.`);
     }
 
     const callback = facetCallbacks[callbackName];
     if (!callback) {
-      throw new Error(`Callback "${callbackName}" not found for facet "${facetName}".`);
+      throw new Error(`Callback "${callbackName}" for facet "${facetName}" not found.`);
     }
 
     await callback(args);
   }
 }
-
-export default FacetCallbackManager;

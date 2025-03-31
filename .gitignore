@@ -65,3 +65,6 @@ typings/
 # faltten files
 flat
 .ignore
+
+# local notes
+notes.local/

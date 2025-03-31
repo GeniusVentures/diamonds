@@ -1,18 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2018",
     "module": "commonjs",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "strict": true,
     "rootDirs": ["./src", "./test"],
     "esModuleInterop": true
   },
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "notes"],
   "include": [
     "./test",
-    "./src"
-, "src/internal/DiamondDeploymentManager.ts", "src/internal/DiamondDeployer.ts", "src/internal/FacetSelectors.ts", "src/internal/FacetCallbackManager.ts", "src/internal/Diamonds.ts", "src/internal/Diamond.ts"  ]
+    "./src",
+    "./src/**/*.ts",]
 }

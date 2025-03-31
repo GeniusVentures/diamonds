@@ -4,7 +4,8 @@ import {
   readFacetsConfig,
   validateFacetsConfig,
   readDeployFile,
-  writeDeployInfo
+  writeDeployInfo,
+  loadFacetsConfig
 } from "./jsonFileHandler";
 import { pathExistsSync } from "fs-extra";
 
@@ -38,33 +39,33 @@ export function loadDeployInfo(
   return defaultDeployment;
 }
 
-export function loadFacetsConfigFile(
-  deploymentsPath: string,
-  diamondName: string,
-  facetsDeploymentPath?: string
-): FacetsConfig {
-  const file = join(deploymentsPath, diamondName, 'facets.json');
-  const valid = validateFacets(file);
+// export function loadFacetsConfigFile(
+//   deploymentsPath: string,
+//   diamondName: string,
+//   facetsDeploymentPath?: string
+// ): FacetsConfig {
+//   const file = join(deploymentsPath, diamondName, 'facets.json');
+//   const valid = validateFacetsConfig(file);
 
-  // TODO: This is defaulting empty.  This should be in the Diamond or Deployer.
-  if (!valid) {
-    return {
-      DiamondCutFacet: {
-        priority: 10,
-        versions: {
-          0.0: {},
-        },
-      },
-      DiamondLoupeFacet: {
-        priority: 20,
-        versions: {
-          0.0: {},
-        },
-      },
-    };
-  }
+//   // TODO: This is defaulting empty.  This should be in the Diamond or Deployer.
+//   if (!valid) {
+//     return {
+//       DiamondCutFacet: {
+//         priority: 10,
+//         versions: {
+//           0.0: {},
+//         },
+//       },
+//       DiamondLoupeFacet: {
+//         priority: 20,
+//         versions: {
+//           0.0: {},
+//         },
+//       },
+//     };
+//   }
 
-  // TODO This does not load the callbacks.  This needs to be done separately.
-  const facets = loadFacets(file);
-  return facets;
-}
+//   // TODO This does not load the callbacks.  This needs to be done separately.
+//   const facets = loadFacetsConfig(file);
+//   return facets;
+// }

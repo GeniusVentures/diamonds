@@ -1,3 +1,5 @@
-export { default as Diamonds } from "./Diamond";
-export { default as DiamondDeploymentManager } from "./DiamondDeployer";
-export { default as DiamondDeployer } from "./DiamondDeploymentManager";
+export { Diamond } from "./Diamond";
+export { DiamondDeployer } from "./DiamondDeployer";
+export { DeploymentManager } from "./DeploymentManager";
+export { FacetCallbackManager } from "./FacetCallbackManager";
+

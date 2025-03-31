@@ -1,10 +1,11 @@
-import { ethers } from "hardhat";
+import "@nomiclabs/hardhat-ethers";
 import { Contract, ContractInterface, utils, BigNumber } from "ethers";
 import { Interface } from "@ethersproject/abi";
 import {
   INetworkDeployInfo,
   // FacetSelectorsDeployed 
-} from "../types";
+} from "../schemas";
+import hre from "hardhat";
 // import { DiamondLoupeFacet } from "../typechain-types/DiamondLoupeFacet";
 
 export enum FacetCutAction {
@@ -62,7 +63,7 @@ export class Selectors {
 
   // remove selectors using an array of function names
   removeSelectors(signatures: string[]) {
-    const iface = new ethers.utils.Interface(
+    const iface = new hre.ethers.utils.Interface(
       signatures.map((v) => "function " + v)
     );
     const removeSelectors = signatures.map((v) => iface.getSighash(v));
@@ -113,7 +114,7 @@ export function findAddressPositionInFacets(
 }
 
 export function getInterfaceID(contractInterface: utils.Interface) {
-  let interfaceID: BigNumber = ethers.constants.Zero;
+  let interfaceID: BigNumber = hre.ethers.constants.Zero;
   const functions: string[] = Object.keys(contractInterface.functions);
   for (let i = 0; i < functions.length; i++) {
     interfaceID = interfaceID.xor(contractInterface.getSighash(functions[i]));

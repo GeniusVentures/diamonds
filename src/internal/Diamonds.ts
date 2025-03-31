@@ -1,1 +1,0 @@
-// TODO a class that will contain all the existing Diamonds
