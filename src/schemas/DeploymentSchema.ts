@@ -61,3 +61,4 @@ export type FacetsConfig = z.infer<typeof FacetsConfigSchema>;
 export type FacetDeployedInfo = z.infer<typeof FacetDeployedInfoSchema>;
 export type INetworkDeployInfo = z.infer<typeof NetworkDeployInfoSchema>;
 export type FacetsDeployment = z.infer<typeof FacetsConfigSchema>;
+export type FacetDeployedInfoRecord = z.infer<typeof FacetDeployedInfoRecordSchema>;

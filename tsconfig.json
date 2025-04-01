@@ -15,5 +15,5 @@
   "include": [
     "./test",
     "./src",
-    "./src/**/*.ts",]
+    "./src",]
 }

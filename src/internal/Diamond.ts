@@ -78,6 +78,21 @@ export class Diamond {
   getFacetsConfig(): FacetsConfig {
     return this.facetsConfig;
   }
+
+  public isUpgradeDeployment(): boolean {
+    return !!this.deployInfo.DiamondAddress;
+  }
+
+  private selectorRegistry: Set<string> = new Set();
+
+  public registerSelectors(selectors: string[]): void {
+    selectors.forEach(selector => this.selectorRegistry.add(selector));
+  }
+
+  public isSelectorRegistered(selector: string): boolean {
+    return this.selectorRegistry.has(selector);
+  }
+
 }
 
 export default Diamond;
