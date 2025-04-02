@@ -47,7 +47,7 @@ export class Diamond {
     const facetsConfigPath = path.join(
       config.deploymentsPath,
       config.diamondName,
-      "facets.json" // TODO change to diamond.config.json
+      "facets.json" // TODO change to diamond.config.json?
     );
 
     // Load existing deployment info

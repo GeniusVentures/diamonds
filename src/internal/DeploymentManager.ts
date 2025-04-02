@@ -33,7 +33,7 @@ export class DeploymentManager {
   async upgradeAll(): Promise<void> {
     console.log(`♻️ Starting upgrade for Diamond: ${this.diamond.diamondName}`);
 
-    await this.deployer.deploy(); // Adjust this method if an upgrade-specific method is created
+    await this.deployer.deploy(); // TODO: This should be a separate upgrade method that defaults to the deploy() if no upgrade function exists for the strategy.
     await this.runPostDeployCallbacks();
 
     console.log(`✅ Upgrade completed successfully.`);

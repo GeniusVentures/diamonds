@@ -22,6 +22,7 @@ export class LocalDeploymentStrategy implements DeploymentStrategy {
     await diamondContract.deployed();
 
     const info = diamond.getDeployInfo();
+    info.DeployerAddress = await diamond.deployer!.getAddress();
     info.DiamondAddress = diamondContract.address;
     const diamondCutFacetFunctionSelectors = Object.keys(diamondCutFacet.interface.functions).map(fn => diamondCutFacet.interface.getSighash(fn));
     info.FacetDeployedInfo = info.FacetDeployedInfo || {};
