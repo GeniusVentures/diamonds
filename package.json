@@ -83,7 +83,8 @@
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.0.1",
     "typescript": "^4.5.5",
-    "uint32": "^0.2.1"
+    "uint32": "^0.2.1",
+    "zod": "^3.24.2"
   },
   "peerDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
