@@ -21,5 +21,5 @@ var FacetCutAction;
     FacetCutAction[FacetCutAction["Add"] = 0] = "Add";
     FacetCutAction[FacetCutAction["Replace"] = 1] = "Replace";
     FacetCutAction[FacetCutAction["Remove"] = 2] = "Remove";
-})(FacetCutAction || (exports.FacetCutAction = FacetCutAction = {}));
+})(FacetCutAction = exports.FacetCutAction || (exports.FacetCutAction = {}));
 //# sourceMappingURL=deployments.js.map

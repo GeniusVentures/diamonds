@@ -14,7 +14,7 @@ export function loadDeployInfo(
   diamondName: string,
   deploymentFilesPath: string
 ): INetworkDeployInfo {
-  const deploymentPath = join(deploymentFilesPath, diamondName, `${networkName}.json`);
+  const deploymentPath = join(deploymentFilesPath, diamondName, `deployments/${networkName}.json`);
 
   if (pathExistsSync(deploymentPath)) {
     return readDeployFile(deploymentPath);

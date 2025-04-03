@@ -31,21 +31,21 @@ export class Diamond {
     this.diamondName = config.diamondName;
     this.networkName = config.networkName;
     this.chainId = config.chainId;
-    this.deploymentsPath = config.deploymentsPath;
-    this.contractsPath = config.contractsPath;
+    this.deploymentsPath = config.deploymentsPath || "diamonds";
+    this.contractsPath = config.contractsPath || "contracts";
     this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName.toLowerCase()}-${config.chainId.toString()}`;
 
     this.repository = repository;
 
     const deployInfoPath = path.join(
-      config.deploymentsPath,
+      this.deploymentsPath,
       config.diamondName,
       `${this.deploymentId}.json`
     )
 
     // Load facets to deploy
     const facetsConfigPath = path.join(
-      config.deploymentsPath,
+      this.deploymentsPath,
       config.diamondName,
       "facets.json" // TODO change to diamond.config.json?
     );
@@ -70,7 +70,7 @@ export class Diamond {
     const deployInfoPath = path.join(
       this.deploymentsPath,
       this.diamondName,
-      `${this.networkName}.json`
+      `deployments/${this.networkName}.json`
     );
     this.repository.saveDeployInfo(deployInfoPath, info);
   }

@@ -14,25 +14,6 @@ export interface IDeployedFuncSelectors {
   contractFacets: { [facetName: string]: string[] };
 }
 
-// TODO This needs to be rectified against the current schema
-// /**
-//  * Interface for the deployments on various blockchain networks info.
-//  */
-// export interface INetworkDeployInfo {
-//   DiamondAddress?: string;
-//   DeployerAddress: string;
-//   FacetDeployedInfo: {
-//     [facetName: string]: {
-//       address: string;
-//       tx_hash: string;
-//       version?: number;
-//       funcSelectors?: string[];
-//     };
-//   };
-//   ExternalLibraries?: { [key: string]: string };
-//   protocolVersion?: number;
-// }
-
 export interface IDeployConfig {
   diamondName: string;
   deploymentsPath: string;

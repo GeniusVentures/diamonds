@@ -4,10 +4,10 @@ exports.FacetsConfigSchema = exports.FacetConfigSchema = exports.FacetVersionCon
 const zod_1 = require("zod");
 // Schema for a single facet's deployment information
 exports.FacetDeployedInfoSchema = zod_1.z.object({
-    address: zod_1.z.string().optional(), // Address of the deployed facet
-    tx_hash: zod_1.z.string().optional(), // Transaction hash of the deployment
-    version: zod_1.z.number().optional(), // Version of the facet
-    funcSelectors: zod_1.z.array(zod_1.z.string()).optional(), // Function selectors for the facet
+    address: zod_1.z.string().optional(),
+    tx_hash: zod_1.z.string().optional(),
+    version: zod_1.z.number().optional(),
+    funcSelectors: zod_1.z.array(zod_1.z.string()).optional(),
     verified: zod_1.z.boolean().optional(), // Whether the facet is verified
 });
 // Schema for all deployed facets
@@ -16,10 +16,10 @@ exports.FacetDeployedInfoRecordSchema = zod_1.z.record(exports.FacetDeployedInfo
 exports.ExternalLibrariesSchema = zod_1.z.record(zod_1.z.string());
 // Schema for the network deployment information
 exports.NetworkDeployInfoSchema = zod_1.z.object({
-    DiamondAddress: zod_1.z.string().optional(), // Address of the deployed diamond
-    DeployerAddress: zod_1.z.string(), // Address of the deployer
-    FacetDeployedInfo: exports.FacetDeployedInfoRecordSchema.optional(), // Information about deployed facets
-    ExternalLibraries: exports.ExternalLibrariesSchema.optional(), // External libraries used in the deployment
+    DiamondAddress: zod_1.z.string().optional(),
+    DeployerAddress: zod_1.z.string(),
+    FacetDeployedInfo: exports.FacetDeployedInfoRecordSchema.optional(),
+    ExternalLibraries: exports.ExternalLibrariesSchema.optional(),
     protocolVersion: zod_1.z.number().optional(), // Protocol version
 });
 /**

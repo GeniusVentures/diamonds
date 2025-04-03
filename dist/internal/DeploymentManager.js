@@ -35,7 +35,7 @@ class DeploymentManager {
                         initConfig: {
                             diamondName: this.diamond.diamondName,
                             deploymentsPath: this.diamond.deploymentsPath,
-                            facetsPath: "", // populate accordingly
+                            facetsPath: "",
                             contractsPath: this.diamond.contractsPath,
                             provider: this.diamond.provider,
                             networkName: this.diamond.networkName,

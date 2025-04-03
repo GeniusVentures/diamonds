@@ -1,38 +1,19 @@
-// export interface HardhatDiamondConfig {
-//   path?: string;
-//   deployments_path?: string;
-//   facets_path?: string;
-//   include: string[];
-//   exclude: string[];
-// }
+export interface DiamondPathsConfig {
+  deploymentsPath?: string;
+  contractsPath?: string;
+  callbacksPath?: string;
+}
 
-export interface DiamondConfig {
+export interface DiamondsPathsConfig {
+  paths: Record<string, DiamondPathsConfig>;
+}
+
+export interface DiamondConfig extends DiamondPathsConfig {
   diamondName: string;
   networkName: string;
   chainId: number;
-  deploymentsPath: string;
-  contractsPath: string;
-}
 
-/**
- * Matches the structure:
- *
- *  diamonds: [
- *    ProxyDiamond: {
- *      path: '...',
- *      deployments_data: '...',
- *      facets_path: '...',
- *      include: [...],
- *      exclude: [...]
- *    },
- *    GeniusDiamond: {
- *      contracts_path: '...',
- *      diamond_deployments_path: '...',
- *      facets: [...]
- *    },
- *  ],
- */
-export interface DiamondsUserConfig {
-  // diamonds?: Record<string, DiamondConfig>;
-  diamondsConfig?: Record<string, DiamondConfig>;
+}
+export interface DiamondsConfig {
+  diamonds: Record<string, DiamondConfig>;
 }

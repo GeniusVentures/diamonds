@@ -7,15 +7,7 @@
  * ability to create an empty file on failure.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateFacetsConfig = exports.deleteFacet = exports.updateFacetConfig = exports.saveFacetsConfig = exports.readFacetsConfig = void 0;
-exports.readDeployFilePathDiamondNetwork = readDeployFilePathDiamondNetwork;
-exports.readDeployFile = readDeployFile;
-exports.createNewDeployFile = createNewDeployFile;
-exports.writeDeployInfo = writeDeployInfo;
-exports.updateDeployInfo = updateDeployInfo;
-exports.deleteDeployInfo = deleteDeployInfo;
-exports.validateDeployFile = validateDeployFile;
-exports.loadFacetsConfig = loadFacetsConfig;
+exports.validateFacetsConfig = exports.deleteFacet = exports.updateFacetConfig = exports.saveFacetsConfig = exports.readFacetsConfig = exports.loadFacetsConfig = exports.validateDeployFile = exports.deleteDeployInfo = exports.updateDeployInfo = exports.writeDeployInfo = exports.createNewDeployFile = exports.readDeployFile = exports.readDeployFilePathDiamondNetwork = void 0;
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const DeploymentSchema_1 = require("../schemas/DeploymentSchema");
@@ -23,6 +15,7 @@ function readDeployFilePathDiamondNetwork(networkName, diamondName, deploymentsP
     const filePath = (0, path_1.join)(deploymentsPath, diamondName, `${networkName}.json`);
     return readDeployFile(filePath, createNew);
 }
+exports.readDeployFilePathDiamondNetwork = readDeployFilePathDiamondNetwork;
 /**
  * Reads and validates a JSON file as INetworkDeployInfo
  * @param path - The path to the deployment file.
@@ -49,6 +42,7 @@ function readDeployFile(path, createNew = false) {
     }
     return parsed.data;
 }
+exports.readDeployFile = readDeployFile;
 /**
  * Resolves the absolute path of a file relative to the project root.
  * @param relativePath - The relative path to resolve.
@@ -65,14 +59,15 @@ function createNewDeployFile(path) {
     const defaultDeployment = {
         DiamondAddress: "",
         DeployerAddress: "",
-        FacetDeployedInfo: {}, // Empty object for facets
-        ExternalLibraries: {}, // Empty object for external libraries
+        FacetDeployedInfo: {},
+        ExternalLibraries: {},
         protocolVersion: 0, // Default protocol version
     };
     // Validate the default deployment object before writing
     const validated = DeploymentSchema_1.NetworkDeployInfoSchema.parse(defaultDeployment);
     (0, fs_extra_1.writeJsonSync)(path, validated, { spaces: 2 });
 }
+exports.createNewDeployFile = createNewDeployFile;
 /**
  * Writes JSON to file
  */
@@ -80,6 +75,7 @@ function writeDeployInfo(path, data) {
     const validated = DeploymentSchema_1.NetworkDeployInfoSchema.parse(data);
     (0, fs_extra_1.writeJsonSync)(path, validated, { spaces: 2 });
 }
+exports.writeDeployInfo = writeDeployInfo;
 /**
  * Update deployment JSON file
  */
@@ -88,6 +84,7 @@ function updateDeployInfo(path, updater) {
     updater(data);
     writeDeployInfo(path, data);
 }
+exports.updateDeployInfo = updateDeployInfo;
 /**
  * Deletes the deployment file
  */
@@ -96,6 +93,7 @@ function deleteDeployInfo(path) {
         (0, fs_extra_1.removeSync)(path);
     }
 }
+exports.deleteDeployInfo = deleteDeployInfo;
 /**
  * Validates the Deployment File without loading it.
  * @param path
@@ -115,6 +113,7 @@ function validateDeployFile(path) {
         return false;
     }
 }
+exports.validateDeployFile = validateDeployFile;
 function loadFacetsConfig(deploymentsPath, diamondName, facetsDeploymentPath) {
     const file = (0, path_1.join)(deploymentsPath, diamondName, 'facets.json');
     const valid = (0, exports.validateFacetsConfig)(file);
@@ -139,6 +138,7 @@ function loadFacetsConfig(deploymentsPath, diamondName, facetsDeploymentPath) {
     const facets = (0, exports.readFacetsConfig)(file);
     return facets;
 }
+exports.loadFacetsConfig = loadFacetsConfig;
 // TODO We choose not to make this  for now, however this could all be loaded earlier as 
 // part of a configuration. This would need to happen before trying to get the first
 // instance of the deployer (at start?), when we are not locking the deployment objects 

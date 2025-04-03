@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadDeployInfo = loadDeployInfo;
+exports.loadDeployInfo = void 0;
 const path_1 = require("path");
 const jsonFileHandler_1 = require("./jsonFileHandler");
 const fs_extra_1 = require("fs-extra");
 function loadDeployInfo(networkName, diamondName, deploymentFilesPath) {
-    const deploymentPath = (0, path_1.join)(deploymentFilesPath, diamondName, `${networkName}.json`);
+    const deploymentPath = (0, path_1.join)(deploymentFilesPath, diamondName, `deployments/${networkName}.json`);
     if ((0, fs_extra_1.pathExistsSync)(deploymentPath)) {
         return (0, jsonFileHandler_1.readDeployFile)(deploymentPath);
     }
@@ -26,6 +26,7 @@ function loadDeployInfo(networkName, diamondName, deploymentFilesPath) {
     (0, jsonFileHandler_1.writeDeployInfo)(deploymentPath, defaultDeployment);
     return defaultDeployment;
 }
+exports.loadDeployInfo = loadDeployInfo;
 // export function loadFacetsConfigFile(
 //   deploymentsPath: string,
 //   diamondName: string,

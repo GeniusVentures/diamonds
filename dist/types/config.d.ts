@@ -1,29 +1,17 @@
-export interface DiamondConfig {
+export interface DiamondPathsConfig {
+    deploymentsPath?: string;
+    contractsPath?: string;
+    callbacksPath?: string;
+}
+export interface DiamondsPathsConfig {
+    paths: Record<string, DiamondPathsConfig>;
+}
+export interface DiamondConfig extends DiamondPathsConfig {
     diamondName: string;
     networkName: string;
     chainId: number;
-    deploymentsPath: string;
-    contractsPath: string;
 }
-/**
- * Matches the structure:
- *
- *  diamonds: [
- *    ProxyDiamond: {
- *      path: '...',
- *      deployments_data: '...',
- *      facets_path: '...',
- *      include: [...],
- *      exclude: [...]
- *    },
- *    GeniusDiamond: {
- *      contracts_path: '...',
- *      diamond_deployments_path: '...',
- *      facets: [...]
- *    },
- *  ],
- */
-export interface DiamondsUserConfig {
-    diamondsConfig?: Record<string, DiamondConfig>;
+export interface DiamondsConfig {
+    diamonds: Record<string, DiamondConfig>;
 }
 //# sourceMappingURL=config.d.ts.map

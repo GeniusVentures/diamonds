@@ -6,14 +6,14 @@ export declare const FacetDeployedInfoSchema: z.ZodObject<{
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    address?: string | undefined;
     version?: number | undefined;
+    address?: string | undefined;
     tx_hash?: string | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
-    address?: string | undefined;
     version?: number | undefined;
+    address?: string | undefined;
     tx_hash?: string | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
@@ -25,14 +25,14 @@ export declare const FacetDeployedInfoRecordSchema: z.ZodRecord<z.ZodString, z.Z
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    address?: string | undefined;
     version?: number | undefined;
+    address?: string | undefined;
     tx_hash?: string | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
-    address?: string | undefined;
     version?: number | undefined;
+    address?: string | undefined;
     tx_hash?: string | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
@@ -48,14 +48,14 @@ export declare const NetworkDeployInfoSchema: z.ZodObject<{
         funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         verified: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        address?: string | undefined;
         version?: number | undefined;
+        address?: string | undefined;
         tx_hash?: string | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }, {
-        address?: string | undefined;
         version?: number | undefined;
+        address?: string | undefined;
         tx_hash?: string | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
@@ -66,8 +66,8 @@ export declare const NetworkDeployInfoSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     FacetDeployedInfo?: Record<string, {
-        address?: string | undefined;
         version?: number | undefined;
+        address?: string | undefined;
         tx_hash?: string | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
@@ -78,8 +78,8 @@ export declare const NetworkDeployInfoSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     FacetDeployedInfo?: Record<string, {
-        address?: string | undefined;
         version?: number | undefined;
+        address?: string | undefined;
         tx_hash?: string | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
@@ -100,13 +100,13 @@ export declare const FacetVersionConfigSchema: z.ZodObject<{
     deployInit?: string | undefined;
     upgradeInit?: string | undefined;
     fromVersions?: number[] | undefined;
-    callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+    callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
     deployInclude?: string[] | undefined;
 }, {
     deployInit?: string | undefined;
     upgradeInit?: string | undefined;
     fromVersions?: number[] | undefined;
-    callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+    callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
     deployInclude?: string[] | undefined;
 }>;
 /**
@@ -125,13 +125,13 @@ export declare const FacetConfigSchema: z.ZodObject<{
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }, {
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }>>>;
 }, "strip", z.ZodTypeAny, {
@@ -141,7 +141,7 @@ export declare const FacetConfigSchema: z.ZodObject<{
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }> | undefined;
 }, {
@@ -151,7 +151,7 @@ export declare const FacetConfigSchema: z.ZodObject<{
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }> | undefined;
 }>;
@@ -171,13 +171,13 @@ export declare const FacetsConfigSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }, {
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }>>>;
 }, "strip", z.ZodTypeAny, {
@@ -187,7 +187,7 @@ export declare const FacetsConfigSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }> | undefined;
 }, {
@@ -197,7 +197,7 @@ export declare const FacetsConfigSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callback?: ((args_0: any, ...args: unknown[]) => Promise<boolean>) | undefined;
+        callback?: ((args_0: any, ...args_1: unknown[]) => Promise<boolean>) | undefined;
         deployInclude?: string[] | undefined;
     }> | undefined;
 }>>;
