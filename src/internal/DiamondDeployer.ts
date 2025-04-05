@@ -1,7 +1,5 @@
-// internal/DiamondDeployer.ts
 import { Diamond } from "./Diamond";
 import { DeploymentStrategy } from "../strategies/DeploymentStrategy";
-import { FacetDeploymentInfo } from "../types";
 
 export class DiamondDeployer {
   private diamond: Diamond;

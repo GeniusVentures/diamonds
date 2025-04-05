@@ -1,43 +1,43 @@
-import { join } from "path";
-import { INetworkDeployInfo, FacetsConfig } from "../schemas";
-import {
-  readFacetsConfig,
-  validateFacetsConfig,
-  readDeployFile,
-  writeDeployInfo,
-  loadFacetsConfig
-} from "./jsonFileHandler";
-import { pathExistsSync } from "fs-extra";
+// import { join } from "path";
+// import { INetworkDeployInfo, FacetsConfig } from "../schemas";
+// import {
+//   readFacetsConfig,
+//   validateFacetsConfig,
+//   readDeployFile,
+//   writeDeployInfo,
+//   loadFacetsConfig
+// } from "./jsonFileHandler";
+// import { pathExistsSync } from "fs-extra";
 
-export function loadDeployInfo(
-  networkName: string,
-  diamondName: string,
-  deploymentFilesPath: string
-): INetworkDeployInfo {
-  const deploymentPath = join(deploymentFilesPath, diamondName, `deployments/${networkName}.json`);
+// export function loadDeployInfo(
+//   networkName: string,
+//   diamondName: string,
+//   deploymentFilesPath: string
+// ): INetworkDeployInfo {
+//   const deploymentPath = join(deploymentFilesPath, diamondName, `deployments/${networkName}.json`);
 
-  if (pathExistsSync(deploymentPath)) {
-    return readDeployFile(deploymentPath);
-  }
+//   if (pathExistsSync(deploymentPath)) {
+//     return readDeployFile(deploymentPath);
+//   }
 
-  const defaultDeployment: INetworkDeployInfo = {
-    DiamondAddress: "",
-    DeployerAddress: "",
-    FacetDeployedInfo: {
-      DiamondCutFacet: {
-        address: "",
-        tx_hash: "",
-      },
-      DiamondLoupeFacet: {
-        address: "",
-        tx_hash: "",
-      },
-    },
-  };
+//   const defaultDeployment: INetworkDeployInfo = {
+//     DiamondAddress: "",
+//     DeployerAddress: "",
+//     FacetDeployedInfo: {
+//       DiamondCutFacet: {
+//         address: "",
+//         tx_hash: "",
+//       },
+//       DiamondLoupeFacet: {
+//         address: "",
+//         tx_hash: "",
+//       },
+//     },
+//   };
 
-  writeDeployInfo(deploymentPath, defaultDeployment);
-  return defaultDeployment;
-}
+//   writeDeployInfo(deploymentPath, defaultDeployment);
+//   return defaultDeployment;
+// }
 
 // export function loadFacetsConfigFile(
 //   deploymentsPath: string,

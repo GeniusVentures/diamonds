@@ -6,15 +6,15 @@ export declare const FacetDeployedInfoSchema: z.ZodObject<{
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }>;
@@ -25,15 +25,15 @@ export declare const FacetDeployedInfoRecordSchema: z.ZodRecord<z.ZodString, z.Z
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }>>;
@@ -48,15 +48,15 @@ export declare const NetworkDeployInfoSchema: z.ZodObject<{
         funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         verified: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }>>>;
@@ -66,9 +66,9 @@ export declare const NetworkDeployInfoSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     FacetDeployedInfo?: Record<string, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }> | undefined;
@@ -78,9 +78,9 @@ export declare const NetworkDeployInfoSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     FacetDeployedInfo?: Record<string, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }> | undefined;
@@ -155,6 +155,94 @@ export declare const FacetConfigSchema: z.ZodObject<{
         deployInclude?: string[] | undefined;
     }> | undefined;
 }>;
+export declare const FacetVersionSchema: z.ZodObject<{
+    deployInit: z.ZodOptional<z.ZodString>;
+    upgradeInit: z.ZodOptional<z.ZodString>;
+    callback: z.ZodOptional<z.ZodString>;
+    fromVersions: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+}, "strip", z.ZodTypeAny, {
+    deployInit?: string | undefined;
+    upgradeInit?: string | undefined;
+    fromVersions?: number[] | undefined;
+    callback?: string | undefined;
+}, {
+    deployInit?: string | undefined;
+    upgradeInit?: string | undefined;
+    fromVersions?: number[] | undefined;
+    callback?: string | undefined;
+}>;
+export declare const FacetInfoSchema: z.ZodObject<{
+    priority: z.ZodNumber;
+    versions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
+        deployInit: z.ZodOptional<z.ZodString>;
+        upgradeInit: z.ZodOptional<z.ZodString>;
+        callback: z.ZodOptional<z.ZodString>;
+        fromVersions: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }>>>;
+}, "strip", z.ZodTypeAny, {
+    priority: number;
+    versions?: Record<string, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }> | undefined;
+}, {
+    priority: number;
+    versions?: Record<string, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }> | undefined;
+}>;
+export declare const FacetsDeploymentSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
+    priority: z.ZodNumber;
+    versions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
+        deployInit: z.ZodOptional<z.ZodString>;
+        upgradeInit: z.ZodOptional<z.ZodString>;
+        callback: z.ZodOptional<z.ZodString>;
+        fromVersions: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }>>>;
+}, "strip", z.ZodTypeAny, {
+    priority: number;
+    versions?: Record<string, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }> | undefined;
+}, {
+    priority: number;
+    versions?: Record<string, {
+        deployInit?: string | undefined;
+        upgradeInit?: string | undefined;
+        fromVersions?: number[] | undefined;
+        callback?: string | undefined;
+    }> | undefined;
+}>>;
+export type FacetVersion = z.infer<typeof FacetVersionSchema>;
+export type FacetInfo = z.infer<typeof FacetInfoSchema>;
 /**
  * Schema for the deployment configuration information of ALL facets to be deployed
  */

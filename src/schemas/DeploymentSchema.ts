@@ -49,6 +49,25 @@ export const FacetConfigSchema = z.object({
 });
 
 
+
+export const FacetVersionSchema = z.object({
+  deployInit: z.string().optional(),
+  upgradeInit: z.string().optional(),
+  callback: z.string().optional(),
+  fromVersions: z.array(z.number()).optional(),
+});
+
+export const FacetInfoSchema = z.object({
+  priority: z.number(),
+  versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
+});
+
+export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
+
+
+export type FacetVersion = z.infer<typeof FacetVersionSchema>;
+export type FacetInfo = z.infer<typeof FacetInfoSchema>;
+
 /**
  * Schema for the deployment configuration information of ALL facets to be deployed
  */

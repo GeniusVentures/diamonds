@@ -1,32 +1,40 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadDeployInfo = void 0;
-const path_1 = require("path");
-const jsonFileHandler_1 = require("./jsonFileHandler");
-const fs_extra_1 = require("fs-extra");
-function loadDeployInfo(networkName, diamondName, deploymentFilesPath) {
-    const deploymentPath = (0, path_1.join)(deploymentFilesPath, diamondName, `deployments/${networkName}.json`);
-    if ((0, fs_extra_1.pathExistsSync)(deploymentPath)) {
-        return (0, jsonFileHandler_1.readDeployFile)(deploymentPath);
-    }
-    const defaultDeployment = {
-        DiamondAddress: "",
-        DeployerAddress: "",
-        FacetDeployedInfo: {
-            DiamondCutFacet: {
-                address: "",
-                tx_hash: "",
-            },
-            DiamondLoupeFacet: {
-                address: "",
-                tx_hash: "",
-            },
-        },
-    };
-    (0, jsonFileHandler_1.writeDeployInfo)(deploymentPath, defaultDeployment);
-    return defaultDeployment;
-}
-exports.loadDeployInfo = loadDeployInfo;
+// import { join } from "path";
+// import { INetworkDeployInfo, FacetsConfig } from "../schemas";
+// import {
+//   readFacetsConfig,
+//   validateFacetsConfig,
+//   readDeployFile,
+//   writeDeployInfo,
+//   loadFacetsConfig
+// } from "./jsonFileHandler";
+// import { pathExistsSync } from "fs-extra";
+// export function loadDeployInfo(
+//   networkName: string,
+//   diamondName: string,
+//   deploymentFilesPath: string
+// ): INetworkDeployInfo {
+//   const deploymentPath = join(deploymentFilesPath, diamondName, `deployments/${networkName}.json`);
+//   if (pathExistsSync(deploymentPath)) {
+//     return readDeployFile(deploymentPath);
+//   }
+//   const defaultDeployment: INetworkDeployInfo = {
+//     DiamondAddress: "",
+//     DeployerAddress: "",
+//     FacetDeployedInfo: {
+//       DiamondCutFacet: {
+//         address: "",
+//         tx_hash: "",
+//       },
+//       DiamondLoupeFacet: {
+//         address: "",
+//         tx_hash: "",
+//       },
+//     },
+//   };
+//   writeDeployInfo(deploymentPath, defaultDeployment);
+//   return defaultDeployment;
+// }
 // export function loadFacetsConfigFile(
 //   deploymentsPath: string,
 //   diamondName: string,

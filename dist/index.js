@@ -17,6 +17,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./internal"), exports);
 __exportStar(require("./types"), exports);
 __exportStar(require("./strategies"), exports);
-// export * from "./schemas";
+__exportStar(require("./schemas"), exports);
 __exportStar(require("./utils"), exports);
 //# sourceMappingURL=index.js.map

@@ -2,17 +2,17 @@ import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { INetworkDeployInfo } from "../schemas";
 
-export interface IDeployments {
-  [networkName: string]: INetworkDeployInfo;
-}
+// export interface IDeployments {
+//   [networkName: string]: INetworkDeployInfo;
+// }
 
-/**
- * Interface for globally tracking function selectors that have already been deployed.
- */
-export interface IDeployedFuncSelectors {
-  facets: { [selector: string]: string };
-  contractFacets: { [facetName: string]: string[] };
-}
+// /**
+//  * Interface for globally tracking function selectors that have already been deployed.
+//  */
+// export interface IDeployedFuncSelectors {
+//   facets: { [selector: string]: string };
+//   contractFacets: { [facetName: string]: string[] };
+// }
 
 export interface IDeployConfig {
   diamondName: string;
@@ -25,65 +25,69 @@ export interface IDeployConfig {
   deployer?: Signer;
 }
 
-/**
-* Interface describing the structure of facets to deploy and their metadata.
-*/
-export interface IFacetsDeployConfig {
-  [facetName: string]: {
-    priority: number;
-    libraries?: string[];
-    versions?: {
-      [versionNumber: number]: {
-        deployInit?: string;
-        upgradeInit?: string;
-        fromVersions?: number[];
-        callback?: (info: INetworkDeployInfo) => Promise<boolean>;
-        deployInclude?: string[];
-      };
-    };
-  };
-}
-
-/**
- * Original Interface for the deployment information of a facet.
- */
-// export interface FacetInfo {
-//   facetAddress: string;
-//   action: FacetCutAction;
-//   functionSelectors: string[];
-//   name: string;
-//   initFunc?: string | null;
+// /**
+// * Interface describing the structure of facets to deploy and their metadata.
+// */
+// export interface IFacetsDeployConfig {
+//   [facetName: string]: {
+//     priority: number;
+//     libraries?: string[];
+//     versions?: {
+//       [versionNumber: number]: {
+//         deployInit?: string;
+//         upgradeInit?: string;
+//         fromVersions?: number[];
+//         callback?: (info: INetworkDeployInfo) => Promise<boolean>;
+//         deployInclude?: string[];
+//       };
+//     };
+//   };
 // }
 
-// map Facet Selectors to contract address string
-export interface IDeployedFacetSelectors {
-  facets: Record<string, string>;
-}
+// // map Facet Selectors to contract address string
+// export interface IDeployedFacetSelectors {
+//   facets: Record<string, string>;
+// }
 
-// map contract name to array of FacetSignature strings
-export interface IDeployedContractFacetSelectors {
-  contractFacets: Record<string, string[]>;
-}
+// // map contract name to array of FacetSignature strings
+// export interface IDeployedContractFacetSelectors {
+//   contractFacets: Record<string, string[]>;
+// }
 
-import { z } from "zod";
+// // map Facet Selectors to contract address string
+// export interface IDeployedFacetSelectors {
+//   facets: Record<string, string>;
+// }
 
-export const FacetVersionSchema = z.object({
-  deployInit: z.string().optional(),
-  upgradeInit: z.string().optional(),
-  callback: z.string().optional(),
-  fromVersions: z.array(z.number()).optional(),
-});
+// // map contract name to array of FacetSignature strings
+// export interface IDeployedContractFacetSelectors {
+//   contractFacets: Record<string, string[]>;
+// }
 
-export const FacetInfoSchema = z.object({
-  priority: z.number(),
-  versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
-});
+// export type FacetSelectorsDeployed = IDeployedFacetSelectors &
+//   IDeployedContractFacetSelectors;
 
-export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
+// export type AfterDeployInit = (
+//   networkDeployInfo: INetworkDeployInfo,
+// ) => Promise<void | boolean>;
 
-export type FacetVersion = z.infer<typeof FacetVersionSchema>;
-export type FacetInfo = z.infer<typeof FacetInfoSchema>;
-export type FacetsDeployment = z.infer<typeof FacetsDeploymentSchema>;
+// export interface IVersionInfo {
+//   fromVersions?: number[];
+//   deployInit?: string;          // init for when not upgrading and first deployment
+//   upgradeInit?: string;   // upgradeInit if version is upgrading from previous version
+//   deployInclude?: string[];
+//   callback?: AfterDeployInit;
+// }
+
+// export type VersionRecord = Record<number, IVersionInfo>;
+
+// export interface IFacetToDeployInfo {
+//   priority: number;
+//   versions?: VersionRecord;
+//   libraries?: string[];
+// }
+
+// export type FacetToDeployInfo = Record<string, IFacetToDeployInfo>;
 
 /**
  * Type for the diamond cut “action”.
@@ -94,6 +98,24 @@ export enum FacetCutAction {
   Remove
 }
 
+export interface CallbackArgs {
+  initConfig: IDeployConfig;
+  deployInfo: INetworkDeployInfo;
+}
+
+// TODO These are not being used yet.  Are from the former AfterDeployInit type. Either incorporate into FacetCallbackManager or remove
+export interface IFacetCallback {
+  (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
+}
+
+/**
+ * Interface for post deployment initialization callbacks.
+ */
+export type FacetCallback = (
+  networkDeployInfo: INetworkDeployInfo,
+) => Promise<void | boolean>;
+
+
 /**
  * Type for capturing the needed data to perform a diamond upgrade.
  */
@@ -103,28 +125,4 @@ export interface FacetDeploymentInfo {
   functionSelectors: string[];
   name: string;
   initFunc?: string | null;
-}
-
-export interface IAfterDeployInit {
-  (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
-}
-
-/**
- * Interface for post deployment initialization callbacks.
- */
-export type AfterDeployInit = (
-  networkDeployInfo: INetworkDeployInfo,
-) => Promise<void | boolean>;
-
-/**
- * Interface for globally tracking function selectors that have already been deployed.
- */
-export interface IDeployedFuncSelectors {
-  facets: { [selector: string]: string };
-  contractFacets: { [facetName: string]: string[] };
-}
-
-export interface CallbackArgs {
-  initConfig: IDeployConfig;
-  deployInfo: INetworkDeployInfo;
 }

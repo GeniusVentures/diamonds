@@ -24,7 +24,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FacetCallbackManager = void 0;
-// internal/FacetCallbackManager.ts
 const fs = __importStar(require("fs-extra"));
 const path_1 = require("path");
 class FacetCallbackManager {

@@ -18,4 +18,5 @@ exports.FileDeploymentRepository = void 0;
 __exportStar(require("./jsonFileHandler"), exports);
 var FileDeploymentRepository_1 = require("./FileDeploymentRepository");
 Object.defineProperty(exports, "FileDeploymentRepository", { enumerable: true, get: function () { return FileDeploymentRepository_1.FileDeploymentRepository; } });
+__exportStar(require("./common"), exports);
 //# sourceMappingURL=index.js.map

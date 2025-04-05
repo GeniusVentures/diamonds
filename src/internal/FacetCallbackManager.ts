@@ -1,4 +1,3 @@
-// internal/FacetCallbackManager.ts
 import * as fs from "fs-extra";
 import { resolve, join } from "path";
 import { CallbackArgs } from "../types";
