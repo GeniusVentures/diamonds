@@ -11,8 +11,8 @@ exports.validateFacetsConfig = exports.deleteFacet = exports.updateFacetConfig =
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const DeploymentSchema_1 = require("../schemas/DeploymentSchema");
-function readDeployFilePathDiamondNetwork(networkName, diamondName, deploymentsPath, createNew = false) {
-    const filePath = (0, path_1.join)(deploymentsPath, diamondName, `${networkName}.json`);
+function readDeployFilePathDiamondNetwork(networkName, diamondName, deploymentId, deploymentsPath, createNew = false) {
+    const filePath = (0, path_1.join)(deploymentsPath, diamondName, `${deploymentId}.json`);
     return readDeployFile(filePath, createNew);
 }
 exports.readDeployFilePathDiamondNetwork = readDeployFilePathDiamondNetwork;
@@ -23,7 +23,7 @@ exports.readDeployFilePathDiamondNetwork = readDeployFilePathDiamondNetwork;
  * the file does not exist. Otherwise this will throw an error if the file does not exist.
  * @returns The parsed and validated deployment object.
  */
-function readDeployFile(path, createNew = false) {
+function readDeployFile(path, createNew = true) {
     // The caller should have already checked for the file's existence,
     if (!(0, fs_extra_1.pathExistsSync)(path) && !createNew) {
         throw new Error(`Deployment file not found: ${path}`);
@@ -31,10 +31,6 @@ function readDeployFile(path, createNew = false) {
     else if (!(0, fs_extra_1.pathExistsSync)(path) && createNew) {
         createNewDeployFile(path);
     }
-    // TODO this may be redundant given the failure of the safeParse below into a type.
-    // if (!validateDeploymentFileOnly(path)) {
-    //   throw new Error(`Invalid deployment file: ${path}`);
-    // }
     const raw = (0, fs_extra_1.readJsonSync)(path);
     const parsed = DeploymentSchema_1.NetworkDeployInfoSchema.safeParse(raw);
     if (!parsed.success) {
@@ -114,8 +110,8 @@ function validateDeployFile(path) {
     }
 }
 exports.validateDeployFile = validateDeployFile;
-function loadFacetsConfig(deploymentsPath, diamondName, facetsDeploymentPath) {
-    const file = (0, path_1.join)(deploymentsPath, diamondName, 'facets.json');
+function loadFacetsConfig(deploymentsPath, diamondName) {
+    const file = (0, path_1.join)(deploymentsPath, diamondName, `${diamondName}.config.json`);
     const valid = (0, exports.validateFacetsConfig)(file);
     // TODO: This is defaulting empty.  This should be a separate function to createNew().
     if (!valid) {
@@ -134,13 +130,12 @@ function loadFacetsConfig(deploymentsPath, diamondName, facetsDeploymentPath) {
             },
         };
     }
-    // TODO This does not load the callbacks.  This needs to be done separately.
     const facets = (0, exports.readFacetsConfig)(file);
     return facets;
 }
 exports.loadFacetsConfig = loadFacetsConfig;
-// TODO We choose not to make this  for now, however this could all be loaded earlier as 
-// part of a configuration. This would need to happen before trying to get the first
+// TODO This could all be lazy loaded for hardhat-diamonds. 
+// This would need to happen before trying to get the first
 // instance of the deployer (at start?), when we are not locking the deployment objects 
 // during deployment to prevent duplication of the singleton before it is ready to return.
 // This is would be a good use of hardhat-diamonds.

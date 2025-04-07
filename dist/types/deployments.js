@@ -54,6 +54,9 @@ exports.FacetCutAction = void 0;
 //   libraries?: string[];
 // }
 // export type FacetToDeployInfo = Record<string, IFacetToDeployInfo>;
+// export interface IFacetCallback {
+//   (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
+// }
 /**
  * Type for the diamond cut “action”.
  */

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FacetsConfigSchema = exports.FacetsDeploymentSchema = exports.FacetInfoSchema = exports.FacetVersionSchema = exports.FacetConfigSchema = exports.FacetVersionConfigSchema = exports.NetworkDeployInfoSchema = exports.ExternalLibrariesSchema = exports.FacetDeployedInfoRecordSchema = exports.FacetDeployedInfoSchema = void 0;
+exports.FacetsConfigSchema = exports.FacetConfigSchema = exports.FacetVersionConfigSchema = exports.NetworkDeployInfoSchema = exports.ExternalLibrariesSchema = exports.FacetDeployedInfoRecordSchema = exports.FacetDeployedInfoSchema = void 0;
 const zod_1 = require("zod");
 // Schema for a single facet's deployment information
 exports.FacetDeployedInfoSchema = zod_1.z.object({
@@ -29,10 +29,7 @@ exports.FacetVersionConfigSchema = zod_1.z.object({
     deployInit: zod_1.z.string().optional(),
     upgradeInit: zod_1.z.string().optional(),
     fromVersions: zod_1.z.array(zod_1.z.number()).optional(),
-    callback: zod_1.z.function()
-        .args(zod_1.z.any()) // TODO: for INetworkDeployInfo — can be refined
-        .returns(zod_1.z.promise(zod_1.z.boolean()))
-        .optional(),
+    callbacks: zod_1.z.array(zod_1.z.string()).optional(),
     deployInclude: zod_1.z.array(zod_1.z.string()).optional()
 });
 /**
@@ -44,19 +41,20 @@ exports.FacetConfigSchema = zod_1.z.object({
     libraries: zod_1.z.array(zod_1.z.string()).optional(),
     versions: zod_1.z.record(zod_1.z.coerce.number(), exports.FacetVersionConfigSchema).optional()
 });
-exports.FacetVersionSchema = zod_1.z.object({
-    deployInit: zod_1.z.string().optional(),
-    upgradeInit: zod_1.z.string().optional(),
-    callback: zod_1.z.string().optional(),
-    fromVersions: zod_1.z.array(zod_1.z.number()).optional(),
-});
-exports.FacetInfoSchema = zod_1.z.object({
-    priority: zod_1.z.number(),
-    versions: zod_1.z.record(exports.FacetVersionSchema).optional(), // Dynamic keys for versions
-});
-exports.FacetsDeploymentSchema = zod_1.z.record(exports.FacetInfoSchema); // Dynamic keys for facets
 /**
  * Schema for the deployment configuration information of ALL facets to be deployed
  */
 exports.FacetsConfigSchema = zod_1.z.record(exports.FacetConfigSchema);
+// export const FacetVersionSchema = z.object({
+//   deployInit: z.string().optional(),
+//   upgradeInit: z.string().optional(),
+//   callback: z.string().optional(),
+//   fromVersions: z.array(z.number()).optional(),
+// });
+// export const FacetInfoSchema = z.object({
+//   priority: z.number(),
+//   versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
+// });
+// export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
+// export type FacetVersion = z.infer<typeof FacetVersionSchema>;
 //# sourceMappingURL=DeploymentSchema.js.map

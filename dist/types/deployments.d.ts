@@ -4,7 +4,6 @@ import { INetworkDeployInfo } from "../schemas";
 export interface IDeployConfig {
     diamondName: string;
     deploymentsPath: string;
-    facetsPath: string;
     contractsPath: string;
     provider: JsonRpcProvider;
     networkName: string;
@@ -22,9 +21,6 @@ export declare enum FacetCutAction {
 export interface CallbackArgs {
     initConfig: IDeployConfig;
     deployInfo: INetworkDeployInfo;
-}
-export interface IFacetCallback {
-    (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
 }
 /**
  * Interface for post deployment initialization callbacks.

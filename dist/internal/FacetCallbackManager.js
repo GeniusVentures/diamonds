@@ -27,28 +27,29 @@ exports.FacetCallbackManager = void 0;
 const fs = __importStar(require("fs-extra"));
 const path_1 = require("path");
 class FacetCallbackManager {
-    constructor(facetCallbacksPath) {
-        this.facetCallbacksPath = facetCallbacksPath;
+    constructor(callbacksPath) {
+        this.callbacksPath = callbacksPath;
         this.callbacks = {};
         this.loadCallbacks();
     }
-    static getInstance(diamondName, facetCallbacksPath) {
+    static getInstance(diamondName, deploymentsPath) {
         if (!this.instances.has(diamondName)) {
-            this.instances.set(diamondName, new FacetCallbackManager(facetCallbacksPath));
+            const callbacksPath = (0, path_1.join)(deploymentsPath, diamondName, "callbacks");
+            this.instances.set(diamondName, new FacetCallbackManager(callbacksPath));
         }
         return this.instances.get(diamondName);
     }
     loadCallbacks() {
-        if (!fs.existsSync(this.facetCallbacksPath)) {
-            console.error(`Facet callbacks path "${this.facetCallbacksPath}" does not exist.`);
+        if (!fs.existsSync(this.callbacksPath)) {
+            console.error(`Facet callbacks path "${this.callbacksPath}" does not exist.`);
             return;
         }
-        const files = fs.readdirSync(this.facetCallbacksPath);
+        const files = fs.readdirSync(this.callbacksPath);
         files.forEach(file => {
             if (!file.endsWith(".ts") && !file.endsWith(".js"))
                 return;
             const facetName = file.split(".")[0];
-            const filePath = (0, path_1.resolve)(this.facetCallbacksPath, file);
+            const filePath = (0, path_1.resolve)(this.callbacksPath, file);
             const module = require(filePath);
             this.callbacks[facetName] = {};
             Object.entries(module).forEach(([callbackName, callbackFn]) => {
@@ -58,16 +59,18 @@ class FacetCallbackManager {
             });
         });
     }
-    async executeCallback(facetName, callbackName, args) {
-        const facetCallbacks = this.callbacks[facetName];
-        if (!facetCallbacks) {
-            throw new Error(`Callbacks for facet "${facetName}" not found.`);
+    async executeCallback(facetName, callbacks, args) {
+        const registeredCallbacks = this.callbacks[facetName];
+        for (const callbackName of callbacks) {
+            if (!registeredCallbacks) {
+                throw new Error(`Callbacks for facet "${facetName}" not found.`);
+            }
+            const callback = registeredCallbacks[callbackName];
+            if (!callback) {
+                throw new Error(`Callback "${callbackName}" for facet "${facetName}" not found.`);
+            }
+            await callback(args);
         }
-        const callback = facetCallbacks[callbackName];
-        if (!callback) {
-            throw new Error(`Callback "${callbackName}" for facet "${facetName}" not found.`);
-        }
-        await callback(args);
     }
 }
 exports.FacetCallbackManager = FacetCallbackManager;

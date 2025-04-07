@@ -16,24 +16,23 @@ class Diamond {
         this.deploymentsPath = config.deploymentsPath || "diamonds";
         this.contractsPath = config.contractsPath || "contracts";
         this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName.toLowerCase()}-${config.chainId.toString()}`;
+        this.createNewDeploymentFile = config.createNewDeployFile || true;
         this.repository = repository;
-        const deployInfoPath = path_1.default.join(this.deploymentsPath, config.diamondName, `${this.deploymentId}.json`);
+        this.deployInfoFilePath = path_1.default.join(this.deploymentsPath, config.diamondName, `deployments/${this.deploymentId}.json`);
         // Load facets to deploy
-        const facetsConfigPath = path_1.default.join(this.deploymentsPath, config.diamondName, "facets.json" // TODO change to diamond.config.json?
-        );
+        this.facetsConfigFilePath = path_1.default.join(this.deploymentsPath, config.diamondName, `${config.diamondName.toLowerCase()}.config.json`);
         // Load existing deployment info
-        this.deployInfo = this.repository.loadDeployInfo(deployInfoPath);
-        this.facetsConfig = this.repository.loadFacetsConfig(facetsConfigPath);
+        this.deployInfo = this.repository.loadDeployInfo(this.deployInfoFilePath, this.createNewDeploymentFile);
+        this.facetsConfig = this.repository.loadFacetsConfig(this.facetsConfigFilePath);
         // Initialize the callback manager
-        this.callbackManager = FacetCallbackManager_1.FacetCallbackManager.getInstance(this.diamondName, path_1.default.join(this.deploymentsPath, this.diamondName, "callbacks"));
+        this.callbackManager = FacetCallbackManager_1.FacetCallbackManager.getInstance(this.diamondName, this.deploymentsPath);
     }
     getDeployInfo() {
         return this.deployInfo;
     }
     updateDeployInfo(info) {
         this.deployInfo = info;
-        const deployInfoPath = path_1.default.join(this.deploymentsPath, this.diamondName, `deployments/${this.networkName}.json`);
-        this.repository.saveDeployInfo(deployInfoPath, info);
+        this.repository.saveDeployInfo(this.deployInfoFilePath, info);
     }
     getFacetsConfig() {
         return this.facetsConfig;
