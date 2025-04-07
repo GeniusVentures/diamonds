@@ -4,8 +4,8 @@ import { INetworkDeployInfo, FacetsConfig } from '../schemas';
 import { readDeployFile, writeDeployInfo, readFacetsConfig } from './jsonFileHandler';
 
 export class FileDeploymentRepository implements DeploymentRepository {
-  loadDeployInfo(path: string): INetworkDeployInfo {
-    return readDeployFile(path, true);
+  loadDeployInfo(path: string, createNew?: boolean): INetworkDeployInfo {
+    return readDeployFile(path, createNew);
   }
 
   saveDeployInfo(path: string, info: INetworkDeployInfo): void {

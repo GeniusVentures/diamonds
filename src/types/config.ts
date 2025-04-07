@@ -2,6 +2,7 @@ export interface DiamondPathsConfig {
   deploymentsPath?: string;
   contractsPath?: string;
   callbacksPath?: string;
+  createNewDeployFile?: boolean;
 }
 
 export interface DiamondsPathsConfig {
@@ -12,7 +13,6 @@ export interface DiamondConfig extends DiamondPathsConfig {
   diamondName: string;
   networkName: string;
   chainId: number;
-
 }
 export interface DiamondsConfig {
   diamonds: Record<string, DiamondConfig>;

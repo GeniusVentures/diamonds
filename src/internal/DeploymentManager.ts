@@ -7,16 +7,13 @@ import { CallbackArgs } from "../types";
 export class DeploymentManager {
   private diamond: Diamond;
   private deployer: DiamondDeployer;
-  private callbackManager: FacetCallbackManager;
 
   constructor(
     diamond: Diamond,
-    deployer: DiamondDeployer,
-    callbackManager: FacetCallbackManager
+    deployer: DiamondDeployer
   ) {
     this.diamond = diamond;
     this.deployer = deployer;
-    this.callbackManager = callbackManager;
   }
 
   // High-level method to handle complete deployment
@@ -33,7 +30,7 @@ export class DeploymentManager {
   async upgradeAll(): Promise<void> {
     console.log(`♻️ Starting upgrade for Diamond: ${this.diamond.diamondName}`);
 
-    await this.deployer.deploy(); // TODO: This should be a separate upgrade method that defaults to the deploy() if no upgrade function exists for the strategy.
+    await this.deployer.upgrade();
     await this.runPostDeployCallbacks();
 
     console.log(`✅ Upgrade completed successfully.`);
@@ -50,12 +47,11 @@ export class DeploymentManager {
       if (!facetConfig.versions) continue;
 
       for (const [version, config] of Object.entries(facetConfig.versions)) {
-        if (config.callback) {
+        if (config.callbacks) {
           const args: CallbackArgs = {
             initConfig: {
               diamondName: this.diamond.diamondName,
               deploymentsPath: this.diamond.deploymentsPath,
-              facetsPath: "", // populate accordingly
               contractsPath: this.diamond.contractsPath,
               provider: this.diamond.provider!,
               networkName: this.diamond.networkName,
@@ -65,13 +61,13 @@ export class DeploymentManager {
             deployInfo: deployInfo,
           };
 
-          await this.callbackManager.executeCallback(
+          await this.diamond.callbackManager.executeCallback(
             facetName,
-            config.callback.name,
+            config.callbacks,
             args
           );
 
-          console.log(`✅ Callback ${config.callback.name} executed for facet ${facetName}`);
+          console.log(`✅ Callback ${config.callbacks} executed for facet ${facetName}`);
         }
       }
     }

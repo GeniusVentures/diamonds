@@ -1,11 +1,8 @@
-import fs from "fs";
 import path from "path";
-import { INetworkDeployInfo, FacetsConfig, FacetsDeployment } from "../schemas";
+import { INetworkDeployInfo, FacetsConfig } from "../schemas";
 import { FacetCallbackManager } from "./FacetCallbackManager";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { ethers, Signer } from "ethers";
-import { writeDeployInfo } from "../utils/jsonFileHandler";
-import { readFacetsConfig, readDeployFilePathDiamondNetwork } from '../utils/jsonFileHandler';
+import { Signer } from "ethers";
 import { DeploymentRepository } from "../utils/DeploymentRepository";
 import { DiamondConfig } from "../types";
 
@@ -26,6 +23,9 @@ export class Diamond {
   private repository: DeploymentRepository;
   public deployer: Signer | undefined;
   public provider: JsonRpcProvider | undefined;
+  public deployInfoFilePath: string;
+  public facetsConfigFilePath: string;
+  public createNewDeploymentFile: boolean;
 
   constructor(config: DiamondConfig, repository: DeploymentRepository) {
     this.diamondName = config.diamondName;
@@ -34,31 +34,30 @@ export class Diamond {
     this.deploymentsPath = config.deploymentsPath || "diamonds";
     this.contractsPath = config.contractsPath || "contracts";
     this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName.toLowerCase()}-${config.chainId.toString()}`;
+    this.createNewDeploymentFile = config.createNewDeployFile || true;
 
     this.repository = repository;
 
-    const deployInfoPath = path.join(
+    this.deployInfoFilePath = path.join(
       this.deploymentsPath,
       config.diamondName,
-      `${this.deploymentId}.json`
+      `deployments/${this.deploymentId}.json`
     )
 
     // Load facets to deploy
-    const facetsConfigPath = path.join(
+    this.facetsConfigFilePath = path.join(
       this.deploymentsPath,
       config.diamondName,
-      "facets.json" // TODO change to diamond.config.json?
+      `${config.diamondName.toLowerCase()}.config.json`
     );
 
     // Load existing deployment info
-    this.deployInfo = this.repository.loadDeployInfo(deployInfoPath);
-    this.facetsConfig = this.repository.loadFacetsConfig(facetsConfigPath);
+    this.deployInfo = this.repository.loadDeployInfo(this.deployInfoFilePath, this.createNewDeploymentFile);
+    this.facetsConfig = this.repository.loadFacetsConfig(this.facetsConfigFilePath);
 
     // Initialize the callback manager
     this.callbackManager = FacetCallbackManager.getInstance(
-      this.diamondName,
-      path.join(this.deploymentsPath, this.diamondName, "callbacks")
-    );
+      this.diamondName, this.deploymentsPath);
   }
 
   getDeployInfo(): INetworkDeployInfo {
@@ -67,12 +66,7 @@ export class Diamond {
 
   updateDeployInfo(info: INetworkDeployInfo): void {
     this.deployInfo = info;
-    const deployInfoPath = path.join(
-      this.deploymentsPath,
-      this.diamondName,
-      `deployments/${this.networkName}.json`
-    );
-    this.repository.saveDeployInfo(deployInfoPath, info);
+    this.repository.saveDeployInfo(this.deployInfoFilePath, info);
   }
 
   getFacetsConfig(): FacetsConfig {

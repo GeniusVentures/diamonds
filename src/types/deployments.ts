@@ -17,7 +17,6 @@ import { INetworkDeployInfo } from "../schemas";
 export interface IDeployConfig {
   diamondName: string;
   deploymentsPath: string;
-  facetsPath: string;
   contractsPath: string;
   provider: JsonRpcProvider;
   networkName: string;
@@ -89,6 +88,11 @@ export interface IDeployConfig {
 
 // export type FacetToDeployInfo = Record<string, IFacetToDeployInfo>;
 
+
+// export interface IFacetCallback {
+//   (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
+// }
+
 /**
  * Type for the diamond cut “action”.
  */
@@ -101,11 +105,6 @@ export enum FacetCutAction {
 export interface CallbackArgs {
   initConfig: IDeployConfig;
   deployInfo: INetworkDeployInfo;
-}
-
-// TODO These are not being used yet.  Are from the former AfterDeployInit type. Either incorporate into FacetCallbackManager or remove
-export interface IFacetCallback {
-  (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
 }
 
 /**

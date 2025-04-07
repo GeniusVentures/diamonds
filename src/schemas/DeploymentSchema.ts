@@ -31,10 +31,7 @@ export const FacetVersionConfigSchema = z.object({
   deployInit: z.string().optional(),
   upgradeInit: z.string().optional(),
   fromVersions: z.array(z.number()).optional(),
-  callback: z.function()
-    .args(z.any()) // TODO: for INetworkDeployInfo — can be refined
-    .returns(z.promise(z.boolean()))
-    .optional(),
+  callbacks: z.array(z.string()).optional(),
   deployInclude: z.array(z.string()).optional()
 });
 
@@ -48,36 +45,31 @@ export const FacetConfigSchema = z.object({
   versions: z.record(z.coerce.number(), FacetVersionConfigSchema).optional()
 });
 
-
-
-export const FacetVersionSchema = z.object({
-  deployInit: z.string().optional(),
-  upgradeInit: z.string().optional(),
-  callback: z.string().optional(),
-  fromVersions: z.array(z.number()).optional(),
-});
-
-export const FacetInfoSchema = z.object({
-  priority: z.number(),
-  versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
-});
-
-export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
-
-
-export type FacetVersion = z.infer<typeof FacetVersionSchema>;
-export type FacetInfo = z.infer<typeof FacetInfoSchema>;
-
 /**
  * Schema for the deployment configuration information of ALL facets to be deployed
  */
 export const FacetsConfigSchema = z.record(FacetConfigSchema);
 
 // Inferred types from Zod schemas
-export type FacetVersionConfig = z.infer<typeof FacetVersionConfigSchema>;
 export type FacetConfig = z.infer<typeof FacetConfigSchema>;
 export type FacetsConfig = z.infer<typeof FacetsConfigSchema>;
+export type FacetVersionConfig = z.infer<typeof FacetVersionConfigSchema>;
+
+// export type FacetsDeployment = z.infer<typeof FacetsConfigSchema>;
 export type FacetDeployedInfo = z.infer<typeof FacetDeployedInfoSchema>;
-export type INetworkDeployInfo = z.infer<typeof NetworkDeployInfoSchema>;
-export type FacetsDeployment = z.infer<typeof FacetsConfigSchema>;
 export type FacetDeployedInfoRecord = z.infer<typeof FacetDeployedInfoRecordSchema>;
+export type INetworkDeployInfo = z.infer<typeof NetworkDeployInfoSchema>;
+
+// export const FacetVersionSchema = z.object({
+//   deployInit: z.string().optional(),
+//   upgradeInit: z.string().optional(),
+//   callback: z.string().optional(),
+//   fromVersions: z.array(z.number()).optional(),
+// });
+// export const FacetInfoSchema = z.object({
+//   priority: z.number(),
+//   versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
+// });
+// export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
+
+// export type FacetVersion = z.infer<typeof FacetVersionSchema>;

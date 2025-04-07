@@ -19,17 +19,19 @@ import {
   FacetsConfigSchema,
   NetworkDeployInfoSchema,
   INetworkDeployInfo,
-  FacetsDeployment,
+  // FacetsDeployment,
+  FacetsConfig
 } from "../schemas/DeploymentSchema";
 import { OK } from "zod";
 
 export function readDeployFilePathDiamondNetwork(
   networkName: string,
   diamondName: string,
+  deploymentId: string,
   deploymentsPath: string,
   createNew: boolean = false
 ): INetworkDeployInfo {
-  const filePath = join(deploymentsPath, diamondName, `${networkName}.json`);
+  const filePath = join(deploymentsPath, diamondName, `${deploymentId}.json`);
   return readDeployFile(filePath, createNew);
 }
 
@@ -40,7 +42,7 @@ export function readDeployFilePathDiamondNetwork(
  * the file does not exist. Otherwise this will throw an error if the file does not exist.
  * @returns The parsed and validated deployment object.
  */
-export function readDeployFile(path: string, createNew: boolean = false)
+export function readDeployFile(path: string, createNew: boolean = true)
   : INetworkDeployInfo {
   // The caller should have already checked for the file's existence,
   if (!pathExistsSync(path) && !createNew) {
@@ -48,11 +50,6 @@ export function readDeployFile(path: string, createNew: boolean = false)
   } else if (!pathExistsSync(path) && createNew) {
     createNewDeployFile(path);
   }
-
-  // TODO this may be redundant given the failure of the safeParse below into a type.
-  // if (!validateDeploymentFileOnly(path)) {
-  //   throw new Error(`Invalid deployment file: ${path}`);
-  // }
 
   const raw = readJsonSync(path);
   const parsed = NetworkDeployInfoSchema.safeParse(raw);
@@ -139,10 +136,9 @@ export function validateDeployFile(path: string): boolean {
 
 export function loadFacetsConfig(
   deploymentsPath: string,
-  diamondName: string,
-  facetsDeploymentPath?: string
-): FacetsDeployment {
-  const file = join(deploymentsPath, diamondName, 'facets.json');
+  diamondName: string
+): FacetsConfig {
+  const file = join(deploymentsPath, diamondName, `${diamondName}.config.json`);
   const valid = validateFacetsConfig(file);
 
   // TODO: This is defaulting empty.  This should be a separate function to createNew().
@@ -163,13 +159,12 @@ export function loadFacetsConfig(
     };
   }
 
-  // TODO This does not load the callbacks.  This needs to be done separately.
   const facets = readFacetsConfig(file);
   return facets;
 }
 
-// TODO We choose not to make this  for now, however this could all be loaded earlier as 
-// part of a configuration. This would need to happen before trying to get the first
+// TODO This could all be lazy loaded for hardhat-diamonds. 
+// This would need to happen before trying to get the first
 // instance of the deployer (at start?), when we are not locking the deployment objects 
 // during deployment to prevent duplication of the singleton before it is ready to return.
 // This is would be a good use of hardhat-diamonds.
@@ -178,7 +173,7 @@ export function loadFacetsConfig(
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */
-export const readFacetsConfig = (filePath: string): FacetsDeployment => {
+export const readFacetsConfig = (filePath: string): FacetsConfig => {
   try {
     const fullPath = resolvePath(filePath);
 
@@ -198,7 +193,7 @@ export const readFacetsConfig = (filePath: string): FacetsDeployment => {
  * @param filePath - The path to the facets file.
  * @param data - The facets object to save.
  */
-export const saveFacetsConfig = (filePath: string, data: FacetsDeployment): void => {
+export const saveFacetsConfig = (filePath: string, data: FacetsConfig): void => {
   const fullPath = resolvePath(filePath);
   ensureFileSync(fullPath);
   writeJsonSync(fullPath, data, { spaces: 2 });
@@ -214,8 +209,8 @@ export const saveFacetsConfig = (filePath: string, data: FacetsDeployment): void
 export const updateFacetConfig = (
   filePath: string,
   facetKey: string,
-  update: Partial<FacetsDeployment>
-): FacetsDeployment => {
+  update: Partial<FacetsConfig>
+): FacetsConfig => {
   const facets = readFacetsConfig(filePath);
   facets[facetKey] = {
     ...(facets[facetKey] || {}),
@@ -231,7 +226,7 @@ export const updateFacetConfig = (
  * @param facetKey - The key of the facet to delete.
  * @returns The updated facets object.
  */
-export const deleteFacet = (filePath: string, facetKey: string): FacetsDeployment => {
+export const deleteFacet = (filePath: string, facetKey: string): FacetsConfig => {
   const facets = readFacetsConfig(filePath);
   delete facets[facetKey];
   saveFacetsConfig(filePath, facets);
