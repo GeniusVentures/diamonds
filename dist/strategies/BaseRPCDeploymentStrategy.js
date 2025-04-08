@@ -15,6 +15,8 @@ class BaseRPCDeploymentStrategy {
         const diamondFactory = await hardhat_1.ethers.getContractFactory(diamondArtifactPath, diamond.deployer);
         const diamondContract = await diamondFactory.deploy(diamond.deployer.getAddress(), diamondCutFacet.address);
         await diamondContract.deployed();
+        const diamondFunctionSelectors = Object.keys(diamondContract.interface.functions).map(fn => diamondContract.interface.getSighash(fn));
+        diamond.registerSelectors(diamondFunctionSelectors);
         const info = diamond.getDeployInfo();
         info.DeployerAddress = await diamond.deployer.getAddress();
         info.DiamondAddress = diamondContract.address;
@@ -27,6 +29,7 @@ class BaseRPCDeploymentStrategy {
             funcSelectors: diamondCutFacetFunctionSelectors,
         };
         diamond.updateDeployInfo(info);
+        diamond.registerSelectors(diamondCutFacetFunctionSelectors);
         console.log(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`);
     }
     async deployFacets(diamond) {
@@ -37,7 +40,6 @@ class BaseRPCDeploymentStrategy {
         const sortedFacetNames = Object.keys(facetsConfig).sort((a, b) => {
             return (facetsConfig[a].priority || 1000) - (facetsConfig[b].priority || 1000);
         });
-        const globalSelectorRegistry = new Set();
         for (const facetName in facetsConfig) {
             const facetConfig = facetsConfig[facetName];
             const deployedVersion = ((_b = (_a = deployInfo.FacetDeployedInfo) === null || _a === void 0 ? void 0 : _a[facetName]) === null || _b === void 0 ? void 0 : _b.version) || 0;
@@ -49,8 +51,12 @@ class BaseRPCDeploymentStrategy {
                 const facetContract = await facetFactory.deploy();
                 await facetContract.deployed();
                 const allSelectors = Object.keys(facetContract.interface.functions).map(fn => facetContract.interface.getSighash(fn));
+                // for (const fn of Object.keys(facetContract.interface.functions)) {
+                //   const hash = facetContract.interface.getSighash(fn);
+                //   console.log(`Function: ${fn}, Hash: ${hash}`);
+                // }
                 const existingSelectors = ((_e = (_d = deployInfo.FacetDeployedInfo) === null || _d === void 0 ? void 0 : _d[facetName]) === null || _e === void 0 ? void 0 : _e.funcSelectors) || [];
-                const newSelectors = allSelectors.filter(sel => !globalSelectorRegistry.has(sel));
+                const newSelectors = allSelectors.filter(sel => !diamond.selectorRegistry.has(sel));
                 const removedSelectors = existingSelectors.filter(sel => !newSelectors.includes(sel));
                 const replacedSelectors = newSelectors.filter(sel => existingSelectors.includes(sel));
                 const addedSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
@@ -84,12 +90,11 @@ class BaseRPCDeploymentStrategy {
                         initFunc: initFuncSelector,
                     });
                 }
-                newSelectors.forEach(sel => globalSelectorRegistry.add(sel));
                 deployInfo.FacetDeployedInfo = deployInfo.FacetDeployedInfo || {};
                 deployInfo.FacetDeployedInfo[facetName] = {
                     address: facetContract.address,
                     tx_hash: facetContract.deployTransaction.hash,
-                    version: 1,
+                    version: upgradeVersion,
                     funcSelectors: newSelectors,
                 };
                 diamond.registerSelectors(newSelectors);

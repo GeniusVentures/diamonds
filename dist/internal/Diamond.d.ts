@@ -27,7 +27,7 @@ export declare class Diamond {
     updateDeployInfo(info: INetworkDeployInfo): void;
     getFacetsConfig(): FacetsConfig;
     isUpgradeDeployment(): boolean;
-    private selectorRegistry;
+    selectorRegistry: Set<string>;
     registerSelectors(selectors: string[]): void;
     isSelectorRegistered(selector: string): boolean;
 }
