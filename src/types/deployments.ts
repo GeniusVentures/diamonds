@@ -1,6 +1,7 @@
 import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { INetworkDeployInfo } from "../schemas";
+import Diamond from "../internal/Diamond";
 
 // export interface IDeployments {
 //   [networkName: string]: INetworkDeployInfo;
@@ -103,8 +104,9 @@ export enum FacetCutAction {
 }
 
 export interface CallbackArgs {
-  initConfig: IDeployConfig;
-  deployInfo: INetworkDeployInfo;
+  diamond: Diamond;
+  // initConfig: IDeployConfig;
+  // deployInfo: INetworkDeployInfo;
 }
 
 /**

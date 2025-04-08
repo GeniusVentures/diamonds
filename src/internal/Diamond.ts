@@ -77,7 +77,7 @@ export class Diamond {
     return !!this.deployInfo.DiamondAddress;
   }
 
-  private selectorRegistry: Set<string> = new Set();
+  public selectorRegistry: Set<string> = new Set();
 
   public registerSelectors(selectors: string[]): void {
     selectors.forEach(selector => this.selectorRegistry.add(selector));
