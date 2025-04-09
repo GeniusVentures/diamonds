@@ -5,7 +5,7 @@ import { FacetDeployedInfoRecord, FacetsConfig } from "../schemas";
 import { ethers } from "hardhat";
 import { join } from "path";
 
-export class BaseRPCDeploymentStrategy implements DeploymentStrategy {
+export class BaseDeploymentStrategy implements DeploymentStrategy {
   async deployDiamond(diamond: Diamond): Promise<void> {
     console.log(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`);
     const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.deployer!);
@@ -65,6 +65,11 @@ export class BaseRPCDeploymentStrategy implements DeploymentStrategy {
         const allSelectors = Object.keys(facetContract.interface.functions).map(fn =>
           facetContract.interface.getSighash(fn)
         );
+
+        // for (const fn of Object.keys(facetContract.interface.functions)) {
+        //   const hash = facetContract.interface.getSighash(fn);
+        //   console.log(`Function: ${fn}, Hash: ${hash}`);
+        // }
 
         const existingSelectors = deployInfo.FacetDeployedInfo?.[facetName]?.funcSelectors || [];
         const newSelectors = allSelectors.filter(sel => !diamond.selectorRegistry.has(sel));

@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseRPCDeploymentStrategy = void 0;
+exports.BaseDeploymentStrategy = void 0;
 const types_1 = require("../types");
 const hardhat_1 = require("hardhat");
 const path_1 = require("path");
-class BaseRPCDeploymentStrategy {
+class BaseDeploymentStrategy {
     async deployDiamond(diamond) {
         console.log(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`);
         const diamondCutFactory = await hardhat_1.ethers.getContractFactory("DiamondCutFacet", diamond.deployer);
@@ -51,6 +51,10 @@ class BaseRPCDeploymentStrategy {
                 const facetContract = await facetFactory.deploy();
                 await facetContract.deployed();
                 const allSelectors = Object.keys(facetContract.interface.functions).map(fn => facetContract.interface.getSighash(fn));
+                // for (const fn of Object.keys(facetContract.interface.functions)) {
+                //   const hash = facetContract.interface.getSighash(fn);
+                //   console.log(`Function: ${fn}, Hash: ${hash}`);
+                // }
                 const existingSelectors = ((_e = (_d = deployInfo.FacetDeployedInfo) === null || _d === void 0 ? void 0 : _d[facetName]) === null || _e === void 0 ? void 0 : _e.funcSelectors) || [];
                 const newSelectors = allSelectors.filter(sel => !diamond.selectorRegistry.has(sel));
                 const removedSelectors = existingSelectors.filter(sel => !newSelectors.includes(sel));
@@ -121,5 +125,5 @@ class BaseRPCDeploymentStrategy {
         console.log(`✅ DiamondCut executed: ${tx.hash}`);
     }
 }
-exports.BaseRPCDeploymentStrategy = BaseRPCDeploymentStrategy;
-//# sourceMappingURL=BaseRPCDeploymentStrategy.js.map
+exports.BaseDeploymentStrategy = BaseDeploymentStrategy;
+//# sourceMappingURL=BaseDeploymentStrategy.js.map

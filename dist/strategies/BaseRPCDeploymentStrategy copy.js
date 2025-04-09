@@ -51,6 +51,10 @@ class BaseRPCDeploymentStrategy {
                 const facetContract = await facetFactory.deploy();
                 await facetContract.deployed();
                 const allSelectors = Object.keys(facetContract.interface.functions).map(fn => facetContract.interface.getSighash(fn));
+                // for (const fn of Object.keys(facetContract.interface.functions)) {
+                //   const hash = facetContract.interface.getSighash(fn);
+                //   console.log(`Function: ${fn}, Hash: ${hash}`);
+                // }
                 const existingSelectors = ((_e = (_d = deployInfo.FacetDeployedInfo) === null || _d === void 0 ? void 0 : _d[facetName]) === null || _e === void 0 ? void 0 : _e.funcSelectors) || [];
                 const newSelectors = allSelectors.filter(sel => !diamond.selectorRegistry.has(sel));
                 const removedSelectors = existingSelectors.filter(sel => !newSelectors.includes(sel));
@@ -122,4 +126,4 @@ class BaseRPCDeploymentStrategy {
     }
 }
 exports.BaseRPCDeploymentStrategy = BaseRPCDeploymentStrategy;
-//# sourceMappingURL=BaseRPCDeploymentStrategy.js.map
+//# sourceMappingURL=BaseRPCDeploymentStrategy%20copy.js.map
