@@ -25,7 +25,7 @@ export class Diamond {
   public provider: JsonRpcProvider | undefined;
   public deployInfoFilePath: string;
   public facetsConfigFilePath: string;
-  public createNewDeploymentFile: boolean;
+  public createOrUpdateDeploymentFile: boolean;
 
   constructor(config: DiamondConfig, repository: DeploymentRepository) {
     this.diamondName = config.diamondName;
@@ -34,7 +34,7 @@ export class Diamond {
     this.deploymentsPath = config.deploymentsPath || "diamonds";
     this.contractsPath = config.contractsPath || "contracts";
     this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName.toLowerCase()}-${config.chainId.toString()}`;
-    this.createNewDeploymentFile = config.createNewDeployFile || true;
+    this.createOrUpdateDeploymentFile = config.createOrUpdateDeployFile ?? true;
 
     this.repository = repository;
 
@@ -52,7 +52,7 @@ export class Diamond {
     );
 
     // Load existing deployment info
-    this.deployInfo = this.repository.loadDeployInfo(this.deployInfoFilePath, this.createNewDeploymentFile);
+    this.deployInfo = this.repository.loadDeployInfo(this.deployInfoFilePath, this.createOrUpdateDeploymentFile);
     this.facetsConfig = this.repository.loadFacetsConfig(this.facetsConfigFilePath);
 
     // Initialize the callback manager
@@ -65,8 +65,10 @@ export class Diamond {
   }
 
   updateDeployInfo(info: INetworkDeployInfo): void {
-    this.deployInfo = info;
-    this.repository.saveDeployInfo(this.deployInfoFilePath, info);
+    if (this.createOrUpdateDeploymentFile == true) {
+      this.deployInfo = info;
+      this.repository.saveDeployInfo(this.deployInfoFilePath, info);
+    }
   }
 
   getFacetsConfig(): FacetsConfig {

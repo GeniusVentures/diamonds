@@ -4,10 +4,13 @@ import { FacetDeploymentInfo, FacetCutAction } from "../types";
 import { FacetDeployedInfoRecord, FacetsConfig } from "../schemas";
 import { ethers } from "hardhat";
 import { join } from "path";
+import chalk from "chalk";
 
 export class BaseDeploymentStrategy implements DeploymentStrategy {
+  constructor(protected verbose: boolean = false) { }
+
   async deployDiamond(diamond: Diamond): Promise<void> {
-    console.log(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`);
+    console.log(chalk.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`));
     const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.deployer!);
     const diamondCutFacet = await diamondCutFactory.deploy();
     await diamondCutFacet.deployed();
@@ -38,7 +41,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     diamond.updateDeployInfo(info);
     diamond.registerSelectors(diamondCutFacetFunctionSelectors);
 
-    console.log(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`);
+    console.log(chalk.green(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`));
   }
 
   async deployFacets(diamond: Diamond): Promise<FacetDeploymentInfo[]> {
@@ -50,14 +53,15 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       return (facetsConfig[a].priority || 1000) - (facetsConfig[b].priority || 1000);
     });
 
-    for (const facetName in facetsConfig) {
+    for (const facetName of sortedFacetNames) {
       const facetConfig = facetsConfig[facetName];
       const deployedVersion = deployInfo.FacetDeployedInfo?.[facetName]?.version || 0;
       const availableVersions = Object.keys(facetConfig.versions || {}).map(Number);
       const upgradeVersion = Math.max(...availableVersions);
+      const existingSelectors = deployInfo.FacetDeployedInfo?.[facetName]?.funcSelectors || [];
 
       if (upgradeVersion > deployedVersion || !deployInfo.FacetDeployedInfo?.[facetName]) {
-        console.log(`🚀 Deploying/upgrading facet: ${facetName} to version ${upgradeVersion}`);
+        console.log(chalk.blueBright(`🚀 Deploying/upgrading facet: ${facetName} to version ${upgradeVersion}`));
         const facetFactory = await ethers.getContractFactory(facetName, diamond.deployer);
         const facetContract = await facetFactory.deploy();
         await facetContract.deployed();
@@ -66,22 +70,24 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
           facetContract.interface.getSighash(fn)
         );
 
-        // for (const fn of Object.keys(facetContract.interface.functions)) {
-        //   const hash = facetContract.interface.getSighash(fn);
-        //   console.log(`Function: ${fn}, Hash: ${hash}`);
-        // }
-
-        const existingSelectors = deployInfo.FacetDeployedInfo?.[facetName]?.funcSelectors || [];
         const newSelectors = allSelectors.filter(sel => !diamond.selectorRegistry.has(sel));
         const removedSelectors = existingSelectors.filter(sel => !newSelectors.includes(sel));
         const replacedSelectors = newSelectors.filter(sel => existingSelectors.includes(sel));
         const addedSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
 
-        const facetVersionConfig = facetsConfig[facetName].versions?.[1];
+        const facetVersionConfig = facetConfig.versions?.[upgradeVersion];
         const initFuncSelector = facetVersionConfig?.deployInit
           ? facetContract.interface.getSighash(facetVersionConfig.deployInit)
           : undefined;
 
+        if (this.verbose) {
+          console.log(chalk.magentaBright(`🧩 Facet: ${facetName}`));
+          console.log(chalk.gray(`  - Upgrade Version: ${upgradeVersion}`));
+          console.log(chalk.green(`  - Added Selectors:`), addedSelectors);
+          console.log(chalk.yellow(`  - Replaced Selectors:`), replacedSelectors);
+          console.log(chalk.red(`  - Removed Selectors:`), removedSelectors);
+          if (initFuncSelector) console.log(chalk.cyan(`  - Init Function Selector: ${initFuncSelector}`));
+        }
 
         if (removedSelectors.length > 0) {
           facetCuts.push({
@@ -122,10 +128,12 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
         diamond.registerSelectors(newSelectors);
 
-        console.log(`✅ Facet ${facetName} deployed at ${facetContract.address}`);
+        console.log(chalk.green(`✅ Facet ${facetName} deployed at ${facetContract.address}`));
+      } else {
+        console.log(chalk.yellowBright(`⚠️ Facet ${facetName} deployed at ${deployInfo.FacetDeployedInfo[facetName].address}, no upgrade, skipping new deployment.`));
+        diamond.registerSelectors(existingSelectors);
       }
     }
-
 
     diamond.updateDeployInfo(deployInfo);
     return facetCuts;
@@ -150,9 +158,17 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     return selectorsToRemove;
   }
 
-
   async performDiamondCut(diamond: Diamond, facetCuts: FacetDeploymentInfo[]): Promise<void> {
     const diamondContract = await ethers.getContractAt("IDiamondCut", diamond.getDeployInfo().DiamondAddress!, diamond.deployer);
+
+    if (this.verbose) {
+      console.log(chalk.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
+      for (const cut of facetCuts) {
+        console.log(chalk.bold(`- ${FacetCutAction[cut.action]} for facet ${cut.name} at ${cut.facetAddress}`));
+        console.log(chalk.gray(`  Selectors:`), cut.functionSelectors);
+        if (cut.initFunc) console.log(chalk.cyan(`  Init:`), cut.initFunc);
+      }
+    }
 
     const tx = await diamondContract.diamondCut(
       facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors })),
@@ -161,6 +177,6 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     );
     await tx.wait();
 
-    console.log(`✅ DiamondCut executed: ${tx.hash}`);
+    console.log(chalk.green(`✅ DiamondCut executed: ${tx.hash}`));
   }
 }

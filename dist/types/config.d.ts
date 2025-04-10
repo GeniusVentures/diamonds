@@ -2,7 +2,7 @@ export interface DiamondPathsConfig {
     deploymentsPath?: string;
     contractsPath?: string;
     callbacksPath?: string;
-    createNewDeployFile?: boolean;
+    createOrUpdateDeployFile?: boolean;
 }
 export interface DiamondsPathsConfig {
     paths: Record<string, DiamondPathsConfig>;

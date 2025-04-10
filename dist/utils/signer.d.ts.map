@@ -1,0 +1,1 @@
+{"version":3,"file":"signer.d.ts","sourceRoot":"","sources":["../../src/utils/signer.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,SAAS,EAAE,MAAM,QAAQ,CAAC;AAInC;;;;;;GAMG;AACH,wBAAsB,iBAAiB,CAAC,aAAa,EAAE,MAAM,gBAM5D;AAED;;;;;;GAMG;AACH,wBAAsB,eAAe,CAAC,OAAO,EAAE,MAAM,EAAE,MAAM,EAAE,SAAS,iBAKvE;AAED;;;;;;GAMG;AACH,eAAO,MAAM,kBAAkB,gBAAuB,MAAM,iBA0B3D,CAAC"}

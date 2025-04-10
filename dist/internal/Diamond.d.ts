@@ -21,7 +21,7 @@ export declare class Diamond {
     provider: JsonRpcProvider | undefined;
     deployInfoFilePath: string;
     facetsConfigFilePath: string;
-    createNewDeploymentFile: boolean;
+    createOrUpdateDeploymentFile: boolean;
     constructor(config: DiamondConfig, repository: DeploymentRepository);
     getDeployInfo(): INetworkDeployInfo;
     updateDeployInfo(info: INetworkDeployInfo): void;
