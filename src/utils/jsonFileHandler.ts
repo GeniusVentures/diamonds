@@ -44,21 +44,21 @@ export function readDeployFilePathDiamondNetwork(
  */
 export function readDeployFile(path: string, createNew: boolean = true)
   : INetworkDeployInfo {
-  // The caller should have already checked for the file's existence,
-  if (!pathExistsSync(path) && !createNew) {
-    throw new Error(`Deployment file not found: ${path}`);
-  } else if (!pathExistsSync(path) && createNew) {
+  let raw: any;
+  if (!pathExistsSync(path) && createNew) {
     createNewDeployFile(path);
+    raw = readJsonSync(path);
+
+    const parsed = NetworkDeployInfoSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error(`Invalid deployment format: ${JSON.stringify(parsed.error.format(), null, 2)}`);
+    }
+
+    return parsed.data;
   }
 
-  const raw = readJsonSync(path);
-  const parsed = NetworkDeployInfoSchema.safeParse(raw);
-
-  if (!parsed.success) {
-    throw new Error(`Invalid deployment format: ${JSON.stringify(parsed.error.format(), null, 2)}`);
-  }
-
-  return parsed.data;
+  // This is a mock deployment object with empty values
+  return defaultDeployment;
 }
 
 /**
@@ -71,18 +71,23 @@ const resolvePath = (relativePath: string): string => {
 };
 
 /**
+ * Default deployment object with empty values
+ * This is used to create a new deployment file if it does not exist or for a mock deployment.
+ * @type {INetworkDeployInfo}
+ */
+const defaultDeployment: INetworkDeployInfo = {
+  DiamondAddress: "",
+  DeployerAddress: "",
+  FacetDeployedInfo: {}, // Empty object for facets
+  ExternalLibraries: {}, // Empty object for external libraries
+  protocolVersion: 0, // Default protocol version
+};
+
+/**
  * Creates a new deployment file with default empty values
  * @param path - The path to the deployment file.
  */
 export function createNewDeployFile(path: string) {
-  const defaultDeployment: INetworkDeployInfo = {
-    DiamondAddress: "",
-    DeployerAddress: "",
-    FacetDeployedInfo: {}, // Empty object for facets
-    ExternalLibraries: {}, // Empty object for external libraries
-    protocolVersion: 0, // Default protocol version
-  };
-
   // Validate the default deployment object before writing
   const validated = NetworkDeployInfoSchema.parse(defaultDeployment);
   writeJsonSync(path, validated, { spaces: 2 });
