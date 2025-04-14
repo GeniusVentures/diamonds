@@ -8,6 +8,7 @@ const types_1 = require("../types");
 const hardhat_1 = require("hardhat");
 const path_1 = require("path");
 const chalk_1 = __importDefault(require("chalk"));
+const common_1 = require("../utils/common");
 class BaseDeploymentStrategy {
     constructor(verbose = false) {
         this.verbose = verbose;
@@ -17,6 +18,7 @@ class BaseDeploymentStrategy {
         const diamondCutFactory = await hardhat_1.ethers.getContractFactory("DiamondCutFacet", diamond.deployer);
         const diamondCutFacet = await diamondCutFactory.deploy();
         await diamondCutFacet.deployed();
+        console.log(chalk_1.default.green(`✅ DiamondCutFacet deployed at ${diamondCutFacet.address}`));
         const diamondArtifactName = `${diamond.diamondName}.sol:${diamond.diamondName}`;
         const diamondArtifactPath = (0, path_1.join)(diamond.contractsPath, diamondArtifactName);
         const diamondFactory = await hardhat_1.ethers.getContractFactory(diamondArtifactPath, diamond.deployer);
@@ -40,7 +42,7 @@ class BaseDeploymentStrategy {
         console.log(chalk_1.default.green(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`));
     }
     async deployFacets(diamond) {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         const facetsConfig = diamond.getFacetsConfig();
         const deployInfo = diamond.getDeployInfo();
         const facetCuts = [];
@@ -49,11 +51,12 @@ class BaseDeploymentStrategy {
         });
         for (const facetName of sortedFacetNames) {
             const facetConfig = facetsConfig[facetName];
-            const deployedVersion = ((_b = (_a = deployInfo.FacetDeployedInfo) === null || _a === void 0 ? void 0 : _a[facetName]) === null || _b === void 0 ? void 0 : _b.version) || 0;
+            const deployedVersion = ((_b = (_a = deployInfo.FacetDeployedInfo) === null || _a === void 0 ? void 0 : _a[facetName]) === null || _b === void 0 ? void 0 : _b.version) || -1;
             const availableVersions = Object.keys(facetConfig.versions || {}).map(Number);
             const upgradeVersion = Math.max(...availableVersions);
             const existingSelectors = ((_d = (_c = deployInfo.FacetDeployedInfo) === null || _c === void 0 ? void 0 : _c[facetName]) === null || _d === void 0 ? void 0 : _d.funcSelectors) || [];
-            if (upgradeVersion > deployedVersion || !((_e = deployInfo.FacetDeployedInfo) === null || _e === void 0 ? void 0 : _e[facetName])) {
+            // check if the facet has never been deployed on this chain and if it possibly has multiple intializers for various upgrades.
+            if (upgradeVersion > deployedVersion && !((_e = deployInfo.FacetDeployedInfo) === null || _e === void 0 ? void 0 : _e[facetName])) {
                 console.log(chalk_1.default.blueBright(`🚀 Deploying/upgrading facet: ${facetName} to version ${upgradeVersion}`));
                 const facetFactory = await hardhat_1.ethers.getContractFactory(facetName, diamond.deployer);
                 const facetContract = await facetFactory.deploy();
@@ -65,16 +68,16 @@ class BaseDeploymentStrategy {
                 const addedSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
                 const facetVersionConfig = (_f = facetConfig.versions) === null || _f === void 0 ? void 0 : _f[upgradeVersion];
                 const initFuncSelector = (facetVersionConfig === null || facetVersionConfig === void 0 ? void 0 : facetVersionConfig.deployInit)
-                    ? facetContract.interface.getSighash(facetVersionConfig.deployInit)
+                    ? (0, common_1.getSighash)(`function ${facetVersionConfig.deployInit}`)
                     : undefined;
                 if (this.verbose) {
                     console.log(chalk_1.default.magentaBright(`🧩 Facet: ${facetName}`));
-                    console.log(chalk_1.default.gray(`  - Upgrade Version: ${upgradeVersion}`));
+                    console.log(chalk_1.default.gray(`  - Deployed Version: ${upgradeVersion}`));
                     console.log(chalk_1.default.green(`  - Added Selectors:`), addedSelectors);
                     console.log(chalk_1.default.yellow(`  - Replaced Selectors:`), replacedSelectors);
                     console.log(chalk_1.default.red(`  - Removed Selectors:`), removedSelectors);
                     if (initFuncSelector)
-                        console.log(chalk_1.default.cyan(`  - Init Function Selector: ${initFuncSelector}`));
+                        console.log(chalk_1.default.cyan(`  - Init Function Selector for ${facetVersionConfig === null || facetVersionConfig === void 0 ? void 0 : facetVersionConfig.deployInit}: ${initFuncSelector}`));
                 }
                 if (removedSelectors.length > 0) {
                     facetCuts.push({
@@ -113,7 +116,7 @@ class BaseDeploymentStrategy {
                 console.log(chalk_1.default.green(`✅ Facet ${facetName} deployed at ${facetContract.address}`));
             }
             else {
-                console.log(chalk_1.default.yellowBright(`⚠️ Facet ${facetName} deployed at ${deployInfo.FacetDeployedInfo[facetName].address}, no upgrade, skipping new deployment.`));
+                console.log(chalk_1.default.yellowBright(`⚠️ Facet ${facetName} deployed at ${((_h = (_g = deployInfo.FacetDeployedInfo) === null || _g === void 0 ? void 0 : _g[facetName]) === null || _h === void 0 ? void 0 : _h.address) || 'unknown address'}, no upgrade, skipping new deployment.`));
                 diamond.registerSelectors(existingSelectors);
             }
         }
