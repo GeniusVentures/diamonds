@@ -34,6 +34,7 @@ export interface FacetDeploymentInfo {
     action: FacetCutAction;
     functionSelectors: string[];
     name: string;
-    initFunc?: string | null;
+    initFunc?: string;
+    version?: number;
 }
 //# sourceMappingURL=deployments.d.ts.map

@@ -2,8 +2,8 @@ import * as fs from "fs-extra";
 import { resolve, join } from "path";
 import { CallbackArgs } from "../types";
 
-export class FacetCallbackManager {
-  private static instances: Map<string, FacetCallbackManager> = new Map();
+export class CallbackManager {
+  private static instances: Map<string, CallbackManager> = new Map();
 
   private callbacks: Record<string, Record<string, (args: CallbackArgs) => Promise<void>>> = {};
 
@@ -11,10 +11,10 @@ export class FacetCallbackManager {
     this.loadCallbacks();
   }
 
-  public static getInstance(diamondName: string, deploymentsPath: string): FacetCallbackManager {
+  public static getInstance(diamondName: string, deploymentsPath: string): CallbackManager {
     if (!this.instances.has(diamondName)) {
       const callbacksPath = join(deploymentsPath, diamondName, "callbacks");
-      this.instances.set(diamondName, new FacetCallbackManager(callbacksPath));
+      this.instances.set(diamondName, new CallbackManager(callbacksPath));
     }
     return this.instances.get(diamondName)!;
   }

@@ -16,11 +16,10 @@ import {
 } from "fs-extra";
 import { join, resolve } from "path";
 import {
-  FacetsConfigSchema,
+  DeployConfigSchema,
   NetworkDeployInfoSchema,
   INetworkDeployInfo,
-  // FacetsDeployment,
-  FacetsConfig
+  DeployConfig
 } from "../schemas/DeploymentSchema";
 import { OK } from "zod";
 
@@ -138,47 +137,23 @@ export function validateDeployFile(path: string): boolean {
   }
 }
 
-
 export function loadFacetsConfig(
   deploymentsPath: string,
   diamondName: string
-): FacetsConfig {
+): DeployConfig {
   const file = join(deploymentsPath, diamondName, `${diamondName}.config.json`);
-  const valid = validateFacetsConfig(file);
+  const valid = validateDeployConfig(file);
 
-  // TODO: This is defaulting empty.  This should be a separate function to createNew().
-  if (!valid) {
-    return {
-      DiamondCutFacet: {
-        priority: 10,
-        versions: {
-          0.0: {},
-        },
-      },
-      DiamondLoupeFacet: {
-        priority: 20,
-        versions: {
-          0.0: {},
-        },
-      },
-    };
-  }
-
-  const facets = readFacetsConfig(file);
+  const facets = readDeployConfig(file);
   return facets;
 }
 
-// TODO This could all be lazy loaded for hardhat-diamonds. 
-// This would need to happen before trying to get the first
-// instance of the deployer (at start?), when we are not locking the deployment objects 
-// during deployment to prevent duplication of the singleton before it is ready to return.
-// This is would be a good use of hardhat-diamonds.
 /**
  * Loads and validates the facets file.
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */
-export const readFacetsConfig = (filePath: string): FacetsConfig => {
+export const readDeployConfig = (filePath: string): DeployConfig => {
   try {
     const fullPath = resolvePath(filePath);
 
@@ -186,7 +161,7 @@ export const readFacetsConfig = (filePath: string): FacetsConfig => {
     const raw = readJsonSync(fullPath);
 
     // Validate and parse the JSON data
-    return FacetsConfigSchema.parse(raw);
+    return DeployConfigSchema.parse(raw);
   } catch (e) {
     console.error('Failed to load facets:', e);
     throw e;
@@ -194,11 +169,11 @@ export const readFacetsConfig = (filePath: string): FacetsConfig => {
 };
 
 /**
- * Saves the facets object to a file.
+ * Saves the Diamond Config object to a file.
  * @param filePath - The path to the facets file.
  * @param data - The facets object to save.
  */
-export const saveFacetsConfig = (filePath: string, data: FacetsConfig): void => {
+export const saveDeployConfig = (filePath: string, data: DeployConfig): void => {
   const fullPath = resolvePath(filePath);
   ensureFileSync(fullPath);
   writeJsonSync(fullPath, data, { spaces: 2 });
@@ -214,15 +189,15 @@ export const saveFacetsConfig = (filePath: string, data: FacetsConfig): void => 
 export const updateFacetConfig = (
   filePath: string,
   facetKey: string,
-  update: Partial<FacetsConfig>
-): FacetsConfig => {
-  const facets = readFacetsConfig(filePath);
-  facets[facetKey] = {
-    ...(facets[facetKey] || {}),
+  update: Partial<DeployConfig["facets"][string]>
+): DeployConfig => {
+  const deployConfig = readDeployConfig(filePath);
+  deployConfig.facets[facetKey] = {
+    ...(deployConfig.facets[facetKey] || {}),
     ...update,
   };
-  saveFacetsConfig(filePath, facets);
-  return facets;
+  saveDeployConfig(filePath, deployConfig);
+  return deployConfig;
 };
 
 /**
@@ -231,11 +206,11 @@ export const updateFacetConfig = (
  * @param facetKey - The key of the facet to delete.
  * @returns The updated facets object.
  */
-export const deleteFacet = (filePath: string, facetKey: string): FacetsConfig => {
-  const facets = readFacetsConfig(filePath);
-  delete facets[facetKey];
-  saveFacetsConfig(filePath, facets);
-  return facets;
+export const deleteFacet = (filePath: string, facetKey: string): DeployConfig => {
+  const deployConfig = readDeployConfig(filePath);
+  delete deployConfig.facets[facetKey];
+  saveDeployConfig(filePath, deployConfig);
+  return deployConfig;
 };
 
 /**
@@ -243,7 +218,7 @@ export const deleteFacet = (filePath: string, facetKey: string): FacetsConfig =>
  * @param filePath - The path to the facets file.
  * @returns A boolean indicating whether the file is valid.
  */
-export const validateFacetsConfig = (filePath: string): boolean => {
+export const validateDeployConfig = (filePath: string): boolean => {
   try {
     const fullPath = resolvePath(filePath);
 
@@ -257,7 +232,7 @@ export const validateFacetsConfig = (filePath: string): boolean => {
     const raw = readJsonSync(fullPath);
 
     // Validate the JSON against the schema
-    FacetsConfigSchema.parse(raw);
+    DeployConfigSchema.parse(raw);
 
     // If all checks pass, return true
     return true;

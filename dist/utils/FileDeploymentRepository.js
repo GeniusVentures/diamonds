@@ -9,8 +9,8 @@ class FileDeploymentRepository {
     saveDeployInfo(path, info) {
         (0, jsonFileHandler_1.writeDeployInfo)(path, info);
     }
-    loadFacetsConfig(path) {
-        return (0, jsonFileHandler_1.readFacetsConfig)(path);
+    loadDeployConfig(path) {
+        return (0, jsonFileHandler_1.readDeployConfig)(path);
     }
 }
 exports.FileDeploymentRepository = FileDeploymentRepository;

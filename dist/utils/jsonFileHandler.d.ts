@@ -5,7 +5,7 @@
  * gracefully in a way that allows for control by the caller, e.g. gives the caller the
  * ability to create an empty file on failure.
  */
-import { INetworkDeployInfo, FacetsConfig } from "../schemas/DeploymentSchema";
+import { INetworkDeployInfo, DeployConfig } from "../schemas/DeploymentSchema";
 export declare function readDeployFilePathDiamondNetwork(networkName: string, diamondName: string, deploymentId: string, deploymentsPath: string, createNew?: boolean): INetworkDeployInfo;
 /**
  * Reads and validates a JSON file as INetworkDeployInfo
@@ -38,19 +38,19 @@ export declare function deleteDeployInfo(path: string): void;
  * @returns
  */
 export declare function validateDeployFile(path: string): boolean;
-export declare function loadFacetsConfig(deploymentsPath: string, diamondName: string): FacetsConfig;
+export declare function loadFacetsConfig(deploymentsPath: string, diamondName: string): DeployConfig;
 /**
  * Loads and validates the facets file.
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */
-export declare const readFacetsConfig: (filePath: string) => FacetsConfig;
+export declare const readDeployConfig: (filePath: string) => DeployConfig;
 /**
- * Saves the facets object to a file.
+ * Saves the Diamond Config object to a file.
  * @param filePath - The path to the facets file.
  * @param data - The facets object to save.
  */
-export declare const saveFacetsConfig: (filePath: string, data: FacetsConfig) => void;
+export declare const saveDeployConfig: (filePath: string, data: DeployConfig) => void;
 /**
  * Updates a specific facet in the facets file.
  * @param filePath - The path to the facets file.
@@ -58,18 +58,18 @@ export declare const saveFacetsConfig: (filePath: string, data: FacetsConfig) =>
  * @param update - The partial update to apply to the facet.
  * @returns The updated facets object.
  */
-export declare const updateFacetConfig: (filePath: string, facetKey: string, update: Partial<FacetsConfig>) => FacetsConfig;
+export declare const updateFacetConfig: (filePath: string, facetKey: string, update: Partial<DeployConfig["facets"][string]>) => DeployConfig;
 /**
  * Deletes a specific facet from the facets file.
  * @param filePath - The path to the facets file.
  * @param facetKey - The key of the facet to delete.
  * @returns The updated facets object.
  */
-export declare const deleteFacet: (filePath: string, facetKey: string) => FacetsConfig;
+export declare const deleteFacet: (filePath: string, facetKey: string) => DeployConfig;
 /**
  * Validates that the facets file exists, is valid JSON, and conforms to the schema.
  * @param filePath - The path to the facets file.
  * @returns A boolean indicating whether the file is valid.
  */
-export declare const validateFacetsConfig: (filePath: string) => boolean;
+export declare const validateDeployConfig: (filePath: string) => boolean;
 //# sourceMappingURL=jsonFileHandler.d.ts.map

@@ -1,7 +1,7 @@
 // utils/FileDeploymentRepository.ts
 import { DeploymentRepository } from './DeploymentRepository';
-import { INetworkDeployInfo, FacetsConfig } from '../schemas';
-import { readDeployFile, writeDeployInfo, readFacetsConfig } from './jsonFileHandler';
+import { INetworkDeployInfo, DeployConfig } from '../schemas';
+import { readDeployFile, writeDeployInfo, readDeployConfig } from './jsonFileHandler';
 
 export class FileDeploymentRepository implements DeploymentRepository {
   loadDeployInfo(path: string, createNew?: boolean): INetworkDeployInfo {
@@ -12,7 +12,7 @@ export class FileDeploymentRepository implements DeploymentRepository {
     writeDeployInfo(path, info);
   }
 
-  loadFacetsConfig(path: string): FacetsConfig {
-    return readFacetsConfig(path);
+  loadDeployConfig(path: string): DeployConfig {
+    return readDeployConfig(path);
   }
 }

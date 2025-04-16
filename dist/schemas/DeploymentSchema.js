@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FacetsConfigSchema = exports.FacetConfigSchema = exports.FacetVersionConfigSchema = exports.NetworkDeployInfoSchema = exports.ExternalLibrariesSchema = exports.FacetDeployedInfoRecordSchema = exports.FacetDeployedInfoSchema = void 0;
+exports.DeployConfigSchema = exports.FacetsConfigSchema = exports.FacetConfigSchema = exports.FacetVersionConfigSchema = exports.NetworkDeployInfoSchema = exports.ExternalLibrariesSchema = exports.FacetDeployedInfoRecordSchema = exports.FacetDeployedInfoSchema = void 0;
 const zod_1 = require("zod");
 // Schema for a single facet's deployment information
 exports.FacetDeployedInfoSchema = zod_1.z.object({
@@ -45,16 +45,10 @@ exports.FacetConfigSchema = zod_1.z.object({
  * Schema for the deployment configuration information of ALL facets to be deployed
  */
 exports.FacetsConfigSchema = zod_1.z.record(exports.FacetConfigSchema);
-// export const FacetVersionSchema = z.object({
-//   deployInit: z.string().optional(),
-//   upgradeInit: z.string().optional(),
-//   callback: z.string().optional(),
-//   fromVersions: z.array(z.number()).optional(),
-// });
-// export const FacetInfoSchema = z.object({
-//   priority: z.number(),
-//   versions: z.record(FacetVersionSchema).optional(), // Dynamic keys for versions
-// });
-// export const FacetsDeploymentSchema = z.record(FacetInfoSchema); // Dynamic keys for facets
-// export type FacetVersion = z.infer<typeof FacetVersionSchema>;
+exports.DeployConfigSchema = zod_1.z.object({
+    protocolVersion: zod_1.z.number(),
+    protocolInitFacet: zod_1.z.string().optional(),
+    protocolCallback: zod_1.z.string().optional(),
+    facets: zod_1.z.record(exports.FacetConfigSchema)
+});
 //# sourceMappingURL=DeploymentSchema.js.map

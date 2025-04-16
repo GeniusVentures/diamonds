@@ -7,7 +7,7 @@
  * ability to create an empty file on failure.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateFacetsConfig = exports.deleteFacet = exports.updateFacetConfig = exports.saveFacetsConfig = exports.readFacetsConfig = exports.loadFacetsConfig = exports.validateDeployFile = exports.deleteDeployInfo = exports.updateDeployInfo = exports.writeDeployInfo = exports.createNewDeployFile = exports.readDeployFile = exports.readDeployFilePathDiamondNetwork = void 0;
+exports.validateDeployConfig = exports.deleteFacet = exports.updateFacetConfig = exports.saveDeployConfig = exports.readDeployConfig = exports.loadFacetsConfig = exports.validateDeployFile = exports.deleteDeployInfo = exports.updateDeployInfo = exports.writeDeployInfo = exports.createNewDeployFile = exports.readDeployFile = exports.readDeployFilePathDiamondNetwork = void 0;
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const DeploymentSchema_1 = require("../schemas/DeploymentSchema");
@@ -116,63 +116,41 @@ function validateDeployFile(path) {
 exports.validateDeployFile = validateDeployFile;
 function loadFacetsConfig(deploymentsPath, diamondName) {
     const file = (0, path_1.join)(deploymentsPath, diamondName, `${diamondName}.config.json`);
-    const valid = (0, exports.validateFacetsConfig)(file);
-    // TODO: This is defaulting empty.  This should be a separate function to createNew().
-    if (!valid) {
-        return {
-            DiamondCutFacet: {
-                priority: 10,
-                versions: {
-                    0.0: {},
-                },
-            },
-            DiamondLoupeFacet: {
-                priority: 20,
-                versions: {
-                    0.0: {},
-                },
-            },
-        };
-    }
-    const facets = (0, exports.readFacetsConfig)(file);
+    const valid = (0, exports.validateDeployConfig)(file);
+    const facets = (0, exports.readDeployConfig)(file);
     return facets;
 }
 exports.loadFacetsConfig = loadFacetsConfig;
-// TODO This could all be lazy loaded for hardhat-diamonds. 
-// This would need to happen before trying to get the first
-// instance of the deployer (at start?), when we are not locking the deployment objects 
-// during deployment to prevent duplication of the singleton before it is ready to return.
-// This is would be a good use of hardhat-diamonds.
 /**
  * Loads and validates the facets file.
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */
-const readFacetsConfig = (filePath) => {
+const readDeployConfig = (filePath) => {
     try {
         const fullPath = resolvePath(filePath);
         // Read the JSON file
         const raw = (0, fs_extra_1.readJsonSync)(fullPath);
         // Validate and parse the JSON data
-        return DeploymentSchema_1.FacetsConfigSchema.parse(raw);
+        return DeploymentSchema_1.DeployConfigSchema.parse(raw);
     }
     catch (e) {
         console.error('Failed to load facets:', e);
         throw e;
     }
 };
-exports.readFacetsConfig = readFacetsConfig;
+exports.readDeployConfig = readDeployConfig;
 /**
- * Saves the facets object to a file.
+ * Saves the Diamond Config object to a file.
  * @param filePath - The path to the facets file.
  * @param data - The facets object to save.
  */
-const saveFacetsConfig = (filePath, data) => {
+const saveDeployConfig = (filePath, data) => {
     const fullPath = resolvePath(filePath);
     (0, fs_extra_1.ensureFileSync)(fullPath);
     (0, fs_extra_1.writeJsonSync)(fullPath, data, { spaces: 2 });
 };
-exports.saveFacetsConfig = saveFacetsConfig;
+exports.saveDeployConfig = saveDeployConfig;
 /**
  * Updates a specific facet in the facets file.
  * @param filePath - The path to the facets file.
@@ -181,13 +159,13 @@ exports.saveFacetsConfig = saveFacetsConfig;
  * @returns The updated facets object.
  */
 const updateFacetConfig = (filePath, facetKey, update) => {
-    const facets = (0, exports.readFacetsConfig)(filePath);
-    facets[facetKey] = {
-        ...(facets[facetKey] || {}),
+    const deployConfig = (0, exports.readDeployConfig)(filePath);
+    deployConfig.facets[facetKey] = {
+        ...(deployConfig.facets[facetKey] || {}),
         ...update,
     };
-    (0, exports.saveFacetsConfig)(filePath, facets);
-    return facets;
+    (0, exports.saveDeployConfig)(filePath, deployConfig);
+    return deployConfig;
 };
 exports.updateFacetConfig = updateFacetConfig;
 /**
@@ -197,10 +175,10 @@ exports.updateFacetConfig = updateFacetConfig;
  * @returns The updated facets object.
  */
 const deleteFacet = (filePath, facetKey) => {
-    const facets = (0, exports.readFacetsConfig)(filePath);
-    delete facets[facetKey];
-    (0, exports.saveFacetsConfig)(filePath, facets);
-    return facets;
+    const deployConfig = (0, exports.readDeployConfig)(filePath);
+    delete deployConfig.facets[facetKey];
+    (0, exports.saveDeployConfig)(filePath, deployConfig);
+    return deployConfig;
 };
 exports.deleteFacet = deleteFacet;
 /**
@@ -208,7 +186,7 @@ exports.deleteFacet = deleteFacet;
  * @param filePath - The path to the facets file.
  * @returns A boolean indicating whether the file is valid.
  */
-const validateFacetsConfig = (filePath) => {
+const validateDeployConfig = (filePath) => {
     try {
         const fullPath = resolvePath(filePath);
         // Check if the file exists
@@ -219,7 +197,7 @@ const validateFacetsConfig = (filePath) => {
         // Read the file and parse it as JSON
         const raw = (0, fs_extra_1.readJsonSync)(fullPath);
         // Validate the JSON against the schema
-        DeploymentSchema_1.FacetsConfigSchema.parse(raw);
+        DeploymentSchema_1.DeployConfigSchema.parse(raw);
         // If all checks pass, return true
         return true;
     }
@@ -228,5 +206,5 @@ const validateFacetsConfig = (filePath) => {
         return false;
     }
 };
-exports.validateFacetsConfig = validateFacetsConfig;
+exports.validateDeployConfig = validateDeployConfig;
 //# sourceMappingURL=jsonFileHandler.js.map

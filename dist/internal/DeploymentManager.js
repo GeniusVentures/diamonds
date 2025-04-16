@@ -23,25 +23,15 @@ class DeploymentManager {
     // Handle post-deployment callbacks clearly
     async runPostDeployCallbacks() {
         console.log(`🔄 Running post-deployment callbacks...`);
-        const facetsConfig = this.diamond.getFacetsConfig();
+        const deployConfig = this.diamond.getDeployConfig();
         const deployInfo = this.diamond.getDeployInfo();
-        for (const [facetName, facetConfig] of Object.entries(facetsConfig)) {
+        for (const [facetName, facetConfig] of Object.entries(deployConfig.facets)) {
             if (!facetConfig.versions)
                 continue;
             for (const [version, config] of Object.entries(facetConfig.versions)) {
                 if (config.callbacks) {
                     const args = {
                         diamond: this.diamond,
-                        // initConfig: {
-                        //   diamondName: this.diamond.diamondName,
-                        //   deploymentsPath: this.diamond.deploymentsPath,
-                        //   contractsPath: this.diamond.contractsPath,
-                        //   provider: this.diamond.provider!,
-                        //   networkName: this.diamond.networkName,
-                        //   chainId: this.diamond.chainId,
-                        //   deployer: this.diamond.deployer,
-                        // },
-                        // deployInfo: deployInfo,
                     };
                     await this.diamond.callbackManager.executeCallback(facetName, config.callbacks, args);
                     console.log(`✅ Callback ${config.callbacks} executed for facet ${facetName}`);
