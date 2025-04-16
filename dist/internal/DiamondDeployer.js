@@ -8,14 +8,14 @@ class DiamondDeployer {
     }
     async deploy() {
         await this.strategy.deployDiamond(this.diamond);
-        const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(this.diamond.getDeployInfo().FacetDeployedInfo, this.diamond.getFacetsConfig());
         const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
+        const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(this.diamond);
         const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
         await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
     }
     async upgrade() {
         await this.strategy.deployFacets(this.diamond);
-        const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(this.diamond.getDeployInfo().FacetDeployedInfo, this.diamond.getFacetsConfig());
+        const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(this.diamond);
         const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
         const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
         await this.strategy.performDiamondCut(this.diamond, allFacetCuts);

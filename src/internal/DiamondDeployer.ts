@@ -13,12 +13,11 @@ export class DiamondDeployer {
   async deploy(): Promise<void> {
     await this.strategy.deployDiamond(this.diamond);
 
-    const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(
-      this.diamond.getDeployInfo().FacetDeployedInfo!,
-      this.diamond.getFacetsConfig()
-    );
 
     const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
+    const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(
+      this.diamond
+    );
     const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
 
     await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
@@ -28,8 +27,7 @@ export class DiamondDeployer {
     await this.strategy.deployFacets(this.diamond);
 
     const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(
-      this.diamond.getDeployInfo().FacetDeployedInfo!,
-      this.diamond.getFacetsConfig()
+      this.diamond
     );
     const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
     const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];

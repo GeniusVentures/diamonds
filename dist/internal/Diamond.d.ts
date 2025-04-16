@@ -34,6 +34,8 @@ export declare class Diamond {
     selectorRegistry: Set<string>;
     registerSelectors(selectors: string[]): void;
     isSelectorRegistered(selector: string): boolean;
+    initializerRegistry: Map<string, string>;
+    registerInitializers(facetName: string, initFunction: string): void;
 }
 export default Diamond;
 //# sourceMappingURL=Diamond.d.ts.map

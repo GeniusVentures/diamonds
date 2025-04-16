@@ -7,7 +7,6 @@ export interface DeploymentStrategy {
   deployFacets(diamond: Diamond): Promise<FacetDeploymentInfo[]>;
   performDiamondCut(diamond: Diamond, facetCuts: FacetDeploymentInfo[]): Promise<void>;
   getFacetsAndSelectorsToRemove(
-    existingFacets: FacetDeployedInfoRecord,
-    newConfig: FacetsConfig
+    diamond: Diamond
   ): Promise<FacetDeploymentInfo[]>;
 }

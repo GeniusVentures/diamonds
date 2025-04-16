@@ -11,6 +11,7 @@ class Diamond {
         var _a;
         this.facetSelectors = [];
         this.selectorRegistry = new Set();
+        this.initializerRegistry = new Map();
         this.config = config;
         this.diamondName = config.diamondName;
         this.networkName = config.networkName;
@@ -56,6 +57,9 @@ class Diamond {
     }
     isSelectorRegistered(selector) {
         return this.selectorRegistry.has(selector);
+    }
+    registerInitializers(facetName, initFunction) {
+        this.initializerRegistry.set(facetName, initFunction);
     }
 }
 exports.Diamond = Diamond;

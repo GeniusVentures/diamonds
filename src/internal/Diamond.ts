@@ -102,6 +102,12 @@ export class Diamond {
     return this.selectorRegistry.has(selector);
   }
 
+  public initializerRegistry: Map<string, string> = new Map();
+
+  public registerInitializers(facetName: string, initFunction: string): void {
+    this.initializerRegistry.set(facetName, initFunction);
+  }
+
 }
 
 export default Diamond;
