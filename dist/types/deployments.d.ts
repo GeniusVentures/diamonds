@@ -1,6 +1,6 @@
 import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { INetworkDeployInfo } from "../schemas";
+import { DeployedDiamondData } from "../schemas";
 import Diamond from "../internal/Diamond";
 export interface IDeployConfig {
     diamondName: string;
@@ -25,7 +25,7 @@ export interface CallbackArgs {
 /**
  * Interface for post deployment initialization callbacks.
  */
-export type FacetCallback = (networkDeployInfo: INetworkDeployInfo) => Promise<void | boolean>;
+export type FacetCallback = (networkDeployInfo: DeployedDiamondData) => Promise<void | boolean>;
 /**
  * Type for capturing the needed data to perform a diamond upgrade.
  */

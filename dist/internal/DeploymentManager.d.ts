@@ -1,11 +1,11 @@
 import { Diamond } from "./Diamond";
-import { DiamondDeployer } from "./DiamondDeployer";
+import { DeploymentStrategy } from "../repositories/DeploymentStrategy";
 export declare class DeploymentManager {
     private diamond;
-    private deployer;
-    constructor(diamond: Diamond, deployer: DiamondDeployer);
-    deployAll(): Promise<void>;
-    upgradeAll(): Promise<void>;
+    private strategy;
+    constructor(diamond: Diamond, strategy: DeploymentStrategy);
+    deploy(): Promise<void>;
+    upgrade(): Promise<void>;
     private runPostDeployCallbacks;
 }
 //# sourceMappingURL=DeploymentManager.d.ts.map

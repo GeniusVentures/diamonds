@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DeployConfigSchema = exports.FacetsConfigSchema = exports.FacetConfigSchema = exports.FacetVersionConfigSchema = exports.NetworkDeployInfoSchema = exports.ExternalLibrariesSchema = exports.FacetDeployedInfoRecordSchema = exports.FacetDeployedInfoSchema = void 0;
+exports.DeployConfigSchema = exports.FacetsConfigSchema = exports.FacetConfigSchema = exports.FacetVersionConfigSchema = exports.DeployedDiamondDataSchema = exports.ExternalLibrariesSchema = exports.FacetDeployedInfoRecordSchema = exports.FacetDeployedInfoSchema = void 0;
 const zod_1 = require("zod");
 // Schema for a single facet's deployment information
 exports.FacetDeployedInfoSchema = zod_1.z.object({
@@ -15,7 +15,7 @@ exports.FacetDeployedInfoRecordSchema = zod_1.z.record(exports.FacetDeployedInfo
 // Schema for external libraries
 exports.ExternalLibrariesSchema = zod_1.z.record(zod_1.z.string());
 // Schema for the network deployment information
-exports.NetworkDeployInfoSchema = zod_1.z.object({
+exports.DeployedDiamondDataSchema = zod_1.z.object({
     DiamondAddress: zod_1.z.string().optional(),
     DeployerAddress: zod_1.z.string(),
     FacetDeployedInfo: exports.FacetDeployedInfoRecordSchema.optional(),

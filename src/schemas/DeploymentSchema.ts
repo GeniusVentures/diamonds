@@ -16,7 +16,7 @@ export const FacetDeployedInfoRecordSchema = z.record(FacetDeployedInfoSchema);
 export const ExternalLibrariesSchema = z.record(z.string());
 
 // Schema for the network deployment information
-export const NetworkDeployInfoSchema = z.object({
+export const DeployedDiamondDataSchema = z.object({
   DiamondAddress: z.string().optional(), // Address of the deployed diamond
   DeployerAddress: z.string(), // Address of the deployer
   FacetDeployedInfo: FacetDeployedInfoRecordSchema.optional(), // Information about deployed facets
@@ -66,4 +66,4 @@ export type DeployConfig = z.infer<typeof DeployConfigSchema>;
 // export type FacetsDeployment = z.infer<typeof FacetsConfigSchema>;
 export type FacetDeployedInfo = z.infer<typeof FacetDeployedInfoSchema>;
 export type FacetDeployedInfoRecord = z.infer<typeof FacetDeployedInfoRecordSchema>;
-export type INetworkDeployInfo = z.infer<typeof NetworkDeployInfoSchema>;
+export type DeployedDiamondData = z.infer<typeof DeployedDiamondDataSchema>;

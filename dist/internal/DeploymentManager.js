@@ -2,21 +2,27 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeploymentManager = void 0;
 class DeploymentManager {
-    constructor(diamond, deployer) {
+    constructor(diamond, strategy) {
         this.diamond = diamond;
-        this.deployer = deployer;
+        this.strategy = strategy;
     }
-    // High-level method to handle complete deployment
-    async deployAll() {
+    async deploy() {
         console.log(`🚀 Starting deployment for Diamond: ${this.diamond.diamondName}`);
-        await this.deployer.deploy();
+        await this.strategy.deployDiamond(this.diamond);
+        const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
+        const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(this.diamond);
+        const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
+        await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
         await this.runPostDeployCallbacks();
         console.log(`✅ Deployment completed successfully.`);
     }
-    // High-level method to handle upgrades
-    async upgradeAll() {
+    async upgrade() {
         console.log(`♻️ Starting upgrade for Diamond: ${this.diamond.diamondName}`);
-        await this.deployer.upgrade();
+        await this.strategy.deployFacets(this.diamond);
+        const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(this.diamond);
+        const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
+        const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
+        await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
         await this.runPostDeployCallbacks();
         console.log(`✅ Upgrade completed successfully.`);
     }
@@ -24,7 +30,7 @@ class DeploymentManager {
     async runPostDeployCallbacks() {
         console.log(`🔄 Running post-deployment callbacks...`);
         const deployConfig = this.diamond.getDeployConfig();
-        const deployInfo = this.diamond.getDeployInfo();
+        const deployInfo = this.diamond.getDeployedDiamondData();
         for (const [facetName, facetConfig] of Object.entries(deployConfig.facets)) {
             if (!facetConfig.versions)
                 continue;

@@ -13,7 +13,7 @@ exports.FacetCutAction = void 0;
 //         deployInit?: string;
 //         upgradeInit?: string;
 //         fromVersions?: number[];
-//         callback?: (info: INetworkDeployInfo) => Promise<boolean>;
+//         callback?: (info: DeployedDiamondData) => Promise<boolean>;
 //         deployInclude?: string[];
 //       };
 //     };
@@ -38,7 +38,7 @@ exports.FacetCutAction = void 0;
 // export type FacetSelectorsDeployed = IDeployedFacetSelectors &
 //   IDeployedContractFacetSelectors;
 // export type AfterDeployInit = (
-//   networkDeployInfo: INetworkDeployInfo,
+//   networkDeployInfo: DeployedDiamondData,
 // ) => Promise<void | boolean>;
 // export interface IVersionInfo {
 //   fromVersions?: number[];
@@ -55,7 +55,7 @@ exports.FacetCutAction = void 0;
 // }
 // export type FacetToDeployInfo = Record<string, IFacetToDeployInfo>;
 // export interface IFacetCallback {
-//   (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
+//   (networkDeployInfo: DeployedDiamondData): Promise<boolean>;
 // }
 /**
  * Type for the diamond cut “action”.

@@ -14,4 +14,5 @@ export interface IDefenderViaInfo {
     via: CreateProposalRequest['via'];
     viaType: CreateProposalRequest['viaType'];
 }
+export declare function cutKey(diamondName: string, networkName: string, chainId: string): string;
 //# sourceMappingURL=common.d.ts.map

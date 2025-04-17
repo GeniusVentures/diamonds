@@ -1,18 +1,16 @@
-import { DeploymentStrategy } from "./DeploymentStrategy";
+import { DeploymentStrategy } from "../repositories/DeploymentStrategy";
 import { Diamond } from "../internal/Diamond";
 import { FacetDeploymentInfo, FacetCutAction } from "../types";
-import { FacetDeployedInfoRecord, FacetsConfig } from "../schemas";
 import { ethers } from "hardhat";
 import { join } from "path";
 import chalk from "chalk";
-import { getSighash } from "../utils/common";
 
 export class BaseDeploymentStrategy implements DeploymentStrategy {
   constructor(protected verbose: boolean = false) { }
 
   async deployDiamond(diamond: Diamond): Promise<void> {
     console.log(chalk.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`));
-    const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.deployer!);
+    const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.signer!);
     const diamondCutFacet = await diamondCutFactory.deploy();
     await diamondCutFacet.deployed();
 
@@ -21,14 +19,14 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       diamond.contractsPath,
       diamondArtifactName,
     );
-    const diamondFactory = await ethers.getContractFactory(diamondArtifactPath, diamond.deployer!);
-    const diamondContract = await diamondFactory.deploy(diamond.deployer!.getAddress(), diamondCutFacet.address);
+    const diamondFactory = await ethers.getContractFactory(diamondArtifactPath, diamond.signer!);
+    const diamondContract = await diamondFactory.deploy(diamond.signer!.getAddress(), diamondCutFacet.address);
     await diamondContract.deployed();
     const diamondFunctionSelectors = Object.keys(diamondContract.interface.functions).map(fn => diamondContract.interface.getSighash(fn));
     diamond.registerSelectors(diamondFunctionSelectors);
 
-    const info = diamond.getDeployInfo();
-    info.DeployerAddress = await diamond.deployer!.getAddress();
+    const info = diamond.getDeployedDiamondData();
+    info.DeployerAddress = await diamond.signer!.getAddress();
     info.DiamondAddress = diamondContract.address;
     const diamondCutFacetFunctionSelectors = Object.keys(diamondCutFacet.interface.functions).map(fn => diamondCutFacet.interface.getSighash(fn));
     info.FacetDeployedInfo = info.FacetDeployedInfo || {};
@@ -39,7 +37,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       funcSelectors: diamondCutFacetFunctionSelectors,
     };
 
-    diamond.updateDeployInfo(info);
+    diamond.updateDeployedDiamondData(info);
     diamond.registerSelectors(diamondCutFacetFunctionSelectors);
 
     console.log(chalk.green(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`));
@@ -48,7 +46,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
   async deployFacets(diamond: Diamond): Promise<FacetDeploymentInfo[]> {
     const deployConfig = diamond.getDeployConfig();
     const facetsConfig = deployConfig.facets;
-    const deployedInfo = diamond.getDeployInfo();
+    const deployedDiamondData = diamond.getDeployedDiamondData();
     const facetCuts: FacetDeploymentInfo[] = [];
 
     const sortedFacetNames = Object.keys(facetsConfig).sort((a, b) => {
@@ -57,13 +55,13 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
     for (const facetName of sortedFacetNames) {
       const facetConfig = facetsConfig[facetName];
-      const deployedVersion = deployedInfo.FacetDeployedInfo?.[facetName]?.version ?? -1;
+      const deployedVersion = deployedDiamondData.FacetDeployedInfo?.[facetName]?.version ?? -1;
       const availableVersions = Object.keys(facetConfig.versions || {}).map(Number);
       const latestVersion = Math.max(...availableVersions);
 
       if (latestVersion > deployedVersion || deployedVersion === -1) {
         console.log(chalk.blueBright(`🚀 Deploying/upgrading facet: ${facetName} to version ${latestVersion}`));
-        const facetFactory = await ethers.getContractFactory(facetName, diamond.deployer);
+        const facetFactory = await ethers.getContractFactory(facetName, diamond.signer);
         const facetContract = await facetFactory.deploy();
         await facetContract.deployed();
 
@@ -71,9 +69,9 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
           facetContract.interface.getSighash(fn)
         );
 
-        const existingSelectors = deployedInfo.FacetDeployedInfo?.[facetName]?.funcSelectors || [];
+        const existingSelectors = deployedDiamondData.FacetDeployedInfo?.[facetName]?.funcSelectors || [];
         const newSelectors = allSelectors.filter(sel => !diamond.selectorRegistry.has(sel));
-        const removedSelectors = existingSelectors.filter(sel => !newSelectors.includes(sel));
+        const removedSelectors: string[] = existingSelectors.filter((sel: string) => !newSelectors.includes(sel));
         const replacedSelectors = newSelectors.filter(sel => existingSelectors.includes(sel));
         const addedSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
 
@@ -115,8 +113,8 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
           });
         }
 
-        deployedInfo.FacetDeployedInfo = deployedInfo.FacetDeployedInfo || {};
-        deployedInfo.FacetDeployedInfo[facetName] = {
+        deployedDiamondData.FacetDeployedInfo = deployedDiamondData.FacetDeployedInfo || {};
+        deployedDiamondData.FacetDeployedInfo[facetName] = {
           address: facetContract.address,
           tx_hash: facetContract.deployTransaction.hash,
           version: latestVersion,
@@ -124,7 +122,6 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         };
 
         diamond.registerSelectors(newSelectors);
-
         // Do not add the protocolInitFacet to the Initializer registry
         if (facetName === deployConfig.protocolInitFacet) continue;
 
@@ -142,16 +139,14 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       }
     }
 
-    diamond.updateDeployInfo(deployedInfo);
+    diamond.updateDeployedDiamondData(deployedDiamondData);
     return facetCuts;
   }
 
   async getFacetsAndSelectorsToRemove(
-    // existingFacets: FacetDeployedInfoRecord,
-    // newConfig: FacetsConfig
     diamond: Diamond
   ): Promise<FacetDeploymentInfo[]> {
-    const existingFacets = diamond.getDeployInfo().FacetDeployedInfo!;
+    const existingFacets = diamond.getDeployedDiamondData().FacetDeployedInfo!;
     const newConfig = diamond.getFacetsConfig();
     const selectorsToRemove: FacetDeploymentInfo[] = [];
 
@@ -169,18 +164,18 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
   }
 
   async performDiamondCut(diamond: Diamond, facetCuts: FacetDeploymentInfo[]): Promise<void> {
-    const diamondContract = await ethers.getContractAt("IDiamondCut", diamond.getDeployInfo().DiamondAddress!, diamond.deployer);
+    const diamondContract = await ethers.getContractAt("IDiamondCut", diamond.getDeployedDiamondData().DiamondAddress!, diamond.signer);
     const deployConfig = diamond.getDeployConfig();
-    const deployedInfo = diamond.getDeployInfo();
+    const deployedDiamondData = diamond.getDeployedDiamondData();
 
     let initAddress = ethers.constants.AddressZero;
     let initCalldata = "0x";
 
     const protocolInitFacet = deployConfig.protocolInitFacet;
-    const currentVersion = deployedInfo.protocolVersion ?? 0;
+    const currentVersion = deployedDiamondData.protocolVersion ?? 0;
 
     if (protocolInitFacet && deployConfig.protocolVersion > currentVersion) {
-      const facetInfo = deployedInfo.FacetDeployedInfo?.[protocolInitFacet];
+      const facetInfo = deployedDiamondData.FacetDeployedInfo?.[protocolInitFacet];
       const facetConfig = deployConfig.facets[protocolInitFacet];
       const versionConfig = facetConfig.versions?.[deployConfig.protocolVersion];
 
@@ -211,14 +206,14 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     );
     await tx.wait();
 
-    deployedInfo.protocolVersion = deployConfig.protocolVersion;
-    diamond.updateDeployInfo(deployedInfo);
+    deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
+    diamond.updateDeployedDiamondData(deployedDiamondData);
 
     console.log(chalk.green(`✅ DiamondCut executed: ${tx.hash}`));
 
     for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
       console.log(chalk.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
-      const contract = await ethers.getContractAt(facetName, deployedInfo!.DiamondAddress, diamond.deployer);
+      const contract = await ethers.getContractAt(facetName, deployedDiamondData!.DiamondAddress, diamond.signer);
       const tx = await contract[initFunction]();
       await tx.wait();
       console.log(chalk.green(`✅ ${facetName}.${initFunction} executed`));

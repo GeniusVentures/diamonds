@@ -1,46 +1,59 @@
-// internal/DeploymentManager.ts
 import { Diamond } from "./Diamond";
-import { DiamondDeployer } from "./DiamondDeployer";
+import { DeploymentStrategy } from "../repositories/DeploymentStrategy";
 import { CallbackArgs } from "../types";
 
 export class DeploymentManager {
   private diamond: Diamond;
-  private deployer: DiamondDeployer;
+  private strategy: DeploymentStrategy;
 
-  constructor(
-    diamond: Diamond,
-    deployer: DiamondDeployer
-  ) {
+  constructor(diamond: Diamond, strategy: DeploymentStrategy) {
     this.diamond = diamond;
-    this.deployer = deployer;
+    this.strategy = strategy;
   }
 
-  // High-level method to handle complete deployment
-  async deployAll(): Promise<void> {
+  async deploy(): Promise<void> {
     console.log(`🚀 Starting deployment for Diamond: ${this.diamond.diamondName}`);
 
-    await this.deployer.deploy();
+    await this.strategy.deployDiamond(this.diamond);
+
+    const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
+    const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(
+      this.diamond
+    );
+    const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
+
+    await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
+
     await this.runPostDeployCallbacks();
 
     console.log(`✅ Deployment completed successfully.`);
   }
 
-  // High-level method to handle upgrades
-  async upgradeAll(): Promise<void> {
+  async upgrade(): Promise<void> {
     console.log(`♻️ Starting upgrade for Diamond: ${this.diamond.diamondName}`);
 
-    await this.deployer.upgrade();
+    await this.strategy.deployFacets(this.diamond);
+
+    const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(
+      this.diamond
+    );
+    const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
+    const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
+
+    await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
+
     await this.runPostDeployCallbacks();
 
     console.log(`✅ Upgrade completed successfully.`);
   }
+
 
   // Handle post-deployment callbacks clearly
   private async runPostDeployCallbacks(): Promise<void> {
     console.log(`🔄 Running post-deployment callbacks...`);
 
     const deployConfig = this.diamond.getDeployConfig();
-    const deployInfo = this.diamond.getDeployInfo();
+    const deployInfo = this.diamond.getDeployedDiamondData();
 
     for (const [facetName, facetConfig] of Object.entries(deployConfig.facets)) {
       if (!facetConfig.versions) continue;

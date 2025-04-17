@@ -1,10 +1,10 @@
 import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
-import { INetworkDeployInfo } from "../schemas";
+import { DeployedDiamondData } from "../schemas";
 import Diamond from "../internal/Diamond";
 
 // export interface IDeployments {
-//   [networkName: string]: INetworkDeployInfo;
+//   [networkName: string]: DeployedDiamondData;
 // }
 
 // /**
@@ -37,7 +37,7 @@ export interface IDeployConfig {
 //         deployInit?: string;
 //         upgradeInit?: string;
 //         fromVersions?: number[];
-//         callback?: (info: INetworkDeployInfo) => Promise<boolean>;
+//         callback?: (info: DeployedDiamondData) => Promise<boolean>;
 //         deployInclude?: string[];
 //       };
 //     };
@@ -68,7 +68,7 @@ export interface IDeployConfig {
 //   IDeployedContractFacetSelectors;
 
 // export type AfterDeployInit = (
-//   networkDeployInfo: INetworkDeployInfo,
+//   networkDeployInfo: DeployedDiamondData,
 // ) => Promise<void | boolean>;
 
 // export interface IVersionInfo {
@@ -91,7 +91,7 @@ export interface IDeployConfig {
 
 
 // export interface IFacetCallback {
-//   (networkDeployInfo: INetworkDeployInfo): Promise<boolean>;
+//   (networkDeployInfo: DeployedDiamondData): Promise<boolean>;
 // }
 
 /**
@@ -106,14 +106,14 @@ export enum FacetCutAction {
 export interface CallbackArgs {
   diamond: Diamond;
   // initConfig: IDeployConfig;
-  // deployInfo: INetworkDeployInfo;
+  // deployInfo: DeployedDiamondData;
 }
 
 /**
  * Interface for post deployment initialization callbacks.
  */
 export type FacetCallback = (
-  networkDeployInfo: INetworkDeployInfo,
+  networkDeployInfo: DeployedDiamondData,
 ) => Promise<void | boolean>;
 
 

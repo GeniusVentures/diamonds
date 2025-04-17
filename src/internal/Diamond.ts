@@ -1,9 +1,9 @@
-import path from "path";
-import { INetworkDeployInfo, DeployConfig, FacetsConfig } from "../schemas";
+import { join } from "path";
+import { DeployedDiamondData, DeployConfig, FacetsConfig } from "../schemas";
 import { CallbackManager } from "./CallbackManager";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
-import { DeploymentRepository } from "../utils/DeploymentRepository";
+import { DeploymentRepository } from "../repositories/DeploymentRepository";
 import { DiamondConfig } from "../types";
 
 export class Diamond {
@@ -17,17 +17,13 @@ export class Diamond {
   public deploymentId: string;
   public facetSelectors: string[] = [];
   public callbackManager: CallbackManager;
-  // TODO: Refactor deployInfo to lastDeploymentInfo or deployedRecord for clarity
-  private deployInfo: INetworkDeployInfo;
+  private deployedDiamondData: DeployedDiamondData;
   private config: DiamondConfig;
   private facetsConfig: FacetsConfig;
   private repository: DeploymentRepository;
-  public deployer: Signer | undefined;
+  public signer: Signer | undefined;
   public provider: JsonRpcProvider | undefined;
-  public deployInfoFilePath: string;
   public deployConfig: DeployConfig;
-  public configFilePath: string;
-  public createOrUpdateDeploymentFile: boolean;
 
   constructor(config: DiamondConfig, repository: DeploymentRepository) {
     this.config = config;
@@ -36,44 +32,26 @@ export class Diamond {
     this.chainId = config.chainId;
     this.deploymentsPath = config.deploymentsPath || "diamonds";
     this.contractsPath = config.contractsPath || "contracts";
-    this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName.toLowerCase()}-${config.chainId.toString()}`;
-    this.createOrUpdateDeploymentFile = config.createOrUpdateDeployFile ?? true;
-
     this.repository = repository;
-
-    this.deployInfoFilePath = path.join(
-      this.deploymentsPath,
-      config.diamondName,
-      `deployments/${this.deploymentId}.json`
-    )
-
-    // Load facets to deploy
-    this.configFilePath = path.join(
-      this.deploymentsPath,
-      config.diamondName,
-      `${config.diamondName.toLowerCase()}.config.json`
-    );
+    this.deploymentId = repository.getDeploymentId();
 
     // Load existing deployment info
-    this.deployInfo = this.repository.loadDeployInfo(this.deployInfoFilePath, this.createOrUpdateDeploymentFile);
-    this.deployConfig = this.repository.loadDeployConfig(this.configFilePath);
+    this.deployedDiamondData = this.repository.loadDeployedDiamondData();
+    this.deployConfig = this.repository.loadDeployConfig();
 
     this.facetsConfig = this.deployConfig.facets;
 
-    // Initialize the callback manager
     this.callbackManager = CallbackManager.getInstance(
       this.diamondName, this.deploymentsPath);
   }
 
-  getDeployInfo(): INetworkDeployInfo {
-    return this.deployInfo;
+  getDeployedDiamondData(): DeployedDiamondData {
+    return this.deployedDiamondData;
   }
 
-  updateDeployInfo(info: INetworkDeployInfo): void {
-    if (this.createOrUpdateDeploymentFile == true) {
-      this.deployInfo = info;
-      this.repository.saveDeployInfo(this.deployInfoFilePath, info);
-    }
+  updateDeployedDiamondData(data: DeployedDiamondData): void {
+    this.repository.saveDeployedDiamondData(data);
+    this.deployedDiamondData = data;
   }
 
   public getDiamondConfig(): DiamondConfig {
@@ -89,7 +67,7 @@ export class Diamond {
   }
 
   public isUpgradeDeployment(): boolean {
-    return !!this.deployInfo.DiamondAddress;
+    return !!this.deployedDiamondData.DiamondAddress;
   }
 
   public selectorRegistry: Set<string> = new Set();

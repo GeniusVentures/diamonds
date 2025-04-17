@@ -38,7 +38,7 @@ export declare const FacetDeployedInfoRecordSchema: z.ZodRecord<z.ZodString, z.Z
     verified?: boolean | undefined;
 }>>;
 export declare const ExternalLibrariesSchema: z.ZodRecord<z.ZodString, z.ZodString>;
-export declare const NetworkDeployInfoSchema: z.ZodObject<{
+export declare const DeployedDiamondDataSchema: z.ZodObject<{
     DiamondAddress: z.ZodOptional<z.ZodString>;
     DeployerAddress: z.ZodString;
     FacetDeployedInfo: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
@@ -285,5 +285,5 @@ export type FacetsConfig = z.infer<typeof FacetsConfigSchema>;
 export type DeployConfig = z.infer<typeof DeployConfigSchema>;
 export type FacetDeployedInfo = z.infer<typeof FacetDeployedInfoSchema>;
 export type FacetDeployedInfoRecord = z.infer<typeof FacetDeployedInfoRecordSchema>;
-export type INetworkDeployInfo = z.infer<typeof NetworkDeployInfoSchema>;
+export type DeployedDiamondData = z.infer<typeof DeployedDiamondDataSchema>;
 //# sourceMappingURL=DeploymentSchema.d.ts.map

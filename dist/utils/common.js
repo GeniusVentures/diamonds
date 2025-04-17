@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSighash = exports.toWei = exports.XMPL_TOKEN_ID = exports.GNUS_TOKEN_ID = exports.toBN = exports.debuglog = void 0;
+exports.cutKey = exports.getSighash = exports.toWei = exports.XMPL_TOKEN_ID = exports.GNUS_TOKEN_ID = exports.toBN = exports.debuglog = void 0;
 const ethers_1 = require("ethers");
 const hardhat_1 = require("hardhat");
 const debug_1 = require("debug");
@@ -19,4 +19,9 @@ function getSighash(funcSig) {
     return hardhat_1.ethers.utils.Interface.getSighash(abi_1.Fragment.fromString(funcSig));
 }
 exports.getSighash = getSighash;
+function cutKey(diamondName, networkName, chainId) {
+    const key = `${diamondName.toLowerCase()}-${networkName}-${chainId}`;
+    return key;
+}
+exports.cutKey = cutKey;
 //# sourceMappingURL=common.js.map

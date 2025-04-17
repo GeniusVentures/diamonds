@@ -14,10 +14,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FileDeploymentRepository = void 0;
-__exportStar(require("./jsonFileHandler"), exports);
-var FileDeploymentRepository_1 = require("./FileDeploymentRepository");
+exports.DeploymentRepository = exports.FileDeploymentRepository = void 0;
+__exportStar(require("../repositories/jsonFileHandler"), exports);
+var FileDeploymentRepository_1 = require("../repositories/FileDeploymentRepository");
 Object.defineProperty(exports, "FileDeploymentRepository", { enumerable: true, get: function () { return FileDeploymentRepository_1.FileDeploymentRepository; } });
+var DeploymentRepository_1 = require("../repositories/DeploymentRepository");
+Object.defineProperty(exports, "DeploymentRepository", { enumerable: true, get: function () { return DeploymentRepository_1.DeploymentRepository; } });
 __exportStar(require("./common"), exports);
 __exportStar(require("./signer"), exports);
 //# sourceMappingURL=index.js.map

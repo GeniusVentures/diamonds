@@ -2,6 +2,7 @@ import { BaseContract, BigNumber, Contract, ContractTransaction } from 'ethers';
 import { ethers } from 'hardhat';
 import { debug } from 'debug';
 import * as chai from 'chai';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
 import chaiAsPromised from 'chai-as-promised';
 import { Fragment } from '@ethersproject/abi';
@@ -32,4 +33,9 @@ export function getSighash(funcSig: string): string {
 export interface IDefenderViaInfo {
   via: CreateProposalRequest['via'],
   viaType: CreateProposalRequest['viaType'];
+}
+
+export function cutKey(diamondName: string, networkName: string, chainId: string): string {
+  const key = `${diamondName.toLowerCase()}-${networkName}-${chainId}`;
+  return key;
 }

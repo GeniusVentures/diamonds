@@ -1,8 +1,8 @@
-import { INetworkDeployInfo, DeployConfig, FacetsConfig } from "../schemas";
+import { DeployedDiamondData, DeployConfig, FacetsConfig } from "../schemas";
 import { CallbackManager } from "./CallbackManager";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
-import { DeploymentRepository } from "../utils/DeploymentRepository";
+import { DeploymentRepository } from "../repositories/DeploymentRepository";
 import { DiamondConfig } from "../types";
 export declare class Diamond {
     private static instances;
@@ -14,19 +14,16 @@ export declare class Diamond {
     deploymentId: string;
     facetSelectors: string[];
     callbackManager: CallbackManager;
-    private deployInfo;
+    private deployedDiamondData;
     private config;
     private facetsConfig;
     private repository;
-    deployer: Signer | undefined;
+    signer: Signer | undefined;
     provider: JsonRpcProvider | undefined;
-    deployInfoFilePath: string;
     deployConfig: DeployConfig;
-    configFilePath: string;
-    createOrUpdateDeploymentFile: boolean;
     constructor(config: DiamondConfig, repository: DeploymentRepository);
-    getDeployInfo(): INetworkDeployInfo;
-    updateDeployInfo(info: INetworkDeployInfo): void;
+    getDeployedDiamondData(): DeployedDiamondData;
+    updateDeployedDiamondData(data: DeployedDiamondData): void;
     getDiamondConfig(): DiamondConfig;
     getDeployConfig(): DeployConfig;
     getFacetsConfig(): FacetsConfig;
