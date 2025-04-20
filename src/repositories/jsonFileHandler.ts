@@ -54,6 +54,13 @@ export function readDeployFile(path: string, createNew: boolean = true)
     }
 
     return parsed.data;
+  } else if (pathExistsSync(path)) {
+    raw = readJsonSync(path);
+    const parsed = DeployedDiamondDataSchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error(`Invalid deployment format: ${JSON.stringify(parsed.error.format(), null, 2)}`);
+    }
+    return parsed.data;
   }
 
   // This is a mock deployment object with empty values

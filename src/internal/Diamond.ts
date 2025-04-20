@@ -62,8 +62,16 @@ export class Diamond {
     return this.deployConfig;
   }
 
-  getFacetsConfig(): FacetsConfig {
+  public getFacetsConfig(): FacetsConfig {
     return this.facetsConfig;
+  }
+
+  public setProvider(provider: JsonRpcProvider): void {
+    this.provider = provider;
+  }
+
+  public setSigner(signer: Signer): void {
+    this.signer = signer;
   }
 
   public isUpgradeDeployment(): boolean {

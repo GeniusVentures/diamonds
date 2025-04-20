@@ -3,4 +3,7 @@ export { FileDeploymentRepository } from '../repositories/FileDeploymentReposito
 export { DeploymentRepository } from '../repositories/DeploymentRepository';
 export * from './common';
 export * from './signer';
+export * from './txlogging';
+export * from './diffDeployedFacets';
+export * from './loupe';
 //# sourceMappingURL=index.d.ts.map

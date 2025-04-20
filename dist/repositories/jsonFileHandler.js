@@ -34,6 +34,14 @@ function readDeployFile(path, createNew = true) {
         }
         return parsed.data;
     }
+    else if ((0, fs_extra_1.pathExistsSync)(path)) {
+        raw = (0, fs_extra_1.readJsonSync)(path);
+        const parsed = DeploymentSchema_1.DeployedDiamondDataSchema.safeParse(raw);
+        if (!parsed.success) {
+            throw new Error(`Invalid deployment format: ${JSON.stringify(parsed.error.format(), null, 2)}`);
+        }
+        return parsed.data;
+    }
     // This is a mock deployment object with empty values
     return defaultDeployment();
 }

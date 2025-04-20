@@ -27,6 +27,8 @@ export declare class Diamond {
     getDiamondConfig(): DiamondConfig;
     getDeployConfig(): DeployConfig;
     getFacetsConfig(): FacetsConfig;
+    setProvider(provider: JsonRpcProvider): void;
+    setSigner(signer: Signer): void;
     isUpgradeDeployment(): boolean;
     selectorRegistry: Set<string>;
     registerSelectors(selectors: string[]): void;

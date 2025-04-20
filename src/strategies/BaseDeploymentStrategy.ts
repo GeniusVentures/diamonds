@@ -1,9 +1,11 @@
-import { DeploymentStrategy } from "../repositories/DeploymentStrategy";
+import { DeploymentStrategy } from "./DeploymentStrategy";
 import { Diamond } from "../internal/Diamond";
 import { FacetDeploymentInfo, FacetCutAction } from "../types";
 import { ethers } from "hardhat";
 import { join } from "path";
 import chalk from "chalk";
+import { logTx, logDiamondLoupe, getDeployedFacets } from "../utils";
+import { getDeployedFacetInterfaces } from "../utils";
 
 export class BaseDeploymentStrategy implements DeploymentStrategy {
   constructor(protected verbose: boolean = false) { }
@@ -60,7 +62,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       const latestVersion = Math.max(...availableVersions);
 
       if (latestVersion > deployedVersion || deployedVersion === -1) {
-        console.log(chalk.blueBright(`🚀 Deploying/upgrading facet: ${facetName} to version ${latestVersion}`));
+        console.log(chalk.blueBright(`🚀 Deploying facet: ${facetName} to version ${latestVersion}`));
         const facetFactory = await ethers.getContractFactory(facetName, diamond.signer);
         const facetContract = await facetFactory.deploy();
         await facetContract.deployed();
@@ -204,8 +206,17 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       initAddress,
       initCalldata
     );
-    await tx.wait();
 
+    const ifaceList = getDeployedFacetInterfaces(deployedDiamondData);
+    if (this.verbose) {
+      await logTx(tx, "DiamondCut", ifaceList);
+    } else {
+      console.log(chalk.blueBright(`🔄 Waiting for DiamondCut transaction to be mined...`));
+      await tx.wait();
+    }
+
+    // const loupeAddr = deployedDiamondData.DiamondAddress!;
+    // await getDeployedFacets(loupeAddr, diamond.signer);
     deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
     diamond.updateDeployedDiamondData(deployedDiamondData);
 
@@ -215,8 +226,14 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       console.log(chalk.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
       const contract = await ethers.getContractAt(facetName, deployedDiamondData!.DiamondAddress, diamond.signer);
       const tx = await contract[initFunction]();
-      await tx.wait();
+      if (this.verbose) {
+        logTx(tx, `${facetName}.${initFunction}`, ifaceList);
+      } else {
+        console.log(chalk.blueBright(`🔄 Waiting for ${facetName}.${initFunction}} mined...`));
+        await tx.wait();
+      }
       console.log(chalk.green(`✅ ${facetName}.${initFunction} executed`));
     }
   }
+
 }

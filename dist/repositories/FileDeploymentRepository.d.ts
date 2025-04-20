@@ -8,6 +8,8 @@ export declare class FileDeploymentRepository implements DeploymentRepository {
     private writeDeployedDiamondData;
     private deploymentId;
     constructor(config: DiamondConfig);
+    setWriteDeployedDiamondData(write: boolean): void;
+    getWriteDeployedDiamondData(): boolean;
     loadDeployedDiamondData(): DeployedDiamondData;
     saveDeployedDiamondData(info: DeployedDiamondData): void;
     loadDeployConfig(): DeployConfig;

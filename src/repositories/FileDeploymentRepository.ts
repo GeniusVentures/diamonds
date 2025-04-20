@@ -3,6 +3,7 @@ import { DeployedDiamondData, DeployConfig } from '../schemas';
 import { readDeployFile, writeDeployInfo, readDeployConfig } from './jsonFileHandler';
 import { DiamondConfig } from '../types';
 import { join } from 'path';
+import chalk from 'chalk';
 
 export class FileDeploymentRepository implements DeploymentRepository {
   private deploymentDataPath: string;
@@ -22,12 +23,19 @@ export class FileDeploymentRepository implements DeploymentRepository {
       `deployments/${this.deploymentId}.json`
     )
 
-    // Load facets to deploy
     this.configFilePath = join(
       this.deploymentDataPath,
       config.diamondName,
       `${config.diamondName.toLowerCase()}.config.json`
     );
+  }
+
+  public setWriteDeployedDiamondData(write: boolean): void {
+    this.writeDeployedDiamondData = write;
+  }
+
+  public getWriteDeployedDiamondData(): boolean {
+    return this.writeDeployedDiamondData;
   }
 
   loadDeployedDiamondData(): DeployedDiamondData {
@@ -38,7 +46,7 @@ export class FileDeploymentRepository implements DeploymentRepository {
     if (this.writeDeployedDiamondData) {
       writeDeployInfo(this.deployedDiamondDataFilePath, info);
     } else {
-      console.log("File deployment Repository configured to ignore writing diamond deployment data.")
+      console.log(chalk.cyanBright("Skipping write of diamond deployment data. Set writeDeployedDiamondData to true to enable."));
     }
   }
 

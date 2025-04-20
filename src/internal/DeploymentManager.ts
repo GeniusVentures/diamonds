@@ -1,6 +1,7 @@
 import { Diamond } from "./Diamond";
-import { DeploymentStrategy } from "../repositories/DeploymentStrategy";
+import { DeploymentStrategy } from "../strategies/DeploymentStrategy";
 import { CallbackArgs } from "../types";
+import chalk from "chalk";
 
 export class DeploymentManager {
   private diamond: Diamond;
@@ -32,12 +33,10 @@ export class DeploymentManager {
   async upgrade(): Promise<void> {
     console.log(`♻️ Starting upgrade for Diamond: ${this.diamond.diamondName}`);
 
-    await this.strategy.deployFacets(this.diamond);
-
+    const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
     const removalFacetCuts = await this.strategy.getFacetsAndSelectorsToRemove(
       this.diamond
     );
-    const additionFacetCuts = await this.strategy.deployFacets(this.diamond);
     const allFacetCuts = [...removalFacetCuts, ...additionFacetCuts];
 
     await this.strategy.performDiamondCut(this.diamond, allFacetCuts);
@@ -64,17 +63,18 @@ export class DeploymentManager {
             diamond: this.diamond,
           };
 
+          console.log(chalk.cyanBright(`Executing callback ${config.callbacks} for facet ${facetName}...`));
           await this.diamond.callbackManager.executeCallback(
             facetName,
             config.callbacks,
             args
           );
 
-          console.log(`✅ Callback ${config.callbacks} executed for facet ${facetName}`);
+          console.log(chalk.magenta(`✅ Callback ${config.callbacks} executed for facet ${facetName}`));
         }
       }
     }
 
-    console.log(`✅ All post-deployment callbacks executed.`);
+    console.log(chalk.greenBright`✅ All post-deployment callbacks executed.`);
   }
 }

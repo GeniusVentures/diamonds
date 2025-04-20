@@ -1,6 +1,8 @@
 /// <reference types="debug" />
-import { BigNumber } from 'ethers';
+import { Interface } from "@ethersproject/abi";
 import { CreateProposalRequest } from "@openzeppelin/defender-admin-client";
+import { BigNumber } from "ethers";
+import { DeployedDiamondData } from "../schemas";
 declare global {
     export var debuglog: debug.Debugger;
 }
@@ -15,4 +17,5 @@ export interface IDefenderViaInfo {
     viaType: CreateProposalRequest['viaType'];
 }
 export declare function cutKey(diamondName: string, networkName: string, chainId: string): string;
+export declare function getDeployedFacetInterfaces(deployedInfo: DeployedDiamondData): Interface[];
 //# sourceMappingURL=common.d.ts.map

@@ -1,13 +1,14 @@
-import { BaseContract, BigNumber, Contract, ContractTransaction } from 'ethers';
 import { ethers } from 'hardhat';
 import { debug } from 'debug';
-import * as chai from 'chai';
-import { JsonRpcProvider } from '@ethersproject/providers';
-
-import chaiAsPromised from 'chai-as-promised';
+import { TransactionReceipt } from "@ethersproject/abstract-provider";
+import { Interface } from "@ethersproject/abi";
 import { Fragment } from '@ethersproject/abi';
 import { CreateProposalRequest } from "@openzeppelin/defender-admin-client";
-
+import { providers, utils, ContractInterface, BigNumber, ContractTransaction } from "ethers";
+import chalk from 'chalk';
+import { Artifact } from "hardhat/types";
+import { artifacts } from "hardhat";
+import { DeployedDiamondData } from "../schemas";
 
 declare global {
   export var debuglog: debug.Debugger;
@@ -38,4 +39,19 @@ export interface IDefenderViaInfo {
 export function cutKey(diamondName: string, networkName: string, chainId: string): string {
   const key = `${diamondName.toLowerCase()}-${networkName}-${chainId}`;
   return key;
+}
+
+export function getDeployedFacetInterfaces(deployedInfo: DeployedDiamondData): Interface[] {
+  const interfaces: Interface[] = [];
+
+  for (const facetName of Object.keys(deployedInfo.FacetDeployedInfo || {})) {
+    try {
+      const artifact: Artifact = artifacts.readArtifactSync(facetName);
+      interfaces.push(new Interface(artifact.abi));
+    } catch (err) {
+      console.warn(`⚠️ Could not load artifact for facet ${facetName}:`, err.message);
+    }
+  }
+
+  return interfaces;
 }

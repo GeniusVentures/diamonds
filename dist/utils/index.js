@@ -22,4 +22,7 @@ var DeploymentRepository_1 = require("../repositories/DeploymentRepository");
 Object.defineProperty(exports, "DeploymentRepository", { enumerable: true, get: function () { return DeploymentRepository_1.DeploymentRepository; } });
 __exportStar(require("./common"), exports);
 __exportStar(require("./signer"), exports);
+__exportStar(require("./txlogging"), exports);
+__exportStar(require("./diffDeployedFacets"), exports);
+__exportStar(require("./loupe"), exports);
 //# sourceMappingURL=index.js.map

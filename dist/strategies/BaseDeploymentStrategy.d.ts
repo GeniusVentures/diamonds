@@ -1,4 +1,4 @@
-import { DeploymentStrategy } from "../repositories/DeploymentStrategy";
+import { DeploymentStrategy } from "./DeploymentStrategy";
 import { Diamond } from "../internal/Diamond";
 import { FacetDeploymentInfo } from "../types";
 export declare class BaseDeploymentStrategy implements DeploymentStrategy {

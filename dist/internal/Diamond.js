@@ -37,6 +37,12 @@ class Diamond {
     getFacetsConfig() {
         return this.facetsConfig;
     }
+    setProvider(provider) {
+        this.provider = provider;
+    }
+    setSigner(signer) {
+        this.signer = signer;
+    }
     isUpgradeDeployment() {
         return !!this.deployedDiamondData.DiamondAddress;
     }
