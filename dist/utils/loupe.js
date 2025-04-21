@@ -87,19 +87,21 @@ exports.logDiamondLoupe = logDiamondLoupe;
  *                       (address + functionSelectors)
  *                       (see DiamondLoupeFacet.sol)
  */
-async function getDeployedFacets(diamondAddress, signerOrProvider = hardhat_1.ethers.provider, receiptToDecode) {
+async function getDeployedFacets(diamondAddress, signerOrProvider = hardhat_1.ethers.provider, receiptToDecode, logDeployedFacets) {
     // Generic ethers.Contract instance built only from the tiny ABI above
     const loupe = new ethers_1.Contract(diamondAddress, DIAMOND_LOUPE_ABI, signerOrProvider);
     // NB: cast is just to help TS‑users downstream; at runtime this is the raw array
     const facets = (await loupe.facets());
-    console.log(chalk_1.default.magentaBright("\n🔍 Deployed facets (via DiamondLoupe):"));
-    facets.forEach((f, i) => {
-        console.log(chalk_1.default.blueBright(`  [${i.toString().padStart(2, "0")}]  ${chalk_1.default.bold(f.facetAddress)}  –  ${f.functionSelectors.length} selector${f.functionSelectors.length === 1 ? "" : "s"}`));
-        f.functionSelectors.forEach((s, j) => {
-            console.log(`    ${j.toString().padStart(2, "0")}:  ${s}`);
+    if (logDeployedFacets === true) {
+        console.log(chalk_1.default.magentaBright("\n🔍 Currently deployed facets (via DiamondLoupe):"));
+        facets.forEach((f, i) => {
+            console.log(chalk_1.default.blueBright(`  [${i.toString().padStart(2, "0")}]  ${chalk_1.default.bold(f.facetAddress)}  –  ${f.functionSelectors.length} selector${f.functionSelectors.length === 1 ? "" : "s"}`));
+            f.functionSelectors.forEach((s, j) => {
+                console.log(`    ${j.toString().padStart(2, "0")}:  ${s}`);
+            });
+            console.log();
         });
-        console.log();
-    });
+    }
     // If the caller supplied a receipt from a recent diamondCut, decode it too
     if (receiptToDecode) {
         await logDiamondLoupe(

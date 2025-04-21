@@ -9,9 +9,10 @@ import { boolean } from "zod";
 export async function diffDeployedFacets(
   diamondAddress: string,
   signerOrProvider: Signer | providers.Provider,
-  deployedFacetData: DeployedDiamondData
+  deployedFacetData: DeployedDiamondData,
+  verboseGetDeployedFacets?: boolean,
 ): Promise<boolean> {
-  const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider);
+  const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
 
   const localFacets = deployedFacetData.FacetDeployedInfo || {};
 

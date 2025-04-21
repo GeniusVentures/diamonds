@@ -107,7 +107,8 @@ export async function logDiamondLoupe(
 export async function getDeployedFacets(
   diamondAddress: string,
   signerOrProvider: Signer | providers.JsonRpcSigner | providers.Provider = ethers.provider,
-  receiptToDecode?: providers.TransactionReceipt
+  receiptToDecode?: providers.TransactionReceipt,
+  logDeployedFacets?: boolean, // default: assumed false
 ): Promise<FacetStruct[]> {
   // Generic ethers.Contract instance built only from the tiny ABI above
   const loupe = new Contract(diamondAddress, DIAMOND_LOUPE_ABI, signerOrProvider);
@@ -115,17 +116,19 @@ export async function getDeployedFacets(
   // NB: cast is just to help TS‑users downstream; at runtime this is the raw array
   const facets = (await loupe.facets()) as FacetStruct[];
 
-  console.log(chalk.magentaBright("\n🔍 Deployed facets (via DiamondLoupe):"));
-  facets.forEach((f: { facetAddress: string; functionSelectors: string[] }, i: number) => {
-    console.log(chalk.blueBright(
-      `  [${i.toString().padStart(2, "0")}]  ${chalk.bold(f.facetAddress)}  –  ${f.functionSelectors.length
-      } selector${f.functionSelectors.length === 1 ? "" : "s"}`
-    ));
-    f.functionSelectors.forEach((s: string, j: number) => {
-      console.log(`    ${j.toString().padStart(2, "0")}:  ${s}`);
+  if (logDeployedFacets === true) {
+    console.log(chalk.magentaBright("\n🔍 Currently deployed facets (via DiamondLoupe):"));
+    facets.forEach((f: { facetAddress: string; functionSelectors: string[] }, i: number) => {
+      console.log(chalk.blueBright(
+        `  [${i.toString().padStart(2, "0")}]  ${chalk.bold(f.facetAddress)}  –  ${f.functionSelectors.length
+        } selector${f.functionSelectors.length === 1 ? "" : "s"}`
+      ));
+      f.functionSelectors.forEach((s: string, j: number) => {
+        console.log(`    ${j.toString().padStart(2, "0")}:  ${s}`);
+      });
+      console.log();
     });
-    console.log();
-  });
+  }
 
   // If the caller supplied a receipt from a recent diamondCut, decode it too
   if (receiptToDecode) {

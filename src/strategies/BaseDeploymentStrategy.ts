@@ -215,8 +215,6 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       await tx.wait();
     }
 
-    // const loupeAddr = deployedDiamondData.DiamondAddress!;
-    // await getDeployedFacets(loupeAddr, diamond.signer);
     deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
     diamond.updateDeployedDiamondData(deployedDiamondData);
 

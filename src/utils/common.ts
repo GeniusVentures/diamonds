@@ -49,7 +49,7 @@ export function getDeployedFacetInterfaces(deployedInfo: DeployedDiamondData): I
       const artifact: Artifact = artifacts.readArtifactSync(facetName);
       interfaces.push(new Interface(artifact.abi));
     } catch (err) {
-      console.warn(`⚠️ Could not load artifact for facet ${facetName}:`, err.message);
+      console.warn(`⚠️ Could not load artifact for facet ${facetName}:`, (err as Error).message);
     }
   }
 

@@ -1,7 +1,7 @@
 import { DeployedDiamondData } from "../schemas";
 import { providers } from "ethers";
 import { Signer } from "@ethersproject/abstract-signer";
-export declare function diffDeployedFacets(diamondAddress: string, signerOrProvider: Signer | providers.Provider, deployedFacetData: DeployedDiamondData): Promise<boolean>;
+export declare function diffDeployedFacets(diamondAddress: string, signerOrProvider: Signer | providers.Provider, deployedFacetData: DeployedDiamondData, verboseGetDeployedFacets?: boolean): Promise<boolean>;
 export declare function printFacetSelectorFunctions(abi: any, selectors: string[]): void;
 export declare function isProtocolInitRegistered(deployedDiamondData: DeployedDiamondData, protocolInitFacet: string, initializerSig: string): Promise<boolean>;
 /**

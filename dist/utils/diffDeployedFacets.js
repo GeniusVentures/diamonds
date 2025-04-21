@@ -7,8 +7,8 @@ exports.compareFacetSelectors = exports.isProtocolInitRegistered = exports.print
 const loupe_1 = require("./loupe");
 const abi_1 = require("@ethersproject/abi");
 const chalk_1 = __importDefault(require("chalk"));
-async function diffDeployedFacets(diamondAddress, signerOrProvider, deployedFacetData) {
-    const onChainFacets = await (0, loupe_1.getDeployedFacets)(diamondAddress, signerOrProvider);
+async function diffDeployedFacets(diamondAddress, signerOrProvider, deployedFacetData, verboseGetDeployedFacets) {
+    const onChainFacets = await (0, loupe_1.getDeployedFacets)(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
     const localFacets = deployedFacetData.FacetDeployedInfo || {};
     const seen = new Set();
     let pass = true;

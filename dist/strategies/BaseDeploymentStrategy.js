@@ -182,8 +182,6 @@ class BaseDeploymentStrategy {
             console.log(chalk_1.default.blueBright(`🔄 Waiting for DiamondCut transaction to be mined...`));
             await tx.wait();
         }
-        // const loupeAddr = deployedDiamondData.DiamondAddress!;
-        // await getDeployedFacets(loupeAddr, diamond.signer);
         deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
         diamond.updateDeployedDiamondData(deployedDiamondData);
         console.log(chalk_1.default.green(`✅ DiamondCut executed: ${tx.hash}`));

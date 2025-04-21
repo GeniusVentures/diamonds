@@ -20,7 +20,8 @@ import { ethers } from "hardhat";
 export async function logTx(
   tx: ContractTransaction,
   description = "",
-  interfaces: (Interface | ContractInterface)[] = []
+  interfaces: (Interface | ContractInterface)[] = [],
+  // verbose?: boolean
 ): Promise<providers.TransactionReceipt> {
   // normalise incoming interfaces => ethers.Interface
   const decoders: Interface[] = interfaces.map((i) =>

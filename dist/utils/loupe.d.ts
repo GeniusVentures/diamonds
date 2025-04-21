@@ -39,5 +39,5 @@ export declare function logDiamondLoupe(tx: ContractTransaction, diamondLoupe: s
  *                       (address + functionSelectors)
  *                       (see DiamondLoupeFacet.sol)
  */
-export declare function getDeployedFacets(diamondAddress: string, signerOrProvider?: Signer | providers.JsonRpcSigner | providers.Provider, receiptToDecode?: providers.TransactionReceipt): Promise<FacetStruct[]>;
+export declare function getDeployedFacets(diamondAddress: string, signerOrProvider?: Signer | providers.JsonRpcSigner | providers.Provider, receiptToDecode?: providers.TransactionReceipt, logDeployedFacets?: boolean): Promise<FacetStruct[]>;
 //# sourceMappingURL=loupe.d.ts.map
