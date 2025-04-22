@@ -15,19 +15,26 @@ export class FileDeploymentRepository implements DeploymentRepository {
   constructor(config: DiamondConfig) {
     this.deploymentDataPath = config.deploymentsPath! || 'diamonds';
     this.writeDeployedDiamondData = config.writeDeployedDiamondData ?? true;
-    this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName.toLowerCase()}-${config.chainId.toString()}`;
+    this.deploymentId = `${config.diamondName.toLowerCase()}-${config.networkName!.toLowerCase()}-${config.chainId!.toString()}`;
 
-    this.deployedDiamondDataFilePath = join(
-      this.deploymentDataPath,
-      config.diamondName,
-      `deployments/${this.deploymentId}.json`
-    )
-
-    this.configFilePath = join(
-      this.deploymentDataPath,
-      config.diamondName,
-      `${config.diamondName.toLowerCase()}.config.json`
-    );
+    if (config.deployedDiamondDataFilePath) {
+      this.deployedDiamondDataFilePath = config.deployedDiamondDataFilePath;
+    } else {
+      this.deployedDiamondDataFilePath = join(
+        this.deploymentDataPath,
+        config.diamondName,
+        `deployments/${this.deploymentId}.json`
+      )
+    }
+    if (config.configFilePath) {
+      this.configFilePath = config.configFilePath;
+    } else {
+      this.configFilePath = join(
+        this.deploymentDataPath,
+        config.diamondName,
+        `${config.diamondName.toLowerCase()}.config.json`
+      );
+    }
   }
 
   public setWriteDeployedDiamondData(write: boolean): void {

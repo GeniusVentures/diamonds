@@ -67,7 +67,8 @@ class BaseDeploymentStrategy {
                 const replacedSelectors = newSelectors.filter(sel => existingSelectors.includes(sel));
                 const addedSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
                 if (this.verbose) {
-                    console.log(chalk_1.default.magentaBright(`🧩 Facet: ${facetName}`));
+                    const facetAddress = facetContract.address;
+                    console.log(chalk_1.default.magentaBright(`🧩 Facet: ${facetName} @ ${facetAddress}`));
                     console.log(chalk_1.default.gray(`  - Upgrade Version: ${latestVersion}`));
                     console.log(chalk_1.default.green(`  - Added Selectors:`), addedSelectors);
                     console.log(chalk_1.default.yellow(`  - Replaced Selectors:`), replacedSelectors);
@@ -170,7 +171,7 @@ class BaseDeploymentStrategy {
                     console.log(chalk_1.default.cyan(`  Init:`), cut.initFunc);
             }
             if (initAddress !== hardhat_1.ethers.constants.AddressZero) {
-                console.log(chalk_1.default.cyan(`Using ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
+                console.log(chalk_1.default.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
             }
         }
         const tx = await diamondContract.diamondCut(facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors })), initAddress, initCalldata);

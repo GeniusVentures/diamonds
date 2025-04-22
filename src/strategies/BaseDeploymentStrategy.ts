@@ -78,7 +78,8 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         const addedSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
 
         if (this.verbose) {
-          console.log(chalk.magentaBright(`🧩 Facet: ${facetName}`));
+          const facetAddress = facetContract.address;
+          console.log(chalk.magentaBright(`🧩 Facet: ${facetName} @ ${facetAddress}`));
           console.log(chalk.gray(`  - Upgrade Version: ${latestVersion}`));
           console.log(chalk.green(`  - Added Selectors:`), addedSelectors);
           console.log(chalk.yellow(`  - Replaced Selectors:`), replacedSelectors);
@@ -197,7 +198,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         if (cut.initFunc) console.log(chalk.cyan(`  Init:`), cut.initFunc);
       }
       if (initAddress !== ethers.constants.AddressZero) {
-        console.log(chalk.cyan(`Using ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
+        console.log(chalk.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
       }
     }
 

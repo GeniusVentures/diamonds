@@ -9,8 +9,8 @@ class Diamond {
         this.initializerRegistry = new Map();
         this.config = config;
         this.diamondName = config.diamondName;
-        this.networkName = config.networkName;
-        this.chainId = config.chainId;
+        this.networkName = config.networkName || "hardhat";
+        this.chainId = config.chainId || 31337;
         this.deploymentsPath = config.deploymentsPath || "diamonds";
         this.contractsPath = config.contractsPath || "contracts";
         this.repository = repository;
