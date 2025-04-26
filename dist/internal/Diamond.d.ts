@@ -23,12 +23,15 @@ export declare class Diamond {
     deployConfig: DeployConfig;
     constructor(config: DiamondConfig, repository: DeploymentRepository);
     getDeployedDiamondData(): DeployedDiamondData;
+    setDeployedDiamondData(data: DeployedDiamondData): void;
     updateDeployedDiamondData(data: DeployedDiamondData): void;
     getDiamondConfig(): DiamondConfig;
     getDeployConfig(): DeployConfig;
     getFacetsConfig(): FacetsConfig;
     setProvider(provider: JsonRpcProvider): void;
+    getProvider(): JsonRpcProvider | undefined;
     setSigner(signer: Signer): void;
+    getSigner(): Signer | undefined;
     isUpgradeDeployment(): boolean;
     selectorRegistry: Set<string>;
     registerSelectors(selectors: string[]): void;

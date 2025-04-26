@@ -49,6 +49,10 @@ export class Diamond {
     return this.deployedDiamondData;
   }
 
+  setDeployedDiamondData(data: DeployedDiamondData) {
+    this.deployedDiamondData = data;
+  }
+
   updateDeployedDiamondData(data: DeployedDiamondData): void {
     this.repository.saveDeployedDiamondData(data);
     this.deployedDiamondData = data;
@@ -70,8 +74,16 @@ export class Diamond {
     this.provider = provider;
   }
 
+  public getProvider(): JsonRpcProvider | undefined {
+    return this.provider;
+  }
+
   public setSigner(signer: Signer): void {
     this.signer = signer;
+  }
+
+  public getSigner(): Signer | undefined {
+    return this.signer;
   }
 
   public isUpgradeDeployment(): boolean {

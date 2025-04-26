@@ -24,6 +24,9 @@ class Diamond {
     getDeployedDiamondData() {
         return this.deployedDiamondData;
     }
+    setDeployedDiamondData(data) {
+        this.deployedDiamondData = data;
+    }
     updateDeployedDiamondData(data) {
         this.repository.saveDeployedDiamondData(data);
         this.deployedDiamondData = data;
@@ -40,8 +43,14 @@ class Diamond {
     setProvider(provider) {
         this.provider = provider;
     }
+    getProvider() {
+        return this.provider;
+    }
     setSigner(signer) {
         this.signer = signer;
+    }
+    getSigner() {
+        return this.signer;
     }
     isUpgradeDeployment() {
         return !!this.deployedDiamondData.DiamondAddress;

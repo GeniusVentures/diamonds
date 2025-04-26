@@ -33,7 +33,6 @@ class DeploymentManager {
     async runPostDeployCallbacks() {
         console.log(`🔄 Running post-deployment callbacks...`);
         const deployConfig = this.diamond.getDeployConfig();
-        const deployInfo = this.diamond.getDeployedDiamondData();
         for (const [facetName, facetConfig] of Object.entries(deployConfig.facets)) {
             if (!facetConfig.versions)
                 continue;
