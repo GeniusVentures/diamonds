@@ -26,6 +26,7 @@ export interface FileRepositoryConfig extends DiamondConfig {
   chainId: number;
   networkName: string;
 }
+
 export interface DiamondsConfig {
   diamonds: Record<string, DiamondConfig>;
 }

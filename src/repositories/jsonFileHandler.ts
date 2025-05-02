@@ -85,7 +85,7 @@ export function defaultDeployment(): DeployedDiamondData {
   return {
     DiamondAddress: "",
     DeployerAddress: "",
-    FacetDeployedInfo: {}, // Empty object for facets
+    DeployedFacets: {}, // Empty object for facets
     ExternalLibraries: {}, // Empty object for external libraries
     protocolVersion: 0, // Default protocol version
   };

@@ -11,14 +11,6 @@ export interface IDeployConfig {
     chainId: number;
     deployer?: Signer;
 }
-/**
- * Type for the diamond cut “action”.
- */
-export declare enum FacetCutAction {
-    Add = 0,
-    Replace = 1,
-    Remove = 2
-}
 export interface CallbackArgs {
     diamond: Diamond;
 }
@@ -37,4 +29,36 @@ export interface FacetDeploymentInfo {
     initFunc?: string;
     version?: number;
 }
+export type NewDeployedFacet = {
+    priority: number;
+    address: string;
+    tx_hash: string;
+    version: number;
+    initFunction: string;
+    funcSelectors: string[];
+    deployInclude: string[];
+    deployExclude: string[];
+    verified: boolean;
+};
+export type NewDeployedFacets = Record<string, NewDeployedFacet>;
+/**
+ * Type for the diamond cut “action”.
+ */
+export declare enum FacetCutAction {
+    Add = 0,
+    Replace = 1,
+    Remove = 2
+}
+export declare enum RegistryFacetCutAction {
+    Add = 0,
+    Replace = 1,
+    Remove = 2,
+    Deployed = 3
+}
+export type FunctionSelectorRegistryEntry = {
+    facetName: string;
+    priority: number;
+    address: string;
+    action: RegistryFacetCutAction;
+};
 //# sourceMappingURL=deployments.d.ts.map

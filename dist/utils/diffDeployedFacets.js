@@ -9,7 +9,7 @@ const abi_1 = require("@ethersproject/abi");
 const chalk_1 = __importDefault(require("chalk"));
 async function diffDeployedFacets(diamondAddress, signerOrProvider, deployedFacetData, verboseGetDeployedFacets) {
     const onChainFacets = await (0, loupe_1.getDeployedFacets)(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
-    const localFacets = deployedFacetData.FacetDeployedInfo || {};
+    const localFacets = deployedFacetData.DeployedFacets || {};
     const seen = new Set();
     let pass = true;
     console.log(chalk_1.default.magentaBright("\n🔍 Diffing on-chain facets against deployment metadata:\n"));
@@ -62,7 +62,7 @@ function printFacetSelectorFunctions(abi, selectors) {
 exports.printFacetSelectorFunctions = printFacetSelectorFunctions;
 async function isProtocolInitRegistered(deployedDiamondData, protocolInitFacet, initializerSig) {
     var _a;
-    const facet = (_a = deployedDiamondData.FacetDeployedInfo) === null || _a === void 0 ? void 0 : _a[protocolInitFacet];
+    const facet = (_a = deployedDiamondData.DeployedFacets) === null || _a === void 0 ? void 0 : _a[protocolInitFacet];
     console.log(`Checking if ${protocolInitFacet} is registered with ${initializerSig}...`);
     if (!facet || !facet.funcSelectors)
         return false;

@@ -44,7 +44,7 @@ export function cutKey(diamondName: string, networkName: string, chainId: string
 export function getDeployedFacetInterfaces(deployedInfo: DeployedDiamondData): Interface[] {
   const interfaces: Interface[] = [];
 
-  for (const facetName of Object.keys(deployedInfo.FacetDeployedInfo || {})) {
+  for (const facetName of Object.keys(deployedInfo.DeployedFacets || {})) {
     try {
       const artifact: Artifact = artifacts.readArtifactSync(facetName);
       interfaces.push(new Interface(artifact.abi));

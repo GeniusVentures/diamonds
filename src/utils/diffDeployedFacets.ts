@@ -14,7 +14,7 @@ export async function diffDeployedFacets(
 ): Promise<boolean> {
   const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
 
-  const localFacets = deployedFacetData.FacetDeployedInfo || {};
+  const localFacets = deployedFacetData.DeployedFacets || {};
 
   const seen = new Set<string>();
 
@@ -78,7 +78,7 @@ export async function isProtocolInitRegistered(
   protocolInitFacet: string,
   initializerSig: string
 ): Promise<boolean> {
-  const facet = deployedDiamondData.FacetDeployedInfo?.[protocolInitFacet];
+  const facet = deployedDiamondData.DeployedFacets?.[protocolInitFacet];
   console.log(`Checking if ${protocolInitFacet} is registered with ${initializerSig}...`);
 
   if (!facet || !facet.funcSelectors) return false;

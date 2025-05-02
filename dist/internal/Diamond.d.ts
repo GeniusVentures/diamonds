@@ -3,7 +3,7 @@ import { CallbackManager } from "./CallbackManager";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { DeploymentRepository } from "../repositories/DeploymentRepository";
-import { DiamondConfig } from "../types";
+import { DiamondConfig, FunctionSelectorRegistryEntry, NewDeployedFacets, NewDeployedFacet } from "../types";
 export declare class Diamond {
     private static instances;
     diamondName: string;
@@ -22,6 +22,14 @@ export declare class Diamond {
     provider: JsonRpcProvider | undefined;
     deployConfig: DeployConfig;
     constructor(config: DiamondConfig, repository: DeploymentRepository);
+    functionSelectorRegistry: Map<string, FunctionSelectorRegistryEntry>;
+    private _initializeFunctionSelectorRegistry;
+    registerFunctionSelectors(selectors: Record<string, Omit<FunctionSelectorRegistryEntry, "selector">>): void;
+    updateFunctionSelectorRegistry(selector: string, entry: FunctionSelectorRegistryEntry): void;
+    isFunctionSelectorRegistered(selector: string): boolean;
+    newDeployedFacets: NewDeployedFacets;
+    getNewDeployedFacets(): NewDeployedFacets;
+    updateNewDeployedFacets(facetName: string, facet: NewDeployedFacet): void;
     getDeployedDiamondData(): DeployedDiamondData;
     setDeployedDiamondData(data: DeployedDiamondData): void;
     updateDeployedDiamondData(data: DeployedDiamondData): void;
@@ -33,9 +41,6 @@ export declare class Diamond {
     setSigner(signer: Signer): void;
     getSigner(): Signer | undefined;
     isUpgradeDeployment(): boolean;
-    selectorRegistry: Set<string>;
-    registerSelectors(selectors: string[]): void;
-    isSelectorRegistered(selector: string): boolean;
     initializerRegistry: Map<string, string>;
     registerInitializers(facetName: string, initFunction: string): void;
 }

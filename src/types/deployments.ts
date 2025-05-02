@@ -13,15 +13,6 @@ export interface IDeployConfig {
   deployer?: Signer;
 }
 
-/**
- * Type for the diamond cut “action”.
- */
-export enum FacetCutAction {
-  Add,
-  Replace,
-  Remove
-}
-
 export interface CallbackArgs {
   diamond: Diamond;
   // initConfig: IDeployConfig;
@@ -47,3 +38,56 @@ export interface FacetDeploymentInfo {
   initFunc?: string;
   version?: number;
 }
+
+// TODO create or implement function selector type, address type tx_hash type with restrictions
+
+export type NewDeployedFacet = {
+  priority: number;
+  address: string;
+  tx_hash: string;
+  version: number;
+  initFunction: string;
+  funcSelectors: string[];
+  deployInclude: string[];
+  deployExclude: string[];
+  verified: boolean;
+};
+
+export type NewDeployedFacets =
+  Record<string, NewDeployedFacet>;
+
+/**
+ * Type for the diamond cut “action”.
+ */
+export enum FacetCutAction {
+  Add,
+  Replace,
+  Remove
+}
+
+export enum RegistryFacetCutAction {
+  Add = FacetCutAction.Add,
+  Replace = FacetCutAction.Replace,
+  Remove = FacetCutAction.Remove,
+  Deployed
+}
+
+export type FunctionSelectorRegistryEntry = {
+  facetName: string;
+  priority: number;
+  address: string;
+  action: RegistryFacetCutAction;
+};
+
+/**
+ * Type for capturing the needed data to perform a diamond cut.
+ * 
+ * key:
+ * @param functionSelectors - The function selectors to be added, replaced, or removed.
+ * 
+ * values:
+ * @param facetName - The name of the facet.
+ * @param address - The address of the facet to be added, replaced, or removed.
+ * @param action - The action to be performed (add, replace, or remove).
+ */
+type SelectorRegistry = Map<string, { facetName: string; address: string; priority: number; action: FacetCutAction }>;

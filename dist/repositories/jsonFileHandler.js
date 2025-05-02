@@ -63,7 +63,7 @@ function defaultDeployment() {
     return {
         DiamondAddress: "",
         DeployerAddress: "",
-        FacetDeployedInfo: {},
+        DeployedFacets: {},
         ExternalLibraries: {},
         protocolVersion: 0, // Default protocol version
     };

@@ -1,205 +1,289 @@
 import { DeploymentStrategy } from "./DeploymentStrategy";
 import { Diamond } from "../internal/Diamond";
-import { FacetDeploymentInfo, FacetCutAction } from "../types";
+import {
+  FacetDeploymentInfo,
+  DiamondConfig,
+  FacetCutAction,
+  RegistryFacetCutAction,
+  CallbackArgs,
+  FunctionSelectorRegistryEntry,
+  NewDeployedFacet
+} from "../types";
+import { DeployedDiamondData, DeployedFacet, DeployedFacets, FacetsConfig } from "../schemas";
 import { ethers } from "hardhat";
 import { join } from "path";
 import chalk from "chalk";
-import { logTx, logDiamondLoupe, getDeployedFacets } from "../utils";
-import { getDeployedFacetInterfaces } from "../utils";
+import { logTx, logDiamondLoupe, getDeployedFacets, getDeployedFacetInterfaces } from "../utils";
 
 export class BaseDeploymentStrategy implements DeploymentStrategy {
   constructor(protected verbose: boolean = false) { }
 
   async deployDiamond(diamond: Diamond): Promise<void> {
     console.log(chalk.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`));
+
+    // Deploy the DiamondCutFacet
     const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.getSigner()!);
     const diamondCutFacet = await diamondCutFactory.deploy();
     await diamondCutFacet.deployed();
 
+    // Deploy the Diamond
     const diamondArtifactName = `${diamond.diamondName}.sol:${diamond.diamondName}`;
-    const diamondArtifactPath = join(
-      diamond.contractsPath,
-      diamondArtifactName,
-    );
+    const diamondArtifactPath = join(diamond.contractsPath, diamondArtifactName);
     const diamondFactory = await ethers.getContractFactory(diamondArtifactPath, diamond.getSigner()!);
     const diamondContract = await diamondFactory.deploy(diamond.getSigner()!.getAddress(), diamondCutFacet.address);
     await diamondContract.deployed();
-    const diamondFunctionSelectors = Object.keys(diamondContract.interface.functions).map(fn => diamondContract.interface.getSighash(fn));
-    diamond.registerSelectors(diamondFunctionSelectors);
 
-    const info = diamond.getDeployedDiamondData();
-    info.DeployerAddress = await diamond.getSigner()!.getAddress();
-    info.DiamondAddress = diamondContract.address;
-    const diamondCutFacetFunctionSelectors = Object.keys(diamondCutFacet.interface.functions).map(fn => diamondCutFacet.interface.getSighash(fn));
-    info.FacetDeployedInfo = info.FacetDeployedInfo || {};
-    info.FacetDeployedInfo["DiamondCutFacet"] = {
+    // Get function selectors for DiamondCutFacet
+    const diamondCutFacetFunctionSelectors = Object.keys(diamondCutFacet.interface.functions).map(fn =>
+      diamondCutFacet.interface.getSighash(fn)
+    );
+
+    // Register the DiamondCutFacet function selectors
+    const diamondCutFacetSelectorsRegistry = diamondCutFacetFunctionSelectors.reduce((acc, selector) => {
+      acc[selector] = {
+        facetName: "DiamondCutFacet",
+        priority: diamond.getFacetsConfig()?.DiamondCutFacet?.priority || 1000, // Default priority if not set
+        address: diamondCutFacet.address,
+        action: RegistryFacetCutAction.Deployed,
+      };
+      return acc;
+    }, {} as Record<string, Omit<FunctionSelectorRegistryEntry, "selector">>);
+
+    // TODO This should be moved to deployFacets?
+    diamond.registerFunctionSelectors(diamondCutFacetSelectorsRegistry);
+
+    // TODO move to NewDeployedFacets
+    // Update deployed diamond data
+    const deployedDiamondData = diamond.getDeployedDiamondData();
+    deployedDiamondData.DeployerAddress = await diamond.getSigner()!.getAddress();
+    deployedDiamondData.DiamondAddress = diamondContract.address;
+    deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
+    deployedDiamondData.DeployedFacets["DiamondCutFacet"] = {
       address: diamondCutFacet.address,
       tx_hash: diamondCutFacet.deployTransaction.hash,
-      version: 1,
+      version: 0,
       funcSelectors: diamondCutFacetFunctionSelectors,
     };
 
-    diamond.updateDeployedDiamondData(info);
-    diamond.registerSelectors(diamondCutFacetFunctionSelectors);
+    diamond.updateDeployedDiamondData(deployedDiamondData);
 
     console.log(chalk.green(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`));
   }
 
-  async deployFacets(diamond: Diamond): Promise<FacetDeploymentInfo[]> {
+  async deployFacets(diamond: Diamond): Promise<void> {
+    await this._deployFacets(diamond);
+  }
+
+  private async _deployFacets(diamond: Diamond) {
     const deployConfig = diamond.getDeployConfig();
-    const facetsConfig = deployConfig.facets;
+    const facetsConfig = diamond.getDeployConfig().facets;
     const deployedDiamondData = diamond.getDeployedDiamondData();
-    const deployedFacets = deployedDiamondData.FacetDeployedInfo || {};
+    const deployedFacets = deployedDiamondData.DeployedFacets || {};
     const facetCuts: FacetDeploymentInfo[] = [];
 
-    const sortedFacetNames = Object.keys(facetsConfig).sort((a, b) => {
-      return (facetsConfig[a].priority || 1000) - (facetsConfig[b].priority || 1000);
-    });
+    // const sortedFacetNames = Object.keys(facetsConfig).sort((a, b) => {
+    //   return (facetsConfig[a].priority || 1000) - (facetsConfig[b].priority || 1000);
+    // });
 
-    const deployedFuncSelectors = Object.entries(facetsConfig)
-      .flatMap(([facetName, facetConfig]) => {
-        const deployedFacetFunctionSelectors = deployedFacets[facetName]?.funcSelectors || [];
-        const priority = facetConfig.priority || 1000;
+    const sortedFacetNames = Object.keys(deployConfig.facets)
+      .sort((a, b) => {
+        return (deployConfig.facets[a].priority || 1000) - (deployConfig.facets[b].priority || 1000);
+      });
 
-        return deployedFacetFunctionSelectors.map(selector => ({
-          selector,
-          priority,
-        }));
-      })
-      .sort((a, b) => a.priority - b.priority)
-      .reduce((acc, { selector, priority }) => {
-        acc[selector] = priority;
-        return acc;
-      }, {} as Record<string, number>);
-
-    const selectorsToRemove = await this.getFacetsAndSelectorsToRemove(diamond)
-
+    // Save the facet deployment info
     for (const facetName of sortedFacetNames) {
       const facetConfig = facetsConfig[facetName];
-      const deployedVersion = deployedDiamondData.FacetDeployedInfo?.[facetName]?.version ?? -1;
+      const deployedVersion = deployedDiamondData.DeployedFacets?.[facetName]?.version ?? -1;
       const availableVersions = Object.keys(facetConfig.versions || {}).map(Number);
-      const latestVersion = Math.max(...availableVersions);
+      const upgradeVersion = Math.max(...availableVersions);
 
-      if (latestVersion > deployedVersion || deployedVersion === -1) {
+      if (upgradeVersion > deployedVersion || deployedVersion === -1) {
         if (this.verbose) {
-          console.log(chalk.blueBright(`🚀 Deploying facet: ${facetName} to version ${latestVersion}`));
+          console.log(chalk.blueBright(`🚀 Deploying facet: ${facetName} to version ${upgradeVersion}`));
         }
         // Deploy the facet contract
         const facetFactory = await ethers.getContractFactory(facetName, ethers.getSigner(diamond.getSigner()?.getAddress()));
         const facetContract = await facetFactory.deploy();
         await facetContract.deployed();
 
-        const facetSelectors = Object.keys(facetContract.interface.functions).map(fn =>
-          facetContract.interface.getSighash(fn)
-        );
+        const deployedFacets = new Map<string, DeployedFacet>();
 
-        // The Selectors that have been previously assigned to this facet
-        const existingSelectors = deployedDiamondData.FacetDeployedInfo?.[facetName]?.funcSelectors || [];
-        // Fileter facet Selectors against those already being included with a higher priority facet
-        const newSelectors = facetSelectors.filter(sel => !diamond.selectorRegistry.has(sel));
-        // Existing Selectors assigned to this facet that need to be removed because they are no longer in the facet.
-        const removedSelectors: string[] = existingSelectors.filter((sel: string) => !newSelectors.includes(sel));
-        // Selectors that exist in the Diamond but are associated with a facet of lower priority or one being removed
-        const replacedSelectors = newSelectors.filter(sel => existingSelectors.includes(sel));
+        const availableVersions = Object.keys(facetConfig.versions ?? {}).map(Number);
 
-        const addSelectors = newSelectors.filter(sel => !existingSelectors.includes(sel));
+        const facetSelectors = Object.keys(facetContract.interface.functions)
+          .map(fn => facetContract.interface.getSighash(fn));
 
-        if (this.verbose) {
-          const facetAddress = facetContract.address;
-          console.log(chalk.magentaBright(`🧩 Facet: ${facetName} @ ${facetAddress}`));
-          console.log(chalk.gray(`  - Upgrade Version: ${latestVersion}`));
-          console.log(chalk.green(`  - Added Selectors:`), addSelectors);
-          console.log(chalk.yellow(`  - Replaced Selectors:`), replacedSelectors);
-          console.log(chalk.red(`  - Removed Selectors:`), removedSelectors);
-        }
 
-        if (removedSelectors.length > 0) {
-          facetCuts.push({
-            facetAddress: ethers.constants.AddressZero,
-            action: FacetCutAction.Remove,
-            functionSelectors: removedSelectors,
-            name: facetName,
-            version: latestVersion
-          });
-        }
-
-        if (addSelectors.length) {
-          facetCuts.push({
-            facetAddress: facetContract.address,
-            action: FacetCutAction.Add,
-            functionSelectors: addSelectors,
-            name: facetName,
-            version: latestVersion
-          });
-        }
-
-        if (replacedSelectors.length) {
-          facetCuts.push({
-            facetAddress: facetContract.address,
-            action: FacetCutAction.Replace,
-            functionSelectors: replacedSelectors,
-            name: facetName,
-            version: latestVersion
-          });
-        }
-
-        deployedDiamondData.FacetDeployedInfo = deployedDiamondData.FacetDeployedInfo || {};
-        deployedDiamondData.FacetDeployedInfo[facetName] = {
+        const newFacetData: NewDeployedFacet = {
+          priority: facetConfig.priority || 1000,
           address: facetContract.address,
           tx_hash: facetContract.deployTransaction.hash,
-          version: latestVersion,
-          funcSelectors: newSelectors,
+          version: upgradeVersion,
+          funcSelectors: facetSelectors,
+          deployInclude: facetConfig.versions?.[upgradeVersion]?.deployInclude || [],
+          deployExclude: facetConfig.versions?.[upgradeVersion]?.deployExclude || [],
+          initFunction: facetConfig.versions?.[upgradeVersion]?.deployInit || "",
+          verified: false,
         };
 
-        diamond.registerSelectors(newSelectors);
-        // Do not add the protocolInitFacet to the Initializer registry
-        if (facetName === deployConfig.protocolInitFacet) continue;
+        diamond.updateNewDeployedFacets(facetName, newFacetData);
 
-        const facetVersionConfig = facetConfig.versions?.[latestVersion];
-        const initFunc = facetVersionConfig?.deployInit ?? facetVersionConfig?.upgradeInit;
-        const initKey = deployedVersion === -1 ? "deployInit" : "upgradeInit";
-        const initFunction = facetConfig.versions && facetConfig.versions[latestVersion]?.[initKey];
+        console.log(chalk.cyan(`⛵ Deployed at ${facetContract.address} with ${facetSelectors.length} selectors.`));
+        // Log the deployment transaction and selectors
+        if (this.verbose) {
+          console.log(chalk.gray(`  Selectors:`), facetSelectors);
+        }
+      }
 
-        if (initFunction) {
-          console.log(chalk.blueBright(`▶ Registering ${initKey} for facet ${facetName}: ${initFunction}`));
-          diamond.registerInitializers(facetName, initFunction);
+    }
+  }
+
+  async updateFunctionSelectorRegistry(diamond: Diamond) {
+    this._updateFunctionSelectorRegistry(diamond);
+  }
+
+  private async _updateFunctionSelectorRegistry(
+    diamond: Diamond,
+  ): Promise<void> {
+    const registry = diamond.functionSelectorRegistry;
+
+    const newDeployedFacets = diamond.getNewDeployedFacets();
+
+    const newDeployedFacetsByPriority = Object.entries(newDeployedFacets).sort(([, a], [, b]) =>
+      (a.priority || 1000) - (b.priority || 1000)
+    );
+
+    for (const [newFacetName, newFacetData] of newDeployedFacetsByPriority) {
+      const currentFacetAddress = newFacetData.address;
+      const priority: number = newFacetData.priority;
+      const functionSelectors: string[] = newFacetData.funcSelectors || [];
+      const includeFuncSelectors: string[] = newFacetData.deployInclude || [];
+      const excludeFuncSelectors: string[] = newFacetData.deployExclude || [];
+
+      /* ------------------ Exclusion Filter ------------------ */
+      for (const excludeFuncSelector of excludeFuncSelectors) {
+        // remove from the facets functionSelectors
+        if (excludeFuncSelector in functionSelectors) {
+          functionSelectors.splice(functionSelectors.indexOf(excludeFuncSelector), 1);
+        }
+        // update action to remove if excluded from registry where a previous deployment associated with facetname
+        if (excludeFuncSelector in registry && registry.get(excludeFuncSelector)?.facetName === newFacetName) {
+          const existing = registry.get(excludeFuncSelector);
+          if (existing && existing.facetName === newFacetName) {
+            registry.set(excludeFuncSelector, {
+              priority: priority,
+              address: currentFacetAddress,
+              action: RegistryFacetCutAction.Remove,
+              facetName: newFacetName,
+            });
+          }
+        }
+      }
+
+      /* ------------ Higher Priority Split of Registry ------------------ */
+      const registryHigherPrioritySplit = Array.from(registry.entries())
+        .filter(([_, entry]) => entry.priority > priority)
+        .reduce((acc, [selector, entry]) => {
+          if (!acc[entry.facetName]) {
+            acc[entry.facetName] = [];
+          }
+          acc[entry.facetName].push(selector);
+          return acc;
+        }, {} as Record<string, string[]>);
+
+      /* ------------------ Inclusion Override Filter ------------------ */
+      for (const includeFuncSelector of includeFuncSelectors) {
+        // Force Replace if already registered by higher priority facet
+        if (includeFuncSelector in registryHigherPrioritySplit) {
+          const higherPriorityFacet = Object.keys(registryHigherPrioritySplit).find(facetName => {
+            return registryHigherPrioritySplit[facetName].includes(includeFuncSelector);
+          });
+          if (higherPriorityFacet) {
+            registry.set(includeFuncSelector, {
+              priority: priority,
+              address: currentFacetAddress,
+              action: RegistryFacetCutAction.Replace,
+              facetName: newFacetName,
+            });
+          }
+        } else {
+          // Add to the registry
+          registry.set(includeFuncSelector, {
+            priority: priority,
+            address: currentFacetAddress,
+            action: RegistryFacetCutAction.Add,
+            facetName: newFacetName,
+          });
         }
 
-        console.log(chalk.green(`✅ Facet ${facetName} deployed at ${facetContract.address}`));
+        // remove from the funcSels so it is not modified in Priority Resolution Pass
+        if (includeFuncSelector in newDeployedFacets) {
+          const existing = newDeployedFacets[newFacetName];
+          if (existing && existing.funcSelectors) {
+            existing.funcSelectors.splice(existing.funcSelectors.indexOf(includeFuncSelector), 1);
+          }
+        }
+      }
+
+      /* ------------------ 3. Replace Facet and Priority Resolution Pass ------------- */
+      for (const selector of functionSelectors) {
+        const existing = registry.get(selector);
+        if (existing) {
+          const existingPriority = existing.priority;
+
+          if (existing.facetName === newFacetName) {
+            // Same facet, update the address
+            registry.set(selector, {
+              priority: priority,
+              address: currentFacetAddress,
+              action: RegistryFacetCutAction.Replace,
+              facetName: newFacetName,
+            });
+          } else if (priority < existingPriority) {
+            // Current facet has higher priority, Replace it
+            registry.set(selector, {
+              priority: priority,
+              address: currentFacetAddress,
+              action: RegistryFacetCutAction.Replace,
+              facetName: newFacetName,
+            });
+          }
+
+        } else {
+          // New selector, simply add
+          registry.set(selector, {
+            priority: priority,
+            address: currentFacetAddress,
+            action: RegistryFacetCutAction.Add,
+            facetName: newFacetName,
+          });
+        }
+      }
+
+      /* ------------------ 4. Remove Old Function Selectors ------------------ */
+      // Set functionselectors with the newFacetName and still different address to Remove
+      for (const [selector, entry] of registry.entries()) {
+        if (entry.facetName === newFacetName && entry.address !== currentFacetAddress) {
+          registry.set(selector, {
+            priority: entry.priority,
+            address: currentFacetAddress,
+            action: RegistryFacetCutAction.Remove,
+            facetName: newFacetName,
+          });
+        }
       }
     }
-
-    diamond.updateDeployedDiamondData(deployedDiamondData);
-    return facetCuts;
   }
 
-  async getFacetsAndSelectorsToRemove(
-    diamond: Diamond
-  ): Promise<FacetDeploymentInfo[]> {
-    const deployedDiamondData = diamond.getDeployedDiamondData();
-    const existingFacets = deployedDiamondData.FacetDeployedInfo!;
-    const newConfig = diamond.getFacetsConfig();
-    const selectorsToRemove: FacetDeploymentInfo[] = [];
-    let removeFacets: string[] = [];
-
-    for (const deployedFacetName in existingFacets) {
-      if (!(deployedFacetName in newConfig)) {
-        selectorsToRemove.push({
-          facetAddress: ethers.constants.AddressZero,
-          action: FacetCutAction.Remove,
-          functionSelectors: existingFacets[deployedFacetName].funcSelectors || [],
-          name: deployedFacetName,
-        });
-        // Remove Facets from deployedData
-        removeFacets.push(deployedFacetName);
-        delete deployedDiamondData.FacetDeployedInfo![deployedFacetName];
-        diamond.updateDeployedDiamondData(deployedDiamondData);
-      }
-    }
-    return selectorsToRemove;
+  private async _runDiamondCut(diamond: Diamond, registry: any) {
+    // prepare facetCuts array based on selector registry, run diamondCut transaction
   }
 
-  async performDiamondCut(diamond: Diamond, facetCuts: FacetDeploymentInfo[]): Promise<void> {
+  private async _runInitializerRegistry(diamond: Diamond) {
+    // run post-deploy per-facet initializers if any registered
+  }
+
+  async performDiamondCut(diamond: Diamond): Promise<void> {
     const diamondSignerwithAddress = await diamond.getSigner()?.getAddress();
     ethers.provider = diamond.getProvider()!;
     const signer = await ethers.getSigner(diamondSignerwithAddress!);
@@ -207,15 +291,17 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     const signerDiamondContract = diamondContract.connect(signer);
     const deployConfig = diamond.getDeployConfig();
     const deployedDiamondData = diamond.getDeployedDiamondData();
+    const selectorRegistry = diamond.functionSelectorRegistry;
 
+
+    // Atomic Intializer setup
     let initAddress = ethers.constants.AddressZero;
     let initCalldata = "0x";
-
-    const protocolInitFacet = deployConfig.protocolInitFacet;
     const currentVersion = deployedDiamondData.protocolVersion ?? 0;
-
+    const protocolInitFacet = deployConfig.protocolInitFacet;
+    // TODO Validate Init Func is being deployed  in registry
     if (protocolInitFacet && deployConfig.protocolVersion > currentVersion) {
-      const facetInfo = deployedDiamondData.FacetDeployedInfo?.[protocolInitFacet];
+      const facetInfo = deployedDiamondData.DeployedFacets?.[protocolInitFacet];
       const facetConfig = deployConfig.facets[protocolInitFacet];
       const versionConfig = facetConfig.versions?.[deployConfig.protocolVersion];
 
@@ -227,21 +313,41 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       }
     }
 
+    /* -------------------------- Prepare the facet cuts -----------------------*/
+
+    // extract facet cuts from the selector registry 
+    const facetCuts = Array.from(selectorRegistry.entries())
+      .filter(([_, entry]) => entry.action !== RegistryFacetCutAction.Deployed)
+      .map(([selector, entry]) => {
+        return {
+          facetAddress: entry.address,
+          action: entry.action,
+          functionSelectors: [selector],
+          name: entry.facetName,
+        };
+      });
+
+
+
     if (this.verbose) {
       console.log(chalk.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
       for (const cut of facetCuts) {
         console.log(chalk.bold(`- ${FacetCutAction[cut.action]} for facet ${cut.name} at ${cut.facetAddress}`));
         console.log(chalk.gray(`  Selectors:`), cut.functionSelectors);
-        if (cut.initFunc) console.log(chalk.cyan(`  Init:`), cut.initFunc);
+        // TODO add facetcuts
+        // if (cut.initFunc) console.log(chalk.cyan(`  Init:`), cut.initFunc);
       }
       if (initAddress !== ethers.constants.AddressZero) {
         console.log(chalk.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
       }
     }
 
-    const chainId = await ethers.provider.getNetwork()
+    /* -------------------------- Perform the diamond cut -----------------------*/
+
+    const chainId = await ethers.provider.getNetwork();
+    const facetSelectorCutMap = facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors }));
     const tx = await signerDiamondContract.diamondCut(
-      facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors })),
+      facetSelectorCutMap,
       initAddress,
       initCalldata
     );
@@ -273,4 +379,32 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     }
   }
 
+  async runPostDeployCallbacks(diamond: Diamond): Promise<void> {
+    console.log(`🔄 Running post-deployment callbacks...`);
+
+    const deployConfig = diamond.getDeployConfig();
+
+    for (const [facetName, facetConfig] of Object.entries(deployConfig.facets)) {
+      if (!facetConfig.versions) continue;
+
+      for (const [version, config] of Object.entries(facetConfig.versions)) {
+        if (config.callbacks) {
+          const args: CallbackArgs = {
+            diamond: diamond,
+          };
+
+          console.log(chalk.cyanBright(`Executing callback ${config.callbacks} for facet ${facetName}...`));
+          await diamond.callbackManager.executeCallback(
+            facetName,
+            config.callbacks,
+            args
+          );
+
+          console.log(chalk.magenta(`✅ Callback ${config.callbacks} executed for facet ${facetName}`));
+        }
+      }
+    }
+
+    console.log(chalk.greenBright`✅ All post-deployment callbacks executed.`);
+  }
 }

@@ -1,10 +1,22 @@
 import { join } from "path";
-import { DeployedDiamondData, DeployConfig, FacetsConfig } from "../schemas";
+import {
+  DeployedDiamondData,
+  DeployedFacets,
+  DeployedFacet,
+  DeployConfig,
+  FacetsConfig
+} from "../schemas";
 import { CallbackManager } from "./CallbackManager";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { DeploymentRepository } from "../repositories/DeploymentRepository";
-import { DiamondConfig } from "../types";
+import {
+  DiamondConfig,
+  RegistryFacetCutAction,
+  FunctionSelectorRegistryEntry,
+  NewDeployedFacets,
+  NewDeployedFacet
+} from "../types";
 
 export class Diamond {
   private static instances: Map<string, Diamond> = new Map();
@@ -43,6 +55,70 @@ export class Diamond {
 
     this.callbackManager = CallbackManager.getInstance(
       this.diamondName, this.deploymentsPath);
+
+    this._initializeFunctionSelectorRegistry(this);
+  }
+
+  public functionSelectorRegistry = new Map<string, FunctionSelectorRegistryEntry>();
+
+  private _initializeFunctionSelectorRegistry(
+    diamond: Diamond
+  ) {
+    const diamondConfig: DiamondConfig = diamond.getDiamondConfig();
+    const deployedDiamondData: DeployedDiamondData = diamond.getDeployedDiamondData();
+    const deployedFacets: DeployedFacets = deployedDiamondData.DeployedFacets || {};
+
+    // Build the deployed function selectors based on the current state of the diamond
+    const deployedFuncSelectors = Object.entries(diamondConfig)
+      .flatMap(([facetName, facetConfig]) => {
+        const deployedFacetFunctionSelectors = deployedFacets[facetName]?.funcSelectors || [];
+        const priority = facetConfig.priority || 1000;
+
+        return deployedFacetFunctionSelectors.map(selector => ({
+          selector,
+          priority,
+        }));
+      })
+      .sort((a, b) => a.priority - b.priority)
+      .reduce((acc, { selector, priority }) => {
+        acc[selector] = priority;
+        return acc;
+      }, {} as Record<string, number>);
+
+    for (const [facetName, { address: contractAddress, funcSelectors: selectors }] of Object.entries(deployedFacets)) {
+      for (const selector of selectors!) {
+        this.functionSelectorRegistry.set(selector, {
+          facetName,
+          priority: deployedFuncSelectors[selector] || 1000,
+          address: contractAddress!,
+          action: RegistryFacetCutAction.Deployed,
+        });
+      }
+    }
+  }
+
+  public registerFunctionSelectors(selectors: Record<string, Omit<FunctionSelectorRegistryEntry, "selector">>): void {
+    Object.entries(selectors).forEach(([selector, entry]) => {
+      this.functionSelectorRegistry.set(selector, entry);
+    });
+  }
+
+  public updateFunctionSelectorRegistry(selector: string, entry: FunctionSelectorRegistryEntry): void {
+    this.functionSelectorRegistry.set(selector, entry);
+  }
+
+  public isFunctionSelectorRegistered(selector: string): boolean {
+    return this.functionSelectorRegistry.has(selector);
+  }
+
+  public newDeployedFacets: NewDeployedFacets = {};
+
+  public getNewDeployedFacets(): NewDeployedFacets {
+    return this.newDeployedFacets || {};
+  }
+
+  public updateNewDeployedFacets(facetName: string, facet: NewDeployedFacet): void {
+    this.newDeployedFacets[facetName] = facet;
   }
 
   getDeployedDiamondData(): DeployedDiamondData {
@@ -90,15 +166,15 @@ export class Diamond {
     return !!this.deployedDiamondData.DiamondAddress;
   }
 
-  public selectorRegistry: Set<string> = new Set();
+  // public selectorRegistry: Set<string> = new Set();
 
-  public registerSelectors(selectors: string[]): void {
-    selectors.forEach(selector => this.selectorRegistry.add(selector));
-  }
+  // public registerSelectors(selectors: string[]): void {
+  //   selectors.forEach(selector => this.selectorRegistry.add(selector));
+  // }
 
-  public isSelectorRegistered(selector: string): boolean {
-    return this.selectorRegistry.has(selector);
-  }
+  // public isSelectorRegistered(selector: string): boolean {
+  //   return this.selectorRegistry.has(selector);
+  // }
 
   public initializerRegistry: Map<string, string> = new Map();
 

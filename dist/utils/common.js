@@ -28,7 +28,7 @@ function cutKey(diamondName, networkName, chainId) {
 exports.cutKey = cutKey;
 function getDeployedFacetInterfaces(deployedInfo) {
     const interfaces = [];
-    for (const facetName of Object.keys(deployedInfo.FacetDeployedInfo || {})) {
+    for (const facetName of Object.keys(deployedInfo.DeployedFacets || {})) {
         try {
             const artifact = hardhat_2.artifacts.readArtifactSync(facetName);
             interfaces.push(new abi_1.Interface(artifact.abi));

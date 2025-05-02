@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Schema for a single facet's deployment information
-export const FacetDeployedInfoSchema = z.object({
+export const DeployedFacetSchema = z.object({
   address: z.string().optional(), // Address of the deployed facet
   tx_hash: z.string().optional(), // Transaction hash of the deployment
   version: z.number().optional(), // Version of the facet
@@ -10,7 +10,7 @@ export const FacetDeployedInfoSchema = z.object({
 });
 
 // Schema for all deployed facets
-export const FacetDeployedInfoRecordSchema = z.record(FacetDeployedInfoSchema);
+export const DeployedFacetsSchema = z.record(DeployedFacetSchema);
 
 // Schema for external libraries
 export const ExternalLibrariesSchema = z.record(z.string());
@@ -19,7 +19,8 @@ export const ExternalLibrariesSchema = z.record(z.string());
 export const DeployedDiamondDataSchema = z.object({
   DiamondAddress: z.string().optional(), // Address of the deployed diamond
   DeployerAddress: z.string(), // Address of the deployer
-  FacetDeployedInfo: FacetDeployedInfoRecordSchema.optional(), // Information about deployed facets
+  // FacetDeployedInfo: FacetDeployedInfoRecordSchema.optional(), // Information about deployed facets
+  DeployedFacets: DeployedFacetsSchema.optional(), // Information about deployed facets
   ExternalLibraries: ExternalLibrariesSchema.optional(), // External libraries used in the deployment
   protocolVersion: z.number().optional(), // Protocol version
 });
@@ -32,7 +33,8 @@ export const FacetVersionConfigSchema = z.object({
   upgradeInit: z.string().optional(),
   fromVersions: z.array(z.number()).optional(),
   callbacks: z.array(z.string()).optional(),
-  deployInclude: z.array(z.string()).optional()
+  deployInclude: z.array(z.string()).optional(),
+  deployExclude: z.array(z.string()).optional(),
 });
 
 /**
@@ -64,6 +66,6 @@ export type FacetsConfig = z.infer<typeof FacetsConfigSchema>;
 export type DeployConfig = z.infer<typeof DeployConfigSchema>;
 
 // export type FacetsDeployment = z.infer<typeof FacetsConfigSchema>;
-export type FacetDeployedInfo = z.infer<typeof FacetDeployedInfoSchema>;
-export type FacetDeployedInfoRecord = z.infer<typeof FacetDeployedInfoRecordSchema>;
+export type DeployedFacet = z.infer<typeof DeployedFacetSchema>;
+export type DeployedFacets = z.infer<typeof DeployedFacetsSchema>;
 export type DeployedDiamondData = z.infer<typeof DeployedDiamondDataSchema>;

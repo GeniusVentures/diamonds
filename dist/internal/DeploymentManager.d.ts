@@ -6,6 +6,5 @@ export declare class DeploymentManager {
     constructor(diamond: Diamond, strategy: DeploymentStrategy);
     deploy(): Promise<void>;
     upgrade(): Promise<void>;
-    private runPostDeployCallbacks;
 }
 //# sourceMappingURL=DeploymentManager.d.ts.map
