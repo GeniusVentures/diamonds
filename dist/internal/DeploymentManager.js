@@ -8,6 +8,7 @@ class DeploymentManager {
     }
     async deploy() {
         console.log(`🚀 Starting deployment for Diamond: ${this.diamond.diamondName}`);
+        this.diamond.newDeployment = true;
         await this.strategy.deployDiamond(this.diamond);
         await this.strategy.deployFacets(this.diamond);
         await this.strategy.updateFunctionSelectorRegistry(this.diamond);
@@ -17,6 +18,7 @@ class DeploymentManager {
     }
     async upgrade() {
         console.log(`♻️ Starting upgrade for Diamond: ${this.diamond.diamondName}`);
+        this.diamond.newDeployment = false;
         await this.strategy.deployFacets(this.diamond);
         await this.strategy.updateFunctionSelectorRegistry(this.diamond);
         await this.strategy.performDiamondCut(this.diamond);

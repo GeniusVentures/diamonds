@@ -7,14 +7,14 @@ import chalk from "chalk";
 import { boolean } from "zod";
 
 export async function diffDeployedFacets(
-  diamondAddress: string,
+  deployedDiamondData: DeployedDiamondData,
   signerOrProvider: Signer | providers.Provider,
-  deployedFacetData: DeployedDiamondData,
   verboseGetDeployedFacets?: boolean,
 ): Promise<boolean> {
+  const diamondAddress = deployedDiamondData.DiamondAddress!;
   const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
 
-  const localFacets = deployedFacetData.DeployedFacets || {};
+  const localFacets = deployedDiamondData.DeployedFacets || {};
 
   const seen = new Set<string>();
 
@@ -48,15 +48,15 @@ export async function diffDeployedFacets(
   }
 
   for (const localFacetName of Object.keys(localFacets)) {
-    if (!seen.has(localFacetName)) {
+    if (pass && !seen.has(localFacetName)) {
       console.log(chalk.red(`  ❌ Deployed facet ${localFacetName} missing from on-chain state.`));
       pass = false;
     }
   }
   if (pass) {
-    console.log(chalk.greenBright("  ✅ All facets match!"));
+    console.log(chalk.bgGreenBright("  ✅ All facets exist in deplyoment metadata!"));
   } else {
-    console.log(chalk.red("  ❌ Some facets do not match!"));
+    console.log(chalk.bgRed("  ❌ Some facets do not match!"));
   }
   return pass;
 }

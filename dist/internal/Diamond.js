@@ -6,6 +6,7 @@ const types_1 = require("../types");
 class Diamond {
     constructor(config, repository) {
         this.facetSelectors = [];
+        this.newDeployment = true;
         this.functionSelectorRegistry = new Map();
         this.newDeployedFacets = {};
         // public selectorRegistry: Set<string> = new Set();
@@ -32,30 +33,31 @@ class Diamond {
         this._initializeFunctionSelectorRegistry(this);
     }
     _initializeFunctionSelectorRegistry(diamond) {
+        var _a;
         const diamondConfig = diamond.getDiamondConfig();
         const deployedDiamondData = diamond.getDeployedDiamondData();
         const deployedFacets = deployedDiamondData.DeployedFacets || {};
-        // Build the deployed function selectors based on the current state of the diamond
-        const deployedFuncSelectors = Object.entries(diamondConfig)
-            .flatMap(([facetName, facetConfig]) => {
-            var _a;
-            const deployedFacetFunctionSelectors = ((_a = deployedFacets[facetName]) === null || _a === void 0 ? void 0 : _a.funcSelectors) || [];
-            const priority = facetConfig.priority || 1000;
-            return deployedFacetFunctionSelectors.map(selector => ({
-                selector,
-                priority,
-            }));
-        })
-            .sort((a, b) => a.priority - b.priority)
-            .reduce((acc, { selector, priority }) => {
-            acc[selector] = priority;
-            return acc;
-        }, {});
+        // // Build the deployed function selectors based on the current state of the diamond
+        // const deployedFuncSelectors = Object.entries(diamondConfig)
+        //   .flatMap(([facetName, facetConfig]) => {
+        //     const deployedFacetFunctionSelectors = deployedFacets[facetName]?.funcSelectors || [];
+        //     const priority = facetConfig.priority || 1000;
+        //     return deployedFacetFunctionSelectors.map(selector => ({
+        //       selector,
+        //       priority,
+        //     }));
+        //   })
+        //   .sort((a, b) => a.priority - b.priority)
+        //   .reduce((acc, { selector, priority }) => {
+        //     acc[selector] = priority;
+        //     return acc;
+        //   }, {} as Record<string, number>);
         for (const [facetName, { address: contractAddress, funcSelectors: selectors }] of Object.entries(deployedFacets)) {
+            console.log(facetName);
             for (const selector of selectors) {
                 this.functionSelectorRegistry.set(selector, {
                     facetName,
-                    priority: deployedFuncSelectors[selector] || 1000,
+                    priority: ((_a = this.facetsConfig[facetName]) === null || _a === void 0 ? void 0 : _a.priority) || 1000,
                     address: contractAddress,
                     action: types_1.RegistryFacetCutAction.Deployed,
                 });
@@ -86,8 +88,8 @@ class Diamond {
         this.deployedDiamondData = data;
     }
     updateDeployedDiamondData(data) {
-        this.repository.saveDeployedDiamondData(data);
         this.deployedDiamondData = data;
+        this.repository.saveDeployedDiamondData(data);
     }
     getDiamondConfig() {
         return this.config;

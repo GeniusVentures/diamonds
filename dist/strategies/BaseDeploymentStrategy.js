@@ -38,9 +38,7 @@ class BaseDeploymentStrategy {
             };
             return acc;
         }, {});
-        // TODO This should be moved to deployFacets?
         diamond.registerFunctionSelectors(diamondCutFacetSelectorsRegistry);
-        // TODO move to NewDeployedFacets
         // Update deployed diamond data
         const deployedDiamondData = diamond.getDeployedDiamondData();
         deployedDiamondData.DeployerAddress = await diamond.getSigner().getAddress();
@@ -59,7 +57,7 @@ class BaseDeploymentStrategy {
         await this._deployFacets(diamond);
     }
     async _deployFacets(diamond) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         const deployConfig = diamond.getDeployConfig();
         const facetsConfig = diamond.getDeployConfig().facets;
         const deployedDiamondData = diamond.getDeployedDiamondData();
@@ -90,15 +88,22 @@ class BaseDeploymentStrategy {
                 const availableVersions = Object.keys((_e = facetConfig.versions) !== null && _e !== void 0 ? _e : {}).map(Number);
                 const facetSelectors = Object.keys(facetContract.interface.functions)
                     .map(fn => facetContract.interface.getSighash(fn));
+                // Initializer function Registry
+                const deployInit = ((_g = (_f = facetConfig.versions) === null || _f === void 0 ? void 0 : _f[upgradeVersion]) === null || _g === void 0 ? void 0 : _g.deployInit) || "";
+                const upgradeInit = ((_j = (_h = facetConfig.versions) === null || _h === void 0 ? void 0 : _h[upgradeVersion]) === null || _j === void 0 ? void 0 : _j.upgradeInit) || "";
+                const initFn = diamond.newDeployment ? deployInit : upgradeInit;
+                if (initFn && facetName !== deployConfig.protocolInitFacet) {
+                    diamond.initializerRegistry.set(facetName, initFn);
+                }
                 const newFacetData = {
                     priority: facetConfig.priority || 1000,
                     address: facetContract.address,
                     tx_hash: facetContract.deployTransaction.hash,
                     version: upgradeVersion,
                     funcSelectors: facetSelectors,
-                    deployInclude: ((_g = (_f = facetConfig.versions) === null || _f === void 0 ? void 0 : _f[upgradeVersion]) === null || _g === void 0 ? void 0 : _g.deployInclude) || [],
-                    deployExclude: ((_j = (_h = facetConfig.versions) === null || _h === void 0 ? void 0 : _h[upgradeVersion]) === null || _j === void 0 ? void 0 : _j.deployExclude) || [],
-                    initFunction: ((_l = (_k = facetConfig.versions) === null || _k === void 0 ? void 0 : _k[upgradeVersion]) === null || _l === void 0 ? void 0 : _l.deployInit) || "",
+                    deployInclude: ((_l = (_k = facetConfig.versions) === null || _k === void 0 ? void 0 : _k[upgradeVersion]) === null || _l === void 0 ? void 0 : _l.deployInclude) || [],
+                    deployExclude: ((_o = (_m = facetConfig.versions) === null || _m === void 0 ? void 0 : _m[upgradeVersion]) === null || _o === void 0 ? void 0 : _o.deployExclude) || [],
+                    initFunction: initFn,
                     verified: false,
                 };
                 diamond.updateNewDeployedFacets(facetName, newFacetData);
@@ -116,6 +121,7 @@ class BaseDeploymentStrategy {
     async _updateFunctionSelectorRegistry(diamond) {
         var _a;
         const registry = diamond.functionSelectorRegistry;
+        const zeroAddress = hardhat_1.ethers.constants.AddressZero;
         const newDeployedFacets = diamond.getNewDeployedFacets();
         const newDeployedFacetsByPriority = Object.entries(newDeployedFacets).sort(([, a], [, b]) => (a.priority || 1000) - (b.priority || 1000));
         for (const [newFacetName, newFacetData] of newDeployedFacetsByPriority) {
@@ -220,28 +226,35 @@ class BaseDeploymentStrategy {
                     });
                 }
             }
-            /* ------------------ 4. Remove Old Function Selectors ------------------ */
+            /* ---------------- 4. Remove Old Function Selectors from facets -------------- */
             // Set functionselectors with the newFacetName and still different address to Remove
             for (const [selector, entry] of registry.entries()) {
                 if (entry.facetName === newFacetName && entry.address !== currentFacetAddress) {
                     registry.set(selector, {
                         priority: entry.priority,
-                        address: currentFacetAddress,
+                        address: zeroAddress,
                         action: types_1.RegistryFacetCutAction.Remove,
                         facetName: newFacetName,
                     });
                 }
             }
         }
-    }
-    async _runDiamondCut(diamond, registry) {
-        // prepare facetCuts array based on selector registry, run diamondCut transaction
-    }
-    async _runInitializerRegistry(diamond) {
-        // run post-deploy per-facet initializers if any registered
+        // `Remove` function selectors for facets no longer in config (deleted facets)
+        const facetsConfig = diamond.getDeployConfig().facets;
+        const facetNames = Object.keys(facetsConfig);
+        for (const [selector, entry] of registry.entries()) {
+            if (!facetNames.includes(entry.facetName)) {
+                registry.set(selector, {
+                    priority: entry.priority,
+                    address: zeroAddress,
+                    action: types_1.RegistryFacetCutAction.Remove,
+                    facetName: entry.facetName,
+                });
+            }
+        }
     }
     async performDiamondCut(diamond) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f, _g;
         const diamondSignerwithAddress = await ((_a = diamond.getSigner()) === null || _a === void 0 ? void 0 : _a.getAddress());
         hardhat_1.ethers.provider = diamond.getProvider();
         const signer = await hardhat_1.ethers.getSigner(diamondSignerwithAddress);
@@ -254,17 +267,19 @@ class BaseDeploymentStrategy {
         let initAddress = hardhat_1.ethers.constants.AddressZero;
         let initCalldata = "0x";
         const currentVersion = (_b = deployedDiamondData.protocolVersion) !== null && _b !== void 0 ? _b : 0;
-        const protocolInitFacet = deployConfig.protocolInitFacet;
-        // TODO Validate Init Func is being deployed  in registry
-        if (protocolInitFacet && deployConfig.protocolVersion > currentVersion) {
-            const facetInfo = (_c = deployedDiamondData.DeployedFacets) === null || _c === void 0 ? void 0 : _c[protocolInitFacet];
-            const facetConfig = deployConfig.facets[protocolInitFacet];
-            const versionConfig = (_d = facetConfig.versions) === null || _d === void 0 ? void 0 : _d[deployConfig.protocolVersion];
-            const initFn = (_e = versionConfig === null || versionConfig === void 0 ? void 0 : versionConfig.deployInit) !== null && _e !== void 0 ? _e : versionConfig === null || versionConfig === void 0 ? void 0 : versionConfig.upgradeInit;
-            if (initFn && facetInfo) {
+        const protocolInitFacet = deployConfig.protocolInitFacet || "";
+        const protocolVersion = deployConfig.protocolVersion;
+        const protocolFacetInfo = diamond.getNewDeployedFacets()[protocolInitFacet];
+        if (protocolInitFacet && protocolFacetInfo) {
+            const versionCfg = (_d = (_c = deployConfig.facets[protocolInitFacet]) === null || _c === void 0 ? void 0 : _c.versions) === null || _d === void 0 ? void 0 : _d[protocolVersion];
+            const initFn = diamond.newDeployment ? versionCfg === null || versionCfg === void 0 ? void 0 : versionCfg.deployInit : versionCfg === null || versionCfg === void 0 ? void 0 : versionCfg.upgradeInit;
+            if (initFn) {
                 const iface = new hardhat_1.ethers.utils.Interface([`function ${initFn}`]);
-                initAddress = facetInfo.address;
+                initAddress = protocolFacetInfo.address;
                 initCalldata = iface.encodeFunctionData(initFn);
+                if (this.verbose) {
+                    console.log(chalk_1.default.cyan(`🔧 Using protocol-wide initializer: ${protocolInitFacet}.${initFn}()`));
+                }
             }
         }
         /* -------------------------- Prepare the facet cuts -----------------------*/
@@ -279,13 +294,26 @@ class BaseDeploymentStrategy {
                 name: entry.facetName,
             };
         });
+        // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
+        const orphanedSelectors = facetCuts.filter(facetCut => {
+            return facetCuts.some(otherFacetCut => {
+                return (otherFacetCut.facetAddress !== facetCut.facetAddress &&
+                    otherFacetCut.name === facetCut.name &&
+                    (otherFacetCut.action === types_1.RegistryFacetCutAction.Add ||
+                        otherFacetCut.action === types_1.RegistryFacetCutAction.Replace ||
+                        otherFacetCut.action === types_1.RegistryFacetCutAction.Deployed));
+            });
+        });
+        if (orphanedSelectors.length > 0) {
+            console.error(chalk_1.default.redBright(`❌ Orphaned selectors found for facet ${orphanedSelectors[0].name} at address ${orphanedSelectors[0].facetAddress}`));
+            console.error(chalk_1.default.redBright(`  - ${orphanedSelectors[0].functionSelectors}`));
+            throw new Error(`Orphaned selectors found for facet ${orphanedSelectors[0].name} at address ${orphanedSelectors[0].facetAddress}`);
+        }
         if (this.verbose) {
             console.log(chalk_1.default.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
             for (const cut of facetCuts) {
                 console.log(chalk_1.default.bold(`- ${types_1.FacetCutAction[cut.action]} for facet ${cut.name} at ${cut.facetAddress}`));
                 console.log(chalk_1.default.gray(`  Selectors:`), cut.functionSelectors);
-                // TODO add facetcuts
-                // if (cut.initFunc) console.log(chalk.cyan(`  Init:`), cut.initFunc);
             }
             if (initAddress !== hardhat_1.ethers.constants.AddressZero) {
                 console.log(chalk_1.default.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
@@ -303,7 +331,39 @@ class BaseDeploymentStrategy {
             console.log(chalk_1.default.blueBright(`🔄 Waiting for DiamondCut transaction to be mined...`));
             await tx.wait();
         }
+        /* ------------------- Update the deployed diamond data ----------------- */
         deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
+        // Update the deployed diamond data with the new facet addresses and the function selectors from the registry
+        for (const [selector, entry] of selectorRegistry.entries()) {
+            const facetName = entry.facetName;
+            const facetAddress = entry.address;
+            const action = entry.action;
+            if (action === types_1.RegistryFacetCutAction.Add || action === types_1.RegistryFacetCutAction.Replace) {
+                const funcSelector = ((_e = deployedDiamondData.DeployedFacets[facetName]) === null || _e === void 0 ? void 0 : _e.funcSelectors) || [];
+                if (!funcSelector.includes(selector)) {
+                    funcSelector.push(selector);
+                }
+                deployedDiamondData.DeployedFacets[facetName] = {
+                    address: facetAddress,
+                    tx_hash: tx.hash,
+                    version: currentVersion,
+                    funcSelectors: [selector],
+                };
+            }
+            else if (action === types_1.RegistryFacetCutAction.Remove) {
+                // Remove the function selector from the facet
+                const funcSelector = ((_f = deployedDiamondData.DeployedFacets[facetName]) === null || _f === void 0 ? void 0 : _f.funcSelectors) || [];
+                if (funcSelector.includes(selector)) {
+                    funcSelector.splice(funcSelector.indexOf(selector), 1);
+                }
+            }
+        }
+        // If a facet has no function selectors, remove it from the deployed facets
+        for (const [facetName, facetData] of Object.entries(deployedDiamondData.DeployedFacets)) {
+            if (!facetData.funcSelectors || ((_g = facetData.funcSelectors) === null || _g === void 0 ? void 0 : _g.length) === 0) {
+                delete deployedDiamondData.DeployedFacets[facetName];
+            }
+        }
         diamond.updateDeployedDiamondData(deployedDiamondData);
         console.log(chalk_1.default.green(`✅ DiamondCut executed: ${tx.hash}`));
         for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {

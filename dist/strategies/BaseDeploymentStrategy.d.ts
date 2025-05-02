@@ -8,8 +8,6 @@ export declare class BaseDeploymentStrategy implements DeploymentStrategy {
     private _deployFacets;
     updateFunctionSelectorRegistry(diamond: Diamond): Promise<void>;
     private _updateFunctionSelectorRegistry;
-    private _runDiamondCut;
-    private _runInitializerRegistry;
     performDiamondCut(diamond: Diamond): Promise<void>;
     runPostDeployCallbacks(diamond: Diamond): Promise<void>;
 }

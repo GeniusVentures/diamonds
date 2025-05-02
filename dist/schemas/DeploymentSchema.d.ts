@@ -6,15 +6,15 @@ export declare const DeployedFacetSchema: z.ZodObject<{
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
-    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
+    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
-    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }>;
@@ -25,15 +25,15 @@ export declare const DeployedFacetsSchema: z.ZodRecord<z.ZodString, z.ZodObject<
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
-    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
+    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
-    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }>>;
@@ -48,15 +48,15 @@ export declare const DeployedDiamondDataSchema: z.ZodObject<{
         funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         verified: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
+        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
-        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }, {
+        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
-        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }>>>;
@@ -66,9 +66,9 @@ export declare const DeployedDiamondDataSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     DeployedFacets?: Record<string, {
+        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
-        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }> | undefined;
@@ -78,9 +78,9 @@ export declare const DeployedDiamondDataSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     DeployedFacets?: Record<string, {
+        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
-        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }> | undefined;

@@ -7,9 +7,10 @@ exports.compareFacetSelectors = exports.isProtocolInitRegistered = exports.print
 const loupe_1 = require("./loupe");
 const abi_1 = require("@ethersproject/abi");
 const chalk_1 = __importDefault(require("chalk"));
-async function diffDeployedFacets(diamondAddress, signerOrProvider, deployedFacetData, verboseGetDeployedFacets) {
+async function diffDeployedFacets(deployedDiamondData, signerOrProvider, verboseGetDeployedFacets) {
+    const diamondAddress = deployedDiamondData.DiamondAddress;
     const onChainFacets = await (0, loupe_1.getDeployedFacets)(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
-    const localFacets = deployedFacetData.DeployedFacets || {};
+    const localFacets = deployedDiamondData.DeployedFacets || {};
     const seen = new Set();
     let pass = true;
     console.log(chalk_1.default.magentaBright("\n🔍 Diffing on-chain facets against deployment metadata:\n"));
@@ -37,16 +38,16 @@ async function diffDeployedFacets(diamondAddress, signerOrProvider, deployedFace
         }
     }
     for (const localFacetName of Object.keys(localFacets)) {
-        if (!seen.has(localFacetName)) {
+        if (pass && !seen.has(localFacetName)) {
             console.log(chalk_1.default.red(`  ❌ Deployed facet ${localFacetName} missing from on-chain state.`));
             pass = false;
         }
     }
     if (pass) {
-        console.log(chalk_1.default.greenBright("  ✅ All facets match!"));
+        console.log(chalk_1.default.bgGreenBright("  ✅ All facets exist in deplyoment metadata!"));
     }
     else {
-        console.log(chalk_1.default.red("  ❌ Some facets do not match!"));
+        console.log(chalk_1.default.bgRed("  ❌ Some facets do not match!"));
     }
     return pass;
 }

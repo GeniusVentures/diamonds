@@ -21,6 +21,7 @@ export declare class Diamond {
     signer: Signer | undefined;
     provider: JsonRpcProvider | undefined;
     deployConfig: DeployConfig;
+    newDeployment: boolean;
     constructor(config: DiamondConfig, repository: DeploymentRepository);
     functionSelectorRegistry: Map<string, FunctionSelectorRegistryEntry>;
     private _initializeFunctionSelectorRegistry;
