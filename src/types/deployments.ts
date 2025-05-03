@@ -91,3 +91,12 @@ export type FunctionSelectorRegistryEntry = {
  * @param action - The action to be performed (add, replace, or remove).
  */
 type SelectorRegistry = Map<string, { facetName: string; address: string; priority: number; action: FacetCutAction }>;
+
+export type FacetCut = {
+  facetAddress: string;
+  action: RegistryFacetCutAction;
+  functionSelectors: string[];
+  name: string;
+};
+
+export type FacetCuts = FacetCut[];

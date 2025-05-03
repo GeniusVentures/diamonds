@@ -61,4 +61,11 @@ export type FunctionSelectorRegistryEntry = {
     address: string;
     action: RegistryFacetCutAction;
 };
+export type FacetCut = {
+    facetAddress: string;
+    action: RegistryFacetCutAction;
+    functionSelectors: string[];
+    name: string;
+};
+export type FacetCuts = FacetCut[];
 //# sourceMappingURL=deployments.d.ts.map

@@ -7,7 +7,8 @@ import {
   RegistryFacetCutAction,
   CallbackArgs,
   FunctionSelectorRegistryEntry,
-  NewDeployedFacet
+  NewDeployedFacet,
+  FacetCuts
 } from "../types";
 import { DeployedDiamondData, DeployedFacet, DeployedFacets, FacetsConfig } from "../schemas";
 import { ethers } from "hardhat";
@@ -302,12 +303,72 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     const deployConfig = diamond.getDeployConfig();
     const deployedDiamondData = diamond.getDeployedDiamondData();
     const selectorRegistry = diamond.functionSelectorRegistry;
+    const currentVersion = deployedDiamondData.protocolVersion ?? 0;
 
+    // Setup initCallData with Atomic Protocol Intializer
+    const [initCalldata, initAddress] = await this.getInitCalldata(diamond);
 
-    // Atomic Intializer setup
+    // extract facet cuts from the selector registry 
+    const facetCuts: FacetCuts = await this.getFacetCuts(diamond);
+
+    // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
+    await this.validateNoOrphanedSelectors(facetCuts);
+
+    if (this.verbose) {
+      console.log(chalk.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
+      for (const cut of facetCuts) {
+        console.log(chalk.bold(`- ${FacetCutAction[cut.action]} for facet ${cut.name} at ${cut.facetAddress}`));
+        console.log(chalk.gray(`  Selectors:`), cut.functionSelectors);
+      }
+      if (initAddress !== ethers.constants.AddressZero) {
+        console.log(chalk.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${deployConfig.protocolInitFacet} @ ${initAddress}`));
+      }
+    }
+
+    /* -------------------------- Perform the diamond cut -----------------------*/
+    const chainId = await ethers.provider.getNetwork();
+    const facetSelectorCutMap = facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors }));
+    const tx = await signerDiamondContract.diamondCut(
+      facetSelectorCutMap,
+      initAddress,
+      initCalldata
+    );
+
+    const ifaceList = getDeployedFacetInterfaces(deployedDiamondData);
+    // Log the transaction
+    if (this.verbose) {
+      await logTx(tx, "DiamondCut", ifaceList);
+    } else {
+      console.log(chalk.blueBright(`🔄 Waiting for DiamondCut transaction to be mined...`));
+      await tx.wait();
+    }
+
+    /* --------------------- Update the deployed diamond data ------------------ */
+    const txHash = tx.hash;
+    await this.postDiamondCutDeployedDataUpdate(diamond, txHash);
+
+    console.log(chalk.green(`✅ DiamondCut executed: ${tx.hash}`));
+
+    for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
+      console.log(chalk.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
+      const contract = await ethers.getContractAt(facetName, deployedDiamondData!.DiamondAddress, signer);
+      const tx = await contract[initFunction]();
+      if (this.verbose) {
+        logTx(tx, `${facetName}.${initFunction}`, ifaceList);
+      } else {
+        console.log(chalk.blueBright(`🔄 Waiting for ${facetName}.${initFunction}} mined...`));
+        await tx.wait();
+      }
+      console.log(chalk.green(`✅ ${facetName}.${initFunction} executed`));
+    }
+  }
+
+  async getInitCalldata(diamond: Diamond): Promise<[string, string]> {
+    const deployedDiamondData = diamond.getDeployedDiamondData();
+    const deployConfig = diamond.getDeployConfig();
+
     let initAddress = ethers.constants.AddressZero;
     let initCalldata = "0x";
-    const currentVersion = deployedDiamondData.protocolVersion ?? 0;
 
     const protocolInitFacet = deployConfig.protocolInitFacet || "";
     const protocolVersion = deployConfig.protocolVersion;
@@ -329,6 +390,15 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       }
     }
 
+    if (initAddress === ethers.constants.AddressZero) {
+      console.log(chalk.yellow(`⚠️ No protocol-wide initializer found. Using zero address.`));
+    }
+    return [initCalldata, initAddress];
+  }
+
+  async getFacetCuts(diamond: Diamond): Promise<FacetCuts> {
+    const deployConfig = diamond.getDeployConfig();
+    const selectorRegistry = diamond.functionSelectorRegistry;
     /* -------------------------- Prepare the facet cuts -----------------------*/
     // extract facet cuts from the selector registry 
     const facetCuts = Array.from(selectorRegistry.entries())
@@ -342,6 +412,10 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         };
       });
 
+    return facetCuts;
+  }
+
+  async validateNoOrphanedSelectors(facetCuts: FacetCuts): Promise<void> {
     // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
     const orphanedSelectors = facetCuts.filter(facetCut => {
       return facetCuts.some(otherFacetCut => {
@@ -354,41 +428,20 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         );
       });
     });
+
     if (orphanedSelectors.length > 0) {
       console.error(chalk.redBright(`❌ Orphaned selectors found for facet ${orphanedSelectors[0].name} at address ${orphanedSelectors[0].facetAddress}`));
       console.error(chalk.redBright(`  - ${orphanedSelectors[0].functionSelectors}`));
       throw new Error(`Orphaned selectors found for facet ${orphanedSelectors[0].name} at address ${orphanedSelectors[0].facetAddress}`);
     }
+  }
 
-    if (this.verbose) {
-      console.log(chalk.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
-      for (const cut of facetCuts) {
-        console.log(chalk.bold(`- ${FacetCutAction[cut.action]} for facet ${cut.name} at ${cut.facetAddress}`));
-        console.log(chalk.gray(`  Selectors:`), cut.functionSelectors);
-      }
-      if (initAddress !== ethers.constants.AddressZero) {
-        console.log(chalk.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${protocolInitFacet} @ ${initAddress}`));
-      }
-    }
+  async postDiamondCutDeployedDataUpdate(diamond: Diamond, txHash: string): Promise<void> {
+    const deployConfig = diamond.getDeployConfig();
+    const deployedDiamondData = diamond.getDeployedDiamondData();
+    const selectorRegistry = diamond.functionSelectorRegistry;
+    const currentVersion = deployedDiamondData.protocolVersion ?? 0;
 
-    /* -------------------------- Perform the diamond cut -----------------------*/
-    const chainId = await ethers.provider.getNetwork();
-    const facetSelectorCutMap = facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors }));
-    const tx = await signerDiamondContract.diamondCut(
-      facetSelectorCutMap,
-      initAddress,
-      initCalldata
-    );
-
-    const ifaceList = getDeployedFacetInterfaces(deployedDiamondData);
-    if (this.verbose) {
-      await logTx(tx, "DiamondCut", ifaceList);
-    } else {
-      console.log(chalk.blueBright(`🔄 Waiting for DiamondCut transaction to be mined...`));
-      await tx.wait();
-    }
-
-    /* ------------------- Update the deployed diamond data ----------------- */
     deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
     // Update the deployed diamond data with the new facet addresses and the function selectors from the registry
     for (const [selector, entry] of selectorRegistry.entries()) {
@@ -403,7 +456,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         }
         deployedDiamondData.DeployedFacets![facetName] = {
           address: facetAddress,
-          tx_hash: tx.hash,
+          tx_hash: txHash,
           version: currentVersion,
           funcSelectors: [selector],
         };
@@ -423,21 +476,6 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
       }
     }
     diamond.updateDeployedDiamondData(deployedDiamondData);
-
-    console.log(chalk.green(`✅ DiamondCut executed: ${tx.hash}`));
-
-    for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
-      console.log(chalk.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
-      const contract = await ethers.getContractAt(facetName, deployedDiamondData!.DiamondAddress, signer);
-      const tx = await contract[initFunction]();
-      if (this.verbose) {
-        logTx(tx, `${facetName}.${initFunction}`, ifaceList);
-      } else {
-        console.log(chalk.blueBright(`🔄 Waiting for ${facetName}.${initFunction}} mined...`));
-        await tx.wait();
-      }
-      console.log(chalk.green(`✅ ${facetName}.${initFunction} executed`));
-    }
   }
 
   async runPostDeployCallbacks(diamond: Diamond): Promise<void> {
