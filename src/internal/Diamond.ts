@@ -17,6 +17,7 @@ import {
   NewDeployedFacets,
   NewDeployedFacet
 } from "../types";
+import { ethers } from "ethers";
 
 export class Diamond {
   private static instances: Map<string, Diamond> = new Map();
@@ -58,7 +59,6 @@ export class Diamond {
       this.diamondName, this.deploymentsPath);
 
     this._initializeFunctionSelectorRegistry(this);
-
   }
 
   public functionSelectorRegistry = new Map<string, FunctionSelectorRegistryEntry>();
@@ -69,23 +69,6 @@ export class Diamond {
     const diamondConfig: DiamondConfig = diamond.getDiamondConfig();
     const deployedDiamondData: DeployedDiamondData = diamond.getDeployedDiamondData();
     const deployedFacets: DeployedFacets = deployedDiamondData.DeployedFacets || {};
-
-    // // Build the deployed function selectors based on the current state of the diamond
-    // const deployedFuncSelectors = Object.entries(diamondConfig)
-    //   .flatMap(([facetName, facetConfig]) => {
-    //     const deployedFacetFunctionSelectors = deployedFacets[facetName]?.funcSelectors || [];
-    //     const priority = facetConfig.priority || 1000;
-
-    //     return deployedFacetFunctionSelectors.map(selector => ({
-    //       selector,
-    //       priority,
-    //     }));
-    //   })
-    //   .sort((a, b) => a.priority - b.priority)
-    //   .reduce((acc, { selector, priority }) => {
-    //     acc[selector] = priority;
-    //     return acc;
-    //   }, {} as Record<string, number>);
 
     for (const [facetName, { address: contractAddress, funcSelectors: selectors }] of Object.entries(deployedFacets)) {
       console.log(facetName);
@@ -169,22 +152,20 @@ export class Diamond {
     return !!this.deployedDiamondData.DiamondAddress;
   }
 
-  // public selectorRegistry: Set<string> = new Set();
-
-  // public registerSelectors(selectors: string[]): void {
-  //   selectors.forEach(selector => this.selectorRegistry.add(selector));
-  // }
-
-  // public isSelectorRegistered(selector: string): boolean {
-  //   return this.selectorRegistry.has(selector);
-  // }
-
   public initializerRegistry: Map<string, string> = new Map();
 
   public registerInitializers(facetName: string, initFunction: string): void {
     this.initializerRegistry.set(facetName, initFunction);
   }
 
+  public initAddress: string = ethers.constants.AddressZero;
+
+  public setInitAddress(initAddress: string): void {
+    this.initAddress = initAddress;
+  }
+  public getInitAddress(): string {
+    return this.initAddress;
+  }
 }
 
 export default Diamond;

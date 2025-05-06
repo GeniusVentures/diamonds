@@ -254,7 +254,7 @@ class BaseDeploymentStrategy {
         }
     }
     async performDiamondCut(diamond) {
-        var _a, _b;
+        var _a;
         const diamondSignerwithAddress = await ((_a = diamond.getSigner()) === null || _a === void 0 ? void 0 : _a.getAddress());
         hardhat_1.ethers.provider = diamond.getProvider();
         const signer = await hardhat_1.ethers.getSigner(diamondSignerwithAddress);
@@ -262,8 +262,6 @@ class BaseDeploymentStrategy {
         const signerDiamondContract = diamondContract.connect(signer);
         const deployConfig = diamond.getDeployConfig();
         const deployedDiamondData = diamond.getDeployedDiamondData();
-        const selectorRegistry = diamond.functionSelectorRegistry;
-        const currentVersion = (_b = deployedDiamondData.protocolVersion) !== null && _b !== void 0 ? _b : 0;
         // Setup initCallData with Atomic Protocol Intializer
         const [initCalldata, initAddress] = await this.getInitCalldata(diamond);
         // extract facet cuts from the selector registry 
@@ -335,6 +333,7 @@ class BaseDeploymentStrategy {
         if (initAddress === hardhat_1.ethers.constants.AddressZero) {
             console.log(chalk_1.default.yellow(`⚠️ No protocol-wide initializer found. Using zero address.`));
         }
+        await diamond.setInitAddress(protocolFacetInfo.address);
         return [initCalldata, initAddress];
     }
     async getFacetCuts(diamond) {

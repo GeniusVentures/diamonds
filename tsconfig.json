@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "composite": true,
+    "allowJs": true,
+    "checkJs": false,
+    "baseUrl": "./",
+    
     "target": "ES2018",
     "module": "commonjs",
     "lib": ["ES2019"],
@@ -10,7 +15,8 @@
     "outDir": "./dist",
     "strict": true,
     "rootDirs": ["./src", "./test"],
-    "esModuleInterop": true
+    "types": ["node", "hardhat", "@nomiclabs/hardhat-ethers"],
+    "esModuleInterop": true,
   },
   "exclude": ["dist", "node_modules", "notes"],
   "include": [

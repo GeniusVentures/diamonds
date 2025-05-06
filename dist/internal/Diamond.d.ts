@@ -44,6 +44,9 @@ export declare class Diamond {
     isUpgradeDeployment(): boolean;
     initializerRegistry: Map<string, string>;
     registerInitializers(facetName: string, initFunction: string): void;
+    initAddrss: string;
+    setInitAddress(initAddress: string): void;
+    getInitAddress(): string;
 }
 export default Diamond;
 //# sourceMappingURL=Diamond.d.ts.map

@@ -19,7 +19,25 @@ import { logTx, logDiamondLoupe, getDeployedFacets, getDeployedFacetInterfaces }
 export class BaseDeploymentStrategy implements DeploymentStrategy {
   constructor(protected verbose: boolean = false) { }
 
+  // Pre-hook for deploying the diamond (can be overridden by subclasses)
+  protected async preDeployDiamond(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 Running pre-deploy logic for diamond ${diamond.diamondName}`));
+    }
+    await this._preDeployDiamond(diamond);
+  }
+
+  protected async _preDeployDiamond(diamond: Diamond): Promise<void> { }
+
   async deployDiamond(diamond: Diamond): Promise<void> {
+    await this.preDeployDiamond(diamond); // Pre-hook
+    await this._deployDiamond(diamond); // Core logic
+    await this.postDeployDiamond(diamond); // Post-hook
+  }
+
+
+  // Core logic for deploying the diamond
+  protected async _deployDiamond(diamond: Diamond): Promise<void> {
     console.log(chalk.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`));
 
     // Deploy the DiamondCutFacet
@@ -69,11 +87,42 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     console.log(chalk.green(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`));
   }
 
-  async deployFacets(diamond: Diamond): Promise<void> {
-    await this._deployFacets(diamond);
+  // Post-hook for deploying the diamond (can be overridden by subclasses)
+  async postDeployDiamond(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`✅ Running post-deploy logic for diamond ${diamond.diamondName}`));
+    }
+    await this.postDeployDiamondTasks(diamond);
   }
 
-  private async _deployFacets(diamond: Diamond) {
+  // Core logic for post-deploying the diamond (can be overridden by subclasses)
+  protected async postDeployDiamondTasks(diamond: Diamond): Promise<void> { }
+
+  // Pre-hook for deploying facets
+  async preDeployFacets(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 Running pre-deploy logic for facets of diamond ${diamond.diamondName}`));
+    }
+    await this._preDeployFacets(diamond);
+  }
+
+  // Core logic for deploying facets (can be overridden by subclasses)
+  protected async _preDeployFacets(diamond: Diamond): Promise<void> { }
+
+  // Base logic for Facet deployment
+  async deployFacets(diamond: Diamond): Promise<void> {
+    await this.deployFacets(diamond);
+  }
+
+  // Post-hook for deploying facets (can be overridden by subclasses)
+  protected async postDeployFacets(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`✅ Running post-deploy logic for facets of diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // Core logic for deploying facets
+  protected async _deployFacets(diamond: Diamond) {
     const deployConfig = diamond.getDeployConfig();
     const facetsConfig = diamond.getDeployConfig().facets;
     const deployedDiamondData = diamond.getDeployedDiamondData();
@@ -101,7 +150,9 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
           console.log(chalk.blueBright(`🚀 Deploying facet: ${facetName} to version ${upgradeVersion}`));
         }
         // Deploy the facet contract
-        const facetFactory = await ethers.getContractFactory(facetName, ethers.getSigner(diamond.getSigner()?.getAddress()));
+        const signer = diamond.getSigner()!;
+        // const signerAddress = await signer.getAddress();
+        const facetFactory = await ethers.getContractFactory(facetName, { signer });
         const facetContract = await facetFactory.deploy();
         await facetContract.deployed();
 
@@ -147,7 +198,22 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     this._updateFunctionSelectorRegistry(diamond);
   }
 
-  private async _updateFunctionSelectorRegistry(
+  // Pre-hook for updating function selector registry (can be overridden by subclasses)
+  protected async preUpdateFunctionSelectorRegistry(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 Running pre-update logic for function selector registry of diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // Post-hook for updating function selector registry (can be overridden by subclasses)
+  protected async postUpdateFunctionSelectorRegistry(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`✅ Running post-update logic for function selector registry of diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // 
+  protected async _updateFunctionSelectorRegistry(
     diamond: Diamond,
   ): Promise<void> {
     const registry = diamond.functionSelectorRegistry;
@@ -295,15 +361,32 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
   }
 
   async performDiamondCut(diamond: Diamond): Promise<void> {
-    const diamondSignerwithAddress = await diamond.getSigner()?.getAddress();
+    await this._performDiamondCut(diamond);
+  }
+
+  // Pre-hook for performing diamond cut (can be overridden by subclasses)
+  protected async prePerformDiamondCut(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 Running pre-diamond cut logic for diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // Post-hook for performing diamond cut (can be overridden by subclasses)
+  protected async postPerformDiamondCut(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`✅ Running post-diamond cut logic for diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // Core logic for performing diamond cut
+  protected async _performDiamondCut(diamond: Diamond): Promise<void> {
+    const diamondSignerAddress = await diamond.getSigner()?.getAddress()!;
     ethers.provider = diamond.getProvider()!;
-    const signer = await ethers.getSigner(diamondSignerwithAddress!);
+    const signer = await ethers.getSigner(diamondSignerAddress!);
     const diamondContract = await ethers.getContractAt("IDiamondCut", diamond.getDeployedDiamondData().DiamondAddress!);
     const signerDiamondContract = diamondContract.connect(signer);
     const deployConfig = diamond.getDeployConfig();
     const deployedDiamondData = diamond.getDeployedDiamondData();
-    const selectorRegistry = diamond.functionSelectorRegistry;
-    const currentVersion = deployedDiamondData.protocolVersion ?? 0;
 
     // Setup initCallData with Atomic Protocol Intializer
     const [initCalldata, initAddress] = await this.getInitCalldata(diamond);
@@ -351,7 +434,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
     for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
       console.log(chalk.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
-      const contract = await ethers.getContractAt(facetName, deployedDiamondData!.DiamondAddress, signer);
+      const contract = await ethers.getContractAt(facetName, diamondSignerAddress!);
       const tx = await contract[initFunction]();
       if (this.verbose) {
         logTx(tx, `${facetName}.${initFunction}`, ifaceList);
@@ -393,6 +476,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     if (initAddress === ethers.constants.AddressZero) {
       console.log(chalk.yellow(`⚠️ No protocol-wide initializer found. Using zero address.`));
     }
+    await diamond.setInitAddress(protocolFacetInfo.address!);
     return [initCalldata, initAddress];
   }
 
@@ -479,6 +563,25 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
   }
 
   async runPostDeployCallbacks(diamond: Diamond): Promise<void> {
+    await this._runPostDeployCallbacks(diamond);
+  }
+
+  // Pre-hook for running post-deployment callbacks (can be overridden by subclasses)
+  protected async preRunPostDeployCallbacks(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 Running pre-post-deploy logic for diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // Post-hook for running post-deployment callbacks (can be overridden by subclasses)
+  protected async postRunPostDeployCallbacks(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`✅ Running post-post-deploy logic for diamond ${diamond.diamondName}`));
+    }
+  }
+
+  // Core logic for running post-deployment callbacks
+  protected async _runPostDeployCallbacks(diamond: Diamond): Promise<void> {
     console.log(`🔄 Running post-deployment callbacks...`);
 
     const deployConfig = diamond.getDeployConfig();

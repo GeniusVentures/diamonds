@@ -11,10 +11,11 @@ import { Signer } from 'ethers';
  * @param signerAddress - The address of the account to impersonate.
  * @returns The impersonated signer object.
  */
-export async function impersonateSigner(signerAddress: string, provider: JsonRpcProvider) {
+export async function impersonateSigner(signerAddress: string, provider: JsonRpcProvider): Promise<Signer> {
   ethers.provider = provider; // Set the provider to the one passed in
   // Request Hardhat to impersonate the account at the specified address
-  await ethers.provider.send("hardhat_impersonateAccount", signerAddress);
+  await ethers.provider.send("hardhat_impersonateAccount", [signerAddress]);
+  return provider.getSigner(signerAddress); // Return the impersonated signer
 }
 
 /**
@@ -85,7 +86,7 @@ export const updateOwnerForTest = async (rootAddress: string, provider: JsonRpcP
     // Ensure the old owner has enough Ether to perform the ownership transfer
     await setEtherBalance(oldOwnerAddress, toWei(10), provider);
 
-    // Execute the ownership transfer from the old owner to the current signer
+    await ownership.connect(await oldOwner).transferOwnership(curOwner.address);
     await ownership.connect(oldOwner).transferOwnership(curOwner.address);
   }
 

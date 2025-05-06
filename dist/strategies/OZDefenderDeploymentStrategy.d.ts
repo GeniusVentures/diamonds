@@ -6,6 +6,5 @@ export declare class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy
     private autoApprove;
     constructor(apiKey: string, apiSecret: string, relayerAddress: string, autoApprove?: boolean, verbose?: boolean);
     performDiamondCut(diamond: Diamond): Promise<void>;
-    private getInitCalldata;
 }
 //# sourceMappingURL=OZDefenderDeploymentStrategy.d.ts.map

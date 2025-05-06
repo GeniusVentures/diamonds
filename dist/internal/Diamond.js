@@ -9,14 +9,8 @@ class Diamond {
         this.newDeployment = true;
         this.functionSelectorRegistry = new Map();
         this.newDeployedFacets = {};
-        // public selectorRegistry: Set<string> = new Set();
-        // public registerSelectors(selectors: string[]): void {
-        //   selectors.forEach(selector => this.selectorRegistry.add(selector));
-        // }
-        // public isSelectorRegistered(selector: string): boolean {
-        //   return this.selectorRegistry.has(selector);
-        // }
         this.initializerRegistry = new Map();
+        this.initAddrss = ethers.constants.AddressZero;
         this.config = config;
         this.diamondName = config.diamondName;
         this.networkName = config.networkName || "hardhat";
@@ -117,6 +111,12 @@ class Diamond {
     }
     registerInitializers(facetName, initFunction) {
         this.initializerRegistry.set(facetName, initFunction);
+    }
+    setInitAddress(initAddress) {
+        this.initAddrss = initAddress;
+    }
+    getInitAddress() {
+        return this.initAddrss;
     }
 }
 exports.Diamond = Diamond;
