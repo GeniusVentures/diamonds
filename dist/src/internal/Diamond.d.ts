@@ -22,6 +22,7 @@ export declare class Diamond {
     provider: JsonRpcProvider | undefined;
     deployConfig: DeployConfig;
     newDeployment: boolean;
+    initAddress: string | undefined;
     constructor(config: DiamondConfig, repository: DeploymentRepository);
     functionSelectorRegistry: Map<string, FunctionSelectorRegistryEntry>;
     private _initializeFunctionSelectorRegistry;
@@ -44,9 +45,8 @@ export declare class Diamond {
     isUpgradeDeployment(): boolean;
     initializerRegistry: Map<string, string>;
     registerInitializers(facetName: string, initFunction: string): void;
-    initAddress: string;
     setInitAddress(initAddress: string): void;
-    getInitAddress(): string;
+    getInitAddress(): string | undefined;
 }
 export default Diamond;
 //# sourceMappingURL=Diamond.d.ts.map

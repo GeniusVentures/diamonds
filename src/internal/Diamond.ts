@@ -38,6 +38,7 @@ export class Diamond {
   public provider: JsonRpcProvider | undefined;
   public deployConfig: DeployConfig;
   public newDeployment: boolean = true;
+  public initAddress: string | undefined;
 
   constructor(config: DiamondConfig, repository: DeploymentRepository) {
     this.config = config;
@@ -158,12 +159,10 @@ export class Diamond {
     this.initializerRegistry.set(facetName, initFunction);
   }
 
-  public initAddress: string = ethers.constants.AddressZero;
-
   public setInitAddress(initAddress: string): void {
     this.initAddress = initAddress;
   }
-  public getInitAddress(): string {
+  public getInitAddress(): string | undefined {
     return this.initAddress;
   }
 }

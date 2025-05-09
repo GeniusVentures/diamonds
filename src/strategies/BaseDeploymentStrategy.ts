@@ -24,17 +24,14 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     if (this.verbose) {
       console.log(chalk.gray(`🔧 Running pre-deploy logic for diamond ${diamond.diamondName}`));
     }
-    await this._preDeployDiamond(diamond);
+    await this.preDeployDiamondTasks(diamond);
   }
 
-  protected async _preDeployDiamond(diamond: Diamond): Promise<void> { }
+  protected async preDeployDiamondTasks(diamond: Diamond): Promise<void> { }
 
   async deployDiamond(diamond: Diamond): Promise<void> {
-    await this.preDeployDiamond(diamond); // Pre-hook
     await this._deployDiamond(diamond); // Core logic
-    await this.postDeployDiamond(diamond); // Post-hook
   }
-
 
   // Core logic for deploying the diamond
   protected async _deployDiamond(diamond: Diamond): Promise<void> {
@@ -103,22 +100,15 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     if (this.verbose) {
       console.log(chalk.gray(`🔧 Running pre-deploy logic for facets of diamond ${diamond.diamondName}`));
     }
-    await this._preDeployFacets(diamond);
+    await this.preDeployFacetsTasks(diamond);
   }
 
   // Core logic for deploying facets (can be overridden by subclasses)
-  protected async _preDeployFacets(diamond: Diamond): Promise<void> { }
+  protected async preDeployFacetsTasks(diamond: Diamond): Promise<void> { }
 
   // Base logic for Facet deployment
   async deployFacets(diamond: Diamond): Promise<void> {
-    await this.deployFacets(diamond);
-  }
-
-  // Post-hook for deploying facets (can be overridden by subclasses)
-  protected async postDeployFacets(diamond: Diamond): Promise<void> {
-    if (this.verbose) {
-      console.log(chalk.gray(`✅ Running post-deploy logic for facets of diamond ${diamond.diamondName}`));
-    }
+    await this._deployFacets(diamond);
   }
 
   // Core logic for deploying facets
@@ -193,6 +183,17 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
     }
   }
+
+  // Post-hook for deploying facets
+  async postDeployFacets(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.gray(`✅ Running post-deploy logic for facets of diamond ${diamond.diamondName}`));
+    }
+    await this.postDeployFacetsTasks(diamond);
+  }
+
+  // Used by subclasses for facet post-deployment tasks
+  protected async postDeployFacetsTasks(diamond: Diamond): Promise<void> { }
 
   async updateFunctionSelectorRegistry(diamond: Diamond) {
     this._updateFunctionSelectorRegistry(diamond);
@@ -296,7 +297,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         }
       }
 
-      /* ------------------ 3. Replace Facet and Priority Resolution Pass ------------- */
+      /* ------------------ Replace Facet and Priority Resolution Pass ------------- */
       for (const selector of functionSelectors) {
         const existing = registry.get(selector);
         if (existing) {
@@ -331,7 +332,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         }
       }
 
-      /* ---------------- 4. Remove Old Function Selectors from facets -------------- */
+      /* ---------------- Remove Old Function Selectors from facets -------------- */
       // Set functionselectors with the newFacetName and still different address to Remove
       for (const [selector, entry] of registry.entries()) {
         if (entry.facetName === newFacetName && entry.address !== currentFacetAddress) {
@@ -476,7 +477,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     if (initAddress === ethers.constants.AddressZero) {
       console.log(chalk.yellow(`⚠️ No protocol-wide initializer found. Using zero address.`));
     }
-    await diamond.setInitAddress(protocolFacetInfo.address!);
+    diamond.setInitAddress(initAddress);
     return [initCalldata, initAddress];
   }
 
@@ -527,38 +528,40 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     const currentVersion = deployedDiamondData.protocolVersion ?? 0;
 
     deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
-    // Update the deployed diamond data with the new facet addresses and the function selectors from the registry
+
+    // Aggregate selectors for each facet
+    const facetSelectorsMap: Record<string, { address: string, selectors: string[] }> = {};
+
     for (const [selector, entry] of selectorRegistry.entries()) {
       const facetName = entry.facetName;
-      const facetAddress = entry.address;
-      const action = entry.action;
+      if (!facetSelectorsMap[facetName]) {
+        facetSelectorsMap[facetName] = { address: entry.address, selectors: [] };
+      }
+      if (entry.action === RegistryFacetCutAction.Add || entry.action === RegistryFacetCutAction.Replace || entry.action === RegistryFacetCutAction.Deployed) {
+        facetSelectorsMap[facetName].selectors.push(selector);
+      }
+    }
 
-      if (action === RegistryFacetCutAction.Add || action === RegistryFacetCutAction.Replace) {
-        const funcSelector = deployedDiamondData.DeployedFacets![facetName]?.funcSelectors || [];
-        if (!funcSelector.includes(selector)) {
-          funcSelector.push(selector);
-        }
-        deployedDiamondData.DeployedFacets![facetName] = {
-          address: facetAddress,
+    // Update deployed facets with aggregated selectors
+    deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
+    for (const [facetName, { address, selectors }] of Object.entries(facetSelectorsMap)) {
+      if (selectors.length > 0) {
+        deployedDiamondData.DeployedFacets[facetName] = {
+          address,
           tx_hash: txHash,
           version: currentVersion,
-          funcSelectors: [selector],
+          funcSelectors: selectors,
         };
-      } else if (action === RegistryFacetCutAction.Remove) {
-        // Remove the function selector from the facet
-        const funcSelector = deployedDiamondData.DeployedFacets![facetName]?.funcSelectors || [];
-        if (funcSelector.includes(selector)) {
-          funcSelector.splice(funcSelector.indexOf(selector), 1);
-        }
       }
     }
 
-    // If a facet has no function selectors, remove it from the deployed facets
-    for (const [facetName, facetData] of Object.entries(deployedDiamondData.DeployedFacets!)) {
-      if (!facetData.funcSelectors || facetData.funcSelectors?.length === 0) {
-        delete deployedDiamondData.DeployedFacets![facetName];
+    // Remove facets with no selectors
+    for (const facetName of Object.keys(deployedDiamondData.DeployedFacets)) {
+      if (!facetSelectorsMap[facetName] || facetSelectorsMap[facetName].selectors.length === 0) {
+        delete deployedDiamondData.DeployedFacets[facetName];
       }
     }
+
     diamond.updateDeployedDiamondData(deployedDiamondData);
   }
 

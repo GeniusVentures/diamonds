@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Diamond = void 0;
 const CallbackManager_1 = require("./CallbackManager");
 const types_1 = require("../types");
-const ethers_1 = require("ethers");
 class Diamond {
     constructor(config, repository) {
         this.facetSelectors = [];
@@ -11,7 +10,6 @@ class Diamond {
         this.functionSelectorRegistry = new Map();
         this.newDeployedFacets = {};
         this.initializerRegistry = new Map();
-        this.initAddress = ethers_1.ethers.constants.AddressZero;
         this.config = config;
         this.diamondName = config.diamondName;
         this.networkName = config.networkName || "hardhat";

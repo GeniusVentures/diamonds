@@ -15,12 +15,12 @@
     "outDir": "./dist",
     "strict": true,
     "rootDirs": ["./src", "./test"],
-    "types": ["node", "hardhat", "@nomiclabs/hardhat-ethers"],
     "esModuleInterop": true,
+    "types": ["node", "@nomiclabs/hardhat-ethers"],
   },
-  "exclude": ["dist", "node_modules", "notes"],
+  "exclude": ["dist", "node_modules", "notes", "notes-local"],
   "include": [
     "./test",
     "./src",
-    "./src",]
+  ]
 }
