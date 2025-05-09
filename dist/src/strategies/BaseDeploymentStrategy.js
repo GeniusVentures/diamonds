@@ -354,6 +354,9 @@ class BaseDeploymentStrategy {
         const chainId = await hardhat_1.ethers.provider.getNetwork();
         const facetSelectorCutMap = facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors }));
         const tx = await signerDiamondContract.diamondCut(facetSelectorCutMap, initAddress, initCalldata);
+        /* --------------------- Update the deployed diamond data ------------------ */
+        const txHash = tx.hash;
+        await this.postDiamondCutDeployedDataUpdate(diamond, txHash);
         const ifaceList = (0, utils_1.getDeployedFacetInterfaces)(deployedDiamondData);
         // Log the transaction
         if (this.verbose) {
@@ -363,14 +366,14 @@ class BaseDeploymentStrategy {
             console.log(chalk_1.default.blueBright(`🔄 Waiting for DiamondCut transaction to be mined...`));
             await tx.wait();
         }
-        /* --------------------- Update the deployed diamond data ------------------ */
-        const txHash = tx.hash;
-        await this.postDiamondCutDeployedDataUpdate(diamond, txHash);
         console.log(chalk_1.default.green(`✅ DiamondCut executed: ${tx.hash}`));
         for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
             console.log(chalk_1.default.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
-            const contract = await hardhat_1.ethers.getContractAt(facetName, diamondSignerAddress);
-            const tx = await contract[initFunction]();
+            // const contract = await ethers.getContractAt(facetName, diamondSignerAddress!);
+            const initContract = await hardhat_1.ethers.getContractAt(facetName, diamond.getDeployedDiamondData().DiamondAddress);
+            const signerDiamondContract = initContract.connect(signer);
+            const tx = await initContract[initFunction]();
+            // const tx = await signerDiamondContract.initFunction;
             if (this.verbose) {
                 (0, utils_1.logTx)(tx, `${facetName}.${initFunction}`, ifaceList);
             }

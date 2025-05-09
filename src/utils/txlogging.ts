@@ -55,12 +55,9 @@ export async function logTx(
 
   /* ----------------------------- decode events ------------------------------ */
   if (receipt.logs.length === 0) return receipt;
-
   console.log(chalk.cyan("\n📜 Decoded events:"));
-
   receipt.logs.forEach((log, idx) => {
     let parsed: utils.LogDescription | undefined;
-
     for (const iface of decoders) {
       try {
         parsed = iface.parseLog(log);
