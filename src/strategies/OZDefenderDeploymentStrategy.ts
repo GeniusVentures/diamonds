@@ -42,15 +42,22 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       console.log(chalk.yellowBright(`\n🪓 Pre-deploy diamond tasks for ${diamond.diamondName} from ${this.constructor.name}...`));
     }
 
-    // TODO: Add Pre-Deployment check of pending or completed OZ Defender DiamondCut or Diamond Deployment transactions, which should then be loaded.
+    // TODO: Add Pre-Deployment check of pending or completed OZ DefenderDiamond Deployment transaction matching the current diamond configuration which should then be loaded as pending before moving on to deployment.
     return Promise.resolve();
   }
 
-  protected async postDeployDiamondTasks(diamond: Diamond): Promise<void> {
-    return Promise.resolve();
+  protected async deployDiamondTasks(diamond: Diamond): Promise<void> {
+    if (this.verbose) {
+      console.log(chalk.yellowBright(`\n🪓 Deploying diamond ${diamond.diamondName} from ${this.constructor.name}...`));
+    }
+
   }
 
-  protected async _performDiamondCut(diamond: Diamond): Promise<void> {
+  /**
+   * Performs the diamond cut tasks using OpenZeppelin Defender.
+   * @param diamond The diamond instance.
+   */
+  protected async performDiamondCutTasks(diamond: Diamond): Promise<void> {
     const deployedDiamondData = diamond.getDeployedDiamondData();
     const diamondAddress = deployedDiamondData.DiamondAddress!;
     const deployConfig = diamond.getDeployConfig();
@@ -114,7 +121,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
     console.log(chalk.blue(`📡 Defender Proposal Created. ProposalId: ${proposal.proposalId} at ${proposal.url}`));
 
-    //TODO this is verifying that the DiamondCutFacet is deployed, not the diamond itself.  This should all be handled in deployDiamond and deployFacet before this is called.
+    //TODO this is verifying that the DiamondCutFacet is deployed, not the diamond itself. This should all be handled in deployDiamond and deployFacet before this is called.
     // TODO However the autoApprove should be handled in every step to automate the process.
     if (this.autoApprove) {
       console.log(chalk.yellow(`\n🪓 Auto-approving Defender Proposal...`))

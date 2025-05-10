@@ -6,3 +6,4 @@ export * from './signer';
 export * from './txlogging';
 export * from './diffDeployedFacets'
 export * from './loupe';
+export * from './defenderStore';
