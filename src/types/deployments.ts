@@ -1,7 +1,7 @@
 import { Signer } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { DeployedDiamondData } from "../schemas";
-import Diamond from "../internal/Diamond";
+import Diamond from "../core/Diamond";
 
 export interface IDeployConfig {
   diamondName: string;

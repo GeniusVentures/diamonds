@@ -17,7 +17,9 @@
     "rootDirs": ["./src", "./test"],
     "esModuleInterop": true,
     "types": ["node", "@nomiclabs/hardhat-ethers"],
+     "forceConsistentCasingInFileNames": true,
   },
+  "files": ["src/**/*", "test/**/*"],
   "exclude": ["dist", "node_modules", "notes", "notes-local"],
   "include": [
     "./test",

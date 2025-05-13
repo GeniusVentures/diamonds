@@ -15,3 +15,10 @@ export interface DefenderDeploymentRegistry {
   diamondName: string;
   deploymentId: string;
 }
+
+export interface PollOptions {
+  maxAttempts?: number;
+  initialDelayMs?: number;
+  maxDelayMs?: number;
+  jitter?: boolean;
+}

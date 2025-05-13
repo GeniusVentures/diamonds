@@ -1,5 +1,5 @@
 import { DeploymentStrategy } from "./DeploymentStrategy";
-import { Diamond } from "../internal/Diamond";
+import { Diamond } from "../core/Diamond";
 import {
   FacetDeploymentInfo,
   DiamondConfig,

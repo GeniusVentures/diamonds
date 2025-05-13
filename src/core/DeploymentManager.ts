@@ -44,10 +44,6 @@ export class DeploymentManager {
 
     this.diamond.newDeployment = false;
 
-    await this.strategy.preDeployDiamond(this.diamond);
-    await this.strategy.deployDiamond(this.diamond);
-    await this.strategy.postDeployDiamond(this.diamond);
-
     await this.strategy.preDeployFacets(this.diamond);
     await this.strategy.deployFacets(this.diamond);
     await this.strategy.postDeployFacets(this.diamond);

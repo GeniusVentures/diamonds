@@ -6,15 +6,15 @@ export declare const DeployedFacetSchema: z.ZodObject<{
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }>;
@@ -25,15 +25,15 @@ export declare const DeployedFacetsSchema: z.ZodRecord<z.ZodString, z.ZodObject<
     funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     verified: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }, {
-    version?: number | undefined;
     address?: string | undefined;
     tx_hash?: string | undefined;
+    version?: number | undefined;
     funcSelectors?: string[] | undefined;
     verified?: boolean | undefined;
 }>>;
@@ -48,15 +48,15 @@ export declare const DeployedDiamondDataSchema: z.ZodObject<{
         funcSelectors: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         verified: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }>>>;
@@ -66,9 +66,9 @@ export declare const DeployedDiamondDataSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     DeployedFacets?: Record<string, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }> | undefined;
@@ -78,9 +78,9 @@ export declare const DeployedDiamondDataSchema: z.ZodObject<{
     DeployerAddress: string;
     DiamondAddress?: string | undefined;
     DeployedFacets?: Record<string, {
-        version?: number | undefined;
         address?: string | undefined;
         tx_hash?: string | undefined;
+        version?: number | undefined;
         funcSelectors?: string[] | undefined;
         verified?: boolean | undefined;
     }> | undefined;
@@ -98,17 +98,17 @@ export declare const FacetVersionConfigSchema: z.ZodObject<{
     deployInclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     deployExclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
+    callbacks?: string[] | undefined;
     deployInit?: string | undefined;
     upgradeInit?: string | undefined;
     fromVersions?: number[] | undefined;
-    callbacks?: string[] | undefined;
     deployInclude?: string[] | undefined;
     deployExclude?: string[] | undefined;
 }, {
+    callbacks?: string[] | undefined;
     deployInit?: string | undefined;
     upgradeInit?: string | undefined;
     fromVersions?: number[] | undefined;
-    callbacks?: string[] | undefined;
     deployInclude?: string[] | undefined;
     deployExclude?: string[] | undefined;
 }>;
@@ -126,17 +126,17 @@ export declare const FacetConfigSchema: z.ZodObject<{
         deployInclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         deployExclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }>>>;
@@ -144,10 +144,10 @@ export declare const FacetConfigSchema: z.ZodObject<{
     priority: number;
     libraries?: string[] | undefined;
     versions?: Record<number, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }> | undefined;
@@ -155,10 +155,10 @@ export declare const FacetConfigSchema: z.ZodObject<{
     priority: number;
     libraries?: string[] | undefined;
     versions?: Record<number, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }> | undefined;
@@ -177,17 +177,17 @@ export declare const FacetsConfigSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
         deployInclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         deployExclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }>>>;
@@ -195,10 +195,10 @@ export declare const FacetsConfigSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
     priority: number;
     libraries?: string[] | undefined;
     versions?: Record<number, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }> | undefined;
@@ -206,10 +206,10 @@ export declare const FacetsConfigSchema: z.ZodRecord<z.ZodString, z.ZodObject<{
     priority: number;
     libraries?: string[] | undefined;
     versions?: Record<number, {
+        callbacks?: string[] | undefined;
         deployInit?: string | undefined;
         upgradeInit?: string | undefined;
         fromVersions?: number[] | undefined;
-        callbacks?: string[] | undefined;
         deployInclude?: string[] | undefined;
         deployExclude?: string[] | undefined;
     }> | undefined;
@@ -229,17 +229,17 @@ export declare const DeployConfigSchema: z.ZodObject<{
             deployInclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
             deployExclude: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
+            callbacks?: string[] | undefined;
             deployInit?: string | undefined;
             upgradeInit?: string | undefined;
             fromVersions?: number[] | undefined;
-            callbacks?: string[] | undefined;
             deployInclude?: string[] | undefined;
             deployExclude?: string[] | undefined;
         }, {
+            callbacks?: string[] | undefined;
             deployInit?: string | undefined;
             upgradeInit?: string | undefined;
             fromVersions?: number[] | undefined;
-            callbacks?: string[] | undefined;
             deployInclude?: string[] | undefined;
             deployExclude?: string[] | undefined;
         }>>>;
@@ -247,10 +247,10 @@ export declare const DeployConfigSchema: z.ZodObject<{
         priority: number;
         libraries?: string[] | undefined;
         versions?: Record<number, {
+            callbacks?: string[] | undefined;
             deployInit?: string | undefined;
             upgradeInit?: string | undefined;
             fromVersions?: number[] | undefined;
-            callbacks?: string[] | undefined;
             deployInclude?: string[] | undefined;
             deployExclude?: string[] | undefined;
         }> | undefined;
@@ -258,10 +258,10 @@ export declare const DeployConfigSchema: z.ZodObject<{
         priority: number;
         libraries?: string[] | undefined;
         versions?: Record<number, {
+            callbacks?: string[] | undefined;
             deployInit?: string | undefined;
             upgradeInit?: string | undefined;
             fromVersions?: number[] | undefined;
-            callbacks?: string[] | undefined;
             deployInclude?: string[] | undefined;
             deployExclude?: string[] | undefined;
         }> | undefined;
@@ -272,10 +272,10 @@ export declare const DeployConfigSchema: z.ZodObject<{
         priority: number;
         libraries?: string[] | undefined;
         versions?: Record<number, {
+            callbacks?: string[] | undefined;
             deployInit?: string | undefined;
             upgradeInit?: string | undefined;
             fromVersions?: number[] | undefined;
-            callbacks?: string[] | undefined;
             deployInclude?: string[] | undefined;
             deployExclude?: string[] | undefined;
         }> | undefined;
@@ -288,10 +288,10 @@ export declare const DeployConfigSchema: z.ZodObject<{
         priority: number;
         libraries?: string[] | undefined;
         versions?: Record<number, {
+            callbacks?: string[] | undefined;
             deployInit?: string | undefined;
             upgradeInit?: string | undefined;
             fromVersions?: number[] | undefined;
-            callbacks?: string[] | undefined;
             deployInclude?: string[] | undefined;
             deployExclude?: string[] | undefined;
         }> | undefined;

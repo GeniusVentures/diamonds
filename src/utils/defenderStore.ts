@@ -4,8 +4,12 @@ import { DefenderDeploymentRegistry, DefenderProposalStatus, DefenderStepRecord 
 
 export class DefenderDeploymentStore {
   private readonly filePath: string;
+  private readonly diamondName: string;
+  private readonly deploymentId: string;
 
   constructor(diamondName: string, deploymentId: string, baseDir: string = 'diamonds') {
+    this.diamondName = diamondName;
+    this.deploymentId = deploymentId;
     const registryDir = join(baseDir, diamondName, 'deployments', 'defender');
     fs.ensureDirSync(registryDir);
     this.filePath = join(registryDir, `${deploymentId}.json`);
@@ -13,7 +17,12 @@ export class DefenderDeploymentStore {
 
   private loadRegistry(): DefenderDeploymentRegistry {
     if (!fs.existsSync(this.filePath)) {
-      return { diamondName: '', network: '', deploymentId: '', steps: [] };
+      return {
+        diamondName: this.diamondName,
+        deploymentId: this.deploymentId,
+        network: '',
+        steps: []
+      };
     }
     return fs.readJSONSync(this.filePath);
   }
@@ -50,4 +59,4 @@ export class DefenderDeploymentStore {
   public list(): DefenderStepRecord[] {
     return this.loadRegistry().steps;
   }
-}
+} 

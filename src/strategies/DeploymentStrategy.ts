@@ -1,5 +1,5 @@
 import { FacetDeploymentInfo } from "../types";
-import { Diamond } from "../internal/Diamond";
+import { Diamond } from "../core/Diamond";
 import { DeployedFacet, FacetsConfig } from "../schemas";
 
 export interface DeploymentStrategy {

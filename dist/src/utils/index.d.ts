@@ -6,4 +6,6 @@ export * from './signer';
 export * from './txlogging';
 export * from './diffDeployedFacets';
 export * from './loupe';
+export * from './defenderStore';
+export * from './defenderClients';
 //# sourceMappingURL=index.d.ts.map

@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { DeploymentRepository } from "../repositories";
-import { Diamond } from "../internal";
+import { Diamond } from "../core";
 
 export interface DiamondPathsConfig {
   deploymentsPath?: string;

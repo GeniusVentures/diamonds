@@ -25,4 +25,6 @@ __exportStar(require("./signer"), exports);
 __exportStar(require("./txlogging"), exports);
 __exportStar(require("./diffDeployedFacets"), exports);
 __exportStar(require("./loupe"), exports);
+__exportStar(require("./defenderStore"), exports);
+__exportStar(require("./defenderClients"), exports);
 //# sourceMappingURL=index.js.map
