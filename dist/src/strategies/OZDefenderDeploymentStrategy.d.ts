@@ -1,14 +1,14 @@
 import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
 import { Diamond } from '../core';
+import { Defender } from '@openzeppelin/defender-sdk';
 import { ExternalApiCreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client/lib/models/proposal";
 export declare class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     private client;
-    private proposalClient;
     private relayerAddress;
     private autoApprove;
     private via;
     private viaType;
-    constructor(apiKey: string, apiSecret: string, relayerAddress: string, autoApprove: boolean | undefined, via: ExternalApiCreateProposalRequest['via'], viaType: ExternalApiCreateProposalRequest['viaType'], verbose?: boolean);
+    constructor(apiKey: string, apiSecret: string, relayerAddress: string, autoApprove: boolean | undefined, via: ExternalApiCreateProposalRequest['via'], viaType: ExternalApiCreateProposalRequest['viaType'], verbose?: boolean, customClient?: Defender);
     protected checkAndUpdateDeployStep(stepName: string, diamond: Diamond): Promise<void>;
     /**
      * Polls the Defender API until the deployment is complete or fails.
@@ -18,6 +18,10 @@ export declare class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy
      * @returns The deployment response or null if not found.
      */
     private pollUntilComplete;
+    /**
+     * Updates the diamond data with deployment information from Defender
+     */
+    private updateDiamondWithDeployment;
     protected preDeployDiamondTasks(diamond: Diamond): Promise<void>;
     protected deployDiamondTasks(diamond: Diamond): Promise<void>;
     protected preDeployFacetsTasks(diamond: Diamond): Promise<void>;

@@ -1,0 +1,36 @@
+{
+  "protocolVersion": 0.0,
+  "protocolInitFacet": "ExampleFacet1",
+  "facets": {
+    "DiamondCutFacet": {
+      "priority": 10,
+      "versions": {
+        "0.0": {}
+      }
+    },
+    "DiamondLoupeFacet": {
+      "priority": 20,
+      "versions": {
+        "0.0": {}
+      }
+    },
+    "ExampleFacet1": {
+      "priority": 30,
+      "versions": {
+        "0.0": {
+          "deployInit": "initialize()",
+          "callbacks": ["logDeployment"]
+        }
+      }
+    },
+    "ExampleFacet2": {
+      "priority": 40,
+      "versions": {
+        "0.0": {
+          "deployInit": "setup()",
+          "callbacks": ["validateSetup"]
+        }
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@ import { debug } from 'debug';
 import { TransactionReceipt } from "@ethersproject/abstract-provider";
 import { Interface } from "@ethersproject/abi";
 import { Fragment } from '@ethersproject/abi';
-import { CreateProposalRequest } from "@openzeppelin/defender-admin-client";
+import { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
 import { providers, utils, ContractInterface, BigNumber, ContractTransaction } from "ethers";
 import chalk from 'chalk';
 import { Artifact } from "hardhat/types";

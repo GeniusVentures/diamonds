@@ -37,6 +37,13 @@
       "status": "executed",
       "description": "Facet TestFacet deployment submitted",
       "timestamp": 1747096149472
+    },
+    {
+      "stepName": "diamond-cut",
+      "proposalId": "test-proposal-id-upgrade",
+      "status": "pending",
+      "description": "DiamondCut proposal with 0 facets",
+      "timestamp": 1751472860130
     }
   ]
 }

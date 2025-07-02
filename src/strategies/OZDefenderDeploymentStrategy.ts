@@ -26,7 +26,7 @@ import {
 
 export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
   private client: Defender;
-  private proposalClient: ProposalClient;
+  // private proposalClient: ProposalClient;
   private relayerAddress: string;
   private autoApprove: boolean;
   private via: ExternalApiCreateProposalRequest['via'];
@@ -39,14 +39,15 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     autoApprove: boolean = false,
     via: ExternalApiCreateProposalRequest['via'],
     viaType: ExternalApiCreateProposalRequest['viaType'],
-    verbose: boolean = true
+    verbose: boolean = true,
+    customClient?: Defender // Optional for testing
   ) {
     super(verbose);
-    this.client = new Defender({ apiKey, apiSecret });
+    this.client = customClient || new Defender({ apiKey, apiSecret });
     // this.proposalClient = new ProposalClient({ apiKey, apiSecret });
     this.relayerAddress = relayerAddress;
-    this.via =
-      this.viaType = viaType;
+    this.via = via;
+    this.viaType = viaType;
     this.autoApprove = autoApprove;
   }
 
@@ -61,7 +62,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     if (!step || !step.proposalId) return;
 
     try {
-      const deployment = await deployClient.getDeployedContract(step.proposalId);
+      const deployment = await this.client.deploy.getDeployedContract(step.proposalId);
       const status = deployment.status as DeploymentStatus;
 
       if (status === 'completed') {
@@ -115,24 +116,32 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
     while (attempt < maxAttempts) {
       try {
-        const deployment = await deployClient.getDeployedContract(step.proposalId);
+        const deployment = await this.client.deploy.getDeployedContract(step.proposalId);
         const status = deployment.status;
 
         if (status === 'completed') {
           console.log(chalk.green(`✅ Deployment succeeded for ${stepName}.`));
           store.updateStatus(stepName, 'executed');
+
+          // Update diamond data with deployed contract information
+          await this.updateDiamondWithDeployment(diamond, stepName, deployment);
+
           return deployment;
         }
 
         if (status === 'failed') {
           console.error(chalk.red(`❌ Deployment failed for ${stepName}.`));
           store.updateStatus(stepName, 'failed');
-          return deployment;
+          const errorMsg = (deployment as any).error || 'Unknown deployment error';
+          throw new Error(`Deployment failed for ${stepName}: ${errorMsg}`);
         }
 
         console.log(chalk.yellow(`⏳ Deployment ${stepName} still ${status}. Retrying in ${delay}ms...`));
       } catch (err) {
         console.error(chalk.red(`⚠️ Error polling Defender for ${stepName}:`), err);
+        if (attempt >= maxAttempts - 1) {
+          throw err;
+        }
       }
 
       attempt++;
@@ -150,6 +159,108 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
     console.warn(chalk.red(`⚠️ Deployment for ${stepName} did not complete after ${maxAttempts} attempts.`));
     return null;
+  }
+
+  /**
+   * Updates the diamond data with deployment information from Defender
+   */
+  private async updateDiamondWithDeployment(
+    diamond: Diamond,
+    stepName: string,
+    deployment: DeploymentResponse
+  ): Promise<void> {
+    const deployedDiamondData = diamond.getDeployedDiamondData();
+    const contractAddress = (deployment as any).contractAddress;
+
+    if (!contractAddress) {
+      console.warn(chalk.yellow(`⚠️ No contract address found in deployment response for ${stepName}`));
+      return;
+    }
+
+    if (stepName === 'deploy-diamondcutfacet') {
+      // Get DiamondCutFacet interface for function selectors
+      const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.getSigner()!);
+      const diamondCutFacetFunctionSelectors = Object.keys(diamondCutFactory.interface.functions).map(fn =>
+        diamondCutFactory.interface.getSighash(fn)
+      );
+
+      deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
+      deployedDiamondData.DeployedFacets["DiamondCutFacet"] = {
+        address: contractAddress,
+        tx_hash: (deployment as any).txHash || 'defender-deployment',
+        version: 0,
+        funcSelectors: diamondCutFacetFunctionSelectors,
+      };
+
+      // Register the DiamondCutFacet function selectors
+      const diamondCutFacetSelectorsRegistry = diamondCutFacetFunctionSelectors.reduce((acc, selector) => {
+        acc[selector] = {
+          facetName: "DiamondCutFacet",
+          priority: diamond.getFacetsConfig()?.DiamondCutFacet?.priority || 1000,
+          address: contractAddress,
+          action: 0, // RegistryFacetCutAction.Deployed
+        };
+        return acc;
+      }, {} as Record<string, any>);
+
+      diamond.registerFunctionSelectors(diamondCutFacetSelectorsRegistry);
+
+    } else if (stepName === 'deploy-diamond') {
+      deployedDiamondData.DiamondAddress = contractAddress;
+
+    } else if (stepName.startsWith('deploy-')) {
+      // Extract facet name from step name
+      const facetName = stepName.replace('deploy-', '');
+
+      try {
+        // Get facet interface for function selectors
+        const facetFactory = await ethers.getContractFactory(facetName, diamond.getSigner()!);
+        const facetSelectors = Object.keys(facetFactory.interface.functions).map(fn =>
+          facetFactory.interface.getSighash(fn)
+        );
+
+        const deployConfig = diamond.getDeployConfig();
+        const facetConfig = deployConfig.facets[facetName];
+        const availableVersions = Object.keys(facetConfig.versions ?? {}).map(Number);
+        const targetVersion = Math.max(...availableVersions);
+
+        deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
+        deployedDiamondData.DeployedFacets[facetName] = {
+          address: contractAddress,
+          tx_hash: (deployment as any).txHash || 'defender-deployment',
+          version: targetVersion,
+          funcSelectors: facetSelectors,
+        };
+
+        // Update new deployed facets for diamond cut preparation
+        const initFn = diamond.newDeployment
+          ? facetConfig.versions?.[targetVersion]?.deployInit || ""
+          : facetConfig.versions?.[targetVersion]?.upgradeInit || "";
+
+        if (initFn && facetName !== deployConfig.protocolInitFacet) {
+          diamond.initializerRegistry.set(facetName, initFn);
+        }
+
+        const newFacetData = {
+          priority: facetConfig.priority || 1000,
+          address: contractAddress,
+          tx_hash: (deployment as any).txHash || 'defender-deployment',
+          version: targetVersion,
+          funcSelectors: facetSelectors,
+          deployInclude: facetConfig.versions?.[targetVersion]?.deployInclude || [],
+          deployExclude: facetConfig.versions?.[targetVersion]?.deployExclude || [],
+          initFunction: initFn,
+          verified: false,
+        };
+
+        diamond.updateNewDeployedFacets(facetName, newFacetData);
+
+      } catch (err) {
+        console.warn(chalk.yellow(`⚠️ Could not get interface for facet ${facetName}: ${err}`));
+      }
+    }
+
+    diamond.updateDeployedDiamondData(deployedDiamondData);
   }
 
 
@@ -182,7 +293,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         verifySourceCode: true, // TODO Verify this should be true or optional
       };
 
-      const cutDeployment = await deployClient.deployContract(cutRequest);
+      const cutDeployment = await this.client.deploy.deployContract(cutRequest);
       store.saveStep({
         stepName: stepNameCut,
         proposalId: cutDeployment.deploymentId,
@@ -206,7 +317,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         verifySourceCode: true, // TODO Verify this should be true or optional
       };
 
-      const diamondDeployment = await deployClient.deployContract(diamondRequest);
+      const diamondDeployment = await this.client.deploy.deployContract(diamondRequest);
       store.saveStep({
         stepName: stepNameDiamond,
         proposalId: diamondDeployment.deploymentId,
@@ -275,7 +386,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         verifySourceCode: true, // TODO Verify this should be true or optional
       };
 
-      const deployResult = await deployClient.deployContract(deployRequest);
+      const deployResult = await this.client.deploy.deployContract(deployRequest);
 
       store.saveStep({
         stepName: stepKey,
@@ -358,49 +469,65 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
     console.log(chalk.blue(`📡 Defender Proposal created: ${url}`));
 
-    // if (this.autoApprove) {
-    //   console.log(chalk.yellow(`⏳ Waiting for proposal approval to execute automatically...`));
-    //   let attempts = 0;
-    //   const maxAttempts = 20;
-    //   const delayMs = 15000;
+    // Store the proposal
+    const store = new DefenderDeploymentStore(diamond.diamondName, `${diamond.diamondName}-${network}-${diamondConfig.chainId}`);
+    store.saveStep({
+      stepName: 'diamond-cut',
+      proposalId,
+      status: 'pending',
+      description: `DiamondCut proposal with ${facetCuts.length} facets`,
+      timestamp: Date.now()
+    });
 
-    //   while (attempts < maxAttempts) {
-    //     const result = await this.client.proposal.get(proposalId);
+    if (this.autoApprove) {
+      console.log(chalk.yellow(`⏳ Auto-approval enabled. Waiting for proposal to be ready for execution...`));
+      let attempts = 0;
+      const maxAttempts = 20;
+      const delayMs = 15000;
 
-    //     const tx = result.transaction;
+      while (attempts < maxAttempts) {
+        try {
+          const proposalData = await this.client.proposal.get(proposalId);
 
-    //     if (tx?.isExecuted && tx?.isSuccessful) {
-    //       console.log(chalk.green(`✅ Proposal executed successfully.`));
-    //       return;
-    //     }
+          // Check if proposal has execution data - API structure may vary
+          // Using optional chaining to handle different API versions
+          const isExecuted = (proposalData as any)?.transaction?.isExecuted ?? false;
+          const isReverted = (proposalData as any)?.transaction?.isReverted ?? false;
 
-    //     if (tx?.isExecuted && tx?.isReverted) {
-    //       console.error(chalk.red(`❌ Proposal execution reverted.`));
-    //       return;
-    //     }
+          if (isExecuted && !isReverted) {
+            console.log(chalk.green(`✅ Proposal executed successfully.`));
+            store.updateStatus('diamond-cut', 'executed');
+            return;
+          }
 
-    //     const canExecute = tx && !tx.isExecuted && !tx.isReverted;
+          if (isExecuted && isReverted) {
+            console.error(chalk.red(`❌ Proposal execution reverted.`));
+            store.updateStatus('diamond-cut', 'failed');
+            throw new Error(`Proposal execution reverted: ${proposalId}`);
+          }
 
-    //     if (canExecute) {
-    //       try {
-    //         const execResult = await this.client.proposal.execute(proposalId);
-    //         console.log(chalk.green(`🚀 Execution submitted: ${execResult.transactionId || '✓'}`));
-    //         return;
-    //       } catch (err) {
-    //         console.error(chalk.red(`❌ Error executing proposal:`), err);
-    //         break;
-    //       }
-    //     }
+          // For auto-approval, we'll just log the status
+          // Note: The actual execution method may vary by Defender API version
+          console.log(chalk.gray(`⌛ Proposal status check ${attempts + 1}/${maxAttempts}. Manual execution may be required.`));
 
-    //     console.log(chalk.gray(`⌛ Proposal not yet ready for execution. Rechecking in ${delayMs / 1000}s...`));
-    //     await new Promise((res) => setTimeout(res, delayMs));
-    //     attempts++;
-    //   }
+        } catch (err: any) {
+          console.error(chalk.red(`⚠️ Error checking proposal status:`), err);
+          if (attempts >= maxAttempts - 1) {
+            throw err;
+          }
+        }
 
-    //   if (attempts >= maxAttempts) {
-    //     console.warn(chalk.red(`⚠️ Proposal was not ready after ${maxAttempts} attempts.`));
-    //   }
-    // }
+        await new Promise((res) => setTimeout(res, delayMs));
+        attempts++;
+      }
+
+      if (attempts >= maxAttempts) {
+        console.warn(chalk.red(`⚠️ Proposal polling completed after ${maxAttempts} attempts.`));
+        console.log(chalk.blue(`🔗 Manual execution may be required: ${url}`));
+      }
+    } else {
+      console.log(chalk.blue(`🔗 Manual approval required: ${url}`));
+    }
 
   }
 

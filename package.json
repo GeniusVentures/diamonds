@@ -25,13 +25,19 @@
     "test:unit": "hardhat test test/unit/**/*.test.ts",
     "test:integration": "hardhat test test/integration/**/*.test.ts",
     "test:coverage": "hardhat coverage",
+    "test:performance": "hardhat test test/integration/performance/**/*.test.ts",
     "compile": "hardhat compile",
     "clean": "hardhat clean && rimraf .tmp-test*",
     "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "build": "tsc",
     "watch": "tsc -w",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "defender:deploy": "ts-node scripts/defender-cli.ts deploy",
+    "defender:upgrade": "ts-node scripts/defender-cli.ts upgrade",
+    "defender:status": "ts-node scripts/defender-cli.ts status",
+    "defender:verify": "ts-node scripts/defender-cli.ts verify",
+    "defender:init": "ts-node scripts/defender-cli.ts init"
   },
   "files": [
     "dist/",
@@ -63,6 +69,7 @@
     "abi2oas": "^0.1.4",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
+    "commander": "^9.4.1",
     "contracts-starter": "git+https://github.com/mudgen/diamond-2-hardhat.git",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",

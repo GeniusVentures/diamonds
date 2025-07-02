@@ -13,22 +13,13 @@ import * as path from 'path';
 import { setupTestEnvironment, cleanupTestEnvironment } from '../setup';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { Contract } from 'ethers';
-
-// Create stub for the defender module - this avoids the need to mock imports
-const mockDeployClient = {
-  deployContract: sinon.stub(),
-  getDeployedContract: sinon.stub()
-};
-
-const mockProposalClient = {
-  create: sinon.stub(),
-  get: sinon.stub(),
-  execute: sinon.stub()
-};
-
-const mockDefender = {
-  proposal: mockProposalClient
-};
+import {
+  createDefenderMocks,
+  setupSuccessfulDeploymentMocks,
+  setupFailedDeploymentMocks,
+  MockDefenderClients,
+  DEFAULT_DEFENDER_CONFIG
+} from './defender/setup/defender-setup';
 
 describe('Integration: OZDefenderDeploymentStrategy', function () {
   // This test might take longer due to complex operations
@@ -40,11 +31,8 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
   const NETWORK_NAME = 'goerli';
   const CHAIN_ID = 5;
 
-  // OZ Defender config
-  const API_KEY = 'test-api-key';
-  const API_SECRET = 'test-api-secret';
-  const RELAYER_ADDRESS = '0x1234567890123456789012345678901234567890';
-  const SAFE_ADDRESS = '0x0987654321098765432109876543210987654321';
+  // Use mock config from defender-setup
+  const { API_KEY, API_SECRET, RELAYER_ADDRESS, SAFE_ADDRESS } = DEFAULT_DEFENDER_CONFIG;
 
   // Test variables
   let config: DiamondConfig;
@@ -56,6 +44,7 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
   let diamondLoupeFacet: Contract;
   let testFacet: Contract;
   let mockDiamond: Contract;
+  let mocks: MockDefenderClients;
 
   before(async function () {
     // Set up test environment
@@ -68,30 +57,20 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
     testFacet = setup.testFacet;
     mockDiamond = setup.diamond;
 
+    // Create and setup Defender mocks
+    mocks = createDefenderMocks();
+    setupSuccessfulDeploymentMocks(mocks);
+
     // Spy on console.log for assertions
     sinon.stub(console, 'log');
     sinon.stub(console, 'error');
-
-    // Replace defender module's clients
-    const originalModule = await import('../../src/utils/defenderClients');
-    // Save original module references
-    const originalDeployClient = originalModule.deployClient;
-    const originalAdminClient = originalModule.adminClient;
-
-    // Temporarily replace the clients
-    Object.defineProperty(originalModule, 'deployClient', {
-      value: mockDeployClient,
-      writable: true
-    });
-    Object.defineProperty(originalModule, 'adminClient', {
-      value: mockDefender,
-      writable: true
-    });
   });
 
   beforeEach(async function () {
-    // Reset stubs
-    sinon.resetHistory();
+    // Reset and setup fresh mocks for each test
+    mocks.restore();
+    mocks = createDefenderMocks();
+    setupSuccessfulDeploymentMocks(mocks);
 
     // Set up a fresh config and repository for each test
     config = {
@@ -255,7 +234,7 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
       if (!config.facets['TestFacet'].versions) {
         config.facets['TestFacet'].versions = {};
       }
-      config.facets['TestFacet'].versions[1.0] = {
+      (config.facets['TestFacet'].versions as any)[1.0] = {
         deployInit: "initialize()",
         upgradeInit: "reinitialize()",
         callbacks: ["testCallback"],

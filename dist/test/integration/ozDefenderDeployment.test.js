@@ -37,19 +37,7 @@ const OZDefenderDeploymentStrategy_1 = require("../../src/strategies/OZDefenderD
 const fs = __importStar(require("fs-extra"));
 const path = __importStar(require("path"));
 const setup_1 = require("../setup");
-// Create stub for the defender module - this avoids the need to mock imports
-const mockDeployClient = {
-    deployContract: sinon_1.default.stub(),
-    getDeployedContract: sinon_1.default.stub()
-};
-const mockProposalClient = {
-    create: sinon_1.default.stub(),
-    get: sinon_1.default.stub(),
-    execute: sinon_1.default.stub()
-};
-const mockDefender = {
-    proposal: mockProposalClient
-};
+const defender_setup_1 = require("./defender/setup/defender-setup");
 describe('Integration: OZDefenderDeploymentStrategy', function () {
     // This test might take longer due to complex operations
     this.timeout(30000);
@@ -58,11 +46,8 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
     const DIAMOND_NAME = 'TestDiamond';
     const NETWORK_NAME = 'goerli';
     const CHAIN_ID = 5;
-    // OZ Defender config
-    const API_KEY = 'test-api-key';
-    const API_SECRET = 'test-api-secret';
-    const RELAYER_ADDRESS = '0x1234567890123456789012345678901234567890';
-    const SAFE_ADDRESS = '0x0987654321098765432109876543210987654321';
+    // Use mock config from defender-setup
+    const { API_KEY, API_SECRET, RELAYER_ADDRESS, SAFE_ADDRESS } = defender_setup_1.DEFAULT_DEFENDER_CONFIG;
     // Test variables
     let config;
     let repository;
@@ -73,6 +58,7 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
     let diamondLoupeFacet;
     let testFacet;
     let mockDiamond;
+    let mocks;
     before(async function () {
         // Set up test environment
         const setup = await (0, setup_1.setupTestEnvironment)(TEMP_DIR, DIAMOND_NAME, NETWORK_NAME, CHAIN_ID);
@@ -82,27 +68,18 @@ describe('Integration: OZDefenderDeploymentStrategy', function () {
         diamondLoupeFacet = setup.diamondLoupeFacet;
         testFacet = setup.testFacet;
         mockDiamond = setup.diamond;
+        // Create and setup Defender mocks
+        mocks = (0, defender_setup_1.createDefenderMocks)();
+        (0, defender_setup_1.setupSuccessfulDeploymentMocks)(mocks);
         // Spy on console.log for assertions
         sinon_1.default.stub(console, 'log');
         sinon_1.default.stub(console, 'error');
-        // Replace defender module's clients
-        const originalModule = await Promise.resolve().then(() => __importStar(require('../../src/utils/defenderClients')));
-        // Save original module references
-        const originalDeployClient = originalModule.deployClient;
-        const originalAdminClient = originalModule.adminClient;
-        // Temporarily replace the clients
-        Object.defineProperty(originalModule, 'deployClient', {
-            value: mockDeployClient,
-            writable: true
-        });
-        Object.defineProperty(originalModule, 'adminClient', {
-            value: mockDefender,
-            writable: true
-        });
     });
     beforeEach(async function () {
-        // Reset stubs
-        sinon_1.default.resetHistory();
+        // Reset and setup fresh mocks for each test
+        mocks.restore();
+        mocks = (0, defender_setup_1.createDefenderMocks)();
+        (0, defender_setup_1.setupSuccessfulDeploymentMocks)(mocks);
         // Set up a fresh config and repository for each test
         config = {
             diamondName: DIAMOND_NAME,

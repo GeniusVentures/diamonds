@@ -1,5 +1,5 @@
 import { Interface } from "@ethersproject/abi";
-import { CreateProposalRequest } from "@openzeppelin/defender-admin-client";
+import { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
 import { BigNumber } from "ethers";
 import { DeployedDiamondData } from "../schemas";
 declare global {
