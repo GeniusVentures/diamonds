@@ -122,12 +122,16 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
     });
   });
 
-  // Standard proposal status response
+  // Standard proposal status response - simulate execution after a few calls
+  // Use a counter that resets each time this function is called
+  let proposalCheckCount = 0;
   mockProposalClient.get.callsFake(() => {
+    proposalCheckCount++;
+    const isExecuted = proposalCheckCount >= 3; // Execute after 3 status checks
     return Promise.resolve({
       proposalId: "test-proposal-id",
       transaction: {
-        isExecuted: false,
+        isExecuted,
         isReverted: false,
       },
     });

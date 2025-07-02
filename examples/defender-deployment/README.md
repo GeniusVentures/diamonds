@@ -5,6 +5,7 @@ This example demonstrates how to deploy and upgrade a Diamond proxy contract usi
 ## Overview
 
 This example includes:
+
 - A complete Diamond implementation with multiple facets
 - Configuration for Defender deployment
 - Deployment and upgrade scripts
@@ -19,18 +20,21 @@ This example includes:
 ## Setup
 
 1. **Clone and Install Dependencies**
+
    ```bash
    cd examples/defender-deployment
    npm install
    ```
 
 2. **Configure Environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your Defender credentials
    ```
 
 3. **Review Diamond Configuration**
+
    ```bash
    cat diamond-config.json
    ```
@@ -94,6 +98,7 @@ npm run deploy:local
 ```
 
 This will:
+
 1. Deploy DiamondCutFacet through Defender
 2. Deploy the main Diamond contract
 3. Deploy all configured facets
@@ -303,7 +308,7 @@ export async function validateSetup(args: any) {
 
 ### Successful Deployment
 
-```
+```bash
 🚀 Starting Defender deployment...
 
 🪓 Pre-deploy diamond tasks for ExampleDiamond from OZDefenderDeploymentStrategy...
@@ -355,32 +360,41 @@ Deployer Address: 0x742d35Cc6634C0532925a3b8D50d97e7
 ### Common Issues
 
 1. **API Authentication Error**
-   ```
+
+   ```bash
    Error: Invalid API credentials
    ```
+
    **Solution**: Verify your `DEFENDER_API_KEY` and `DEFENDER_API_SECRET` in `.env`
 
 2. **Insufficient Balance**
-   ```
+
+   ```bash
    Error: insufficient funds for gas
    ```
+
    **Solution**: Add testnet ETH to your deployer address
 
 3. **Network Configuration**
-   ```
+
+   ```bash
    Error: could not detect network
    ```
+
    **Solution**: Verify your RPC URL and network settings
 
 4. **Multi-sig Approval Required**
-   ```
+
+   ```bash
    Warning: Proposal awaiting approval
    ```
+
    **Solution**: Check Defender dashboard for pending proposals
 
 ### Debug Mode
 
 Enable verbose logging:
+
 ```bash
 DEBUG=diamonds:* npm run deploy:sepolia
 ```

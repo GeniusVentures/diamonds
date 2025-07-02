@@ -8,7 +8,7 @@ This guide covers comprehensive testing strategies for the Diamonds module, incl
 
 ### Test Structure
 
-```
+```bash
 test/
 ├── unit/                           # Unit tests for individual components
 │   ├── core/                       # Core module tests
@@ -654,24 +654,28 @@ jobs:
 ### Common Issues
 
 1. **Timeout Errors**
+
    ```bash
    # Increase timeout for specific tests
    npx mocha test/integration/deployment.test.ts --timeout 300000
    ```
 
 2. **Network Connectivity**
+
    ```bash
    # Test with local network only
    TEST_NETWORK=hardhat npm test
    ```
 
 3. **Resource Conflicts**
+
    ```bash
    # Run tests sequentially
    npm test -- --parallel=false
    ```
 
 4. **Mock State Issues**
+
    ```bash
    # Reset all mocks
    beforeEach(() => {
@@ -683,12 +687,14 @@ jobs:
 ### Debugging Failed Tests
 
 1. **Enable Verbose Logging**
+
    ```typescript
    process.env.DEBUG = 'diamonds:*';
    process.env.VERBOSE_TESTING = 'true';
    ```
 
 2. **Inspect Test State**
+
    ```typescript
    // Add debugging output
    console.log('Diamond state:', diamond.getDeployedDiamondData());
@@ -696,6 +702,7 @@ jobs:
    ```
 
 3. **Use Test-Specific Timeouts**
+
    ```typescript
    it('slow test', async function() {
      this.timeout(120000); // 2 minutes for this specific test

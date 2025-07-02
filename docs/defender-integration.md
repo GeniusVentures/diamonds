@@ -14,18 +14,21 @@ The Diamonds module provides comprehensive integration with OpenZeppelin Defende
 ## Benefits of Using Defender
 
 ### Security
+
 - Private key management through Defender's secure infrastructure
 - Multi-signature approval workflows for critical operations
 - Automated security scanning and monitoring
 - Role-based access controls
 
 ### Reliability
+
 - Built-in retry mechanisms for failed transactions
 - Gas price optimization
 - Network congestion handling
 - Transaction monitoring and confirmation
 
 ### Transparency
+
 - Complete audit trail of all deployment operations
 - Real-time status updates through Defender dashboard
 - Integration with monitoring and alerting systems
@@ -41,6 +44,7 @@ The Diamonds module provides comprehensive integration with OpenZeppelin Defende
    - Navigate to the API section
 
 2. **Generate API Credentials**
+
    ```bash
    # In Defender dashboard:
    # 1. Go to "API Keys" section
@@ -52,6 +56,7 @@ The Diamonds module provides comprehensive integration with OpenZeppelin Defende
    ```
 
 3. **Setup Relayer (Optional)**
+
    ```bash
    # For automated transaction execution:
    # 1. Go to "Relay" section
@@ -61,6 +66,7 @@ The Diamonds module provides comprehensive integration with OpenZeppelin Defende
    ```
 
 4. **Setup Multi-sig (Recommended)**
+
    ```bash
    # For production deployments:
    # 1. Deploy or import existing Gnosis Safe
@@ -261,6 +267,7 @@ steps.forEach(step => {
 ### Real-time Monitoring
 
 Access the Defender dashboard to monitor:
+
 - Deployment progress in real-time
 - Transaction status and confirmations
 - Gas usage and optimization recommendations
@@ -355,24 +362,28 @@ const productionStrategy = new OZDefenderDeploymentStrategy(
 ### Common Issues
 
 1. **API Authentication Errors**
+
    ```bash
    Error: Invalid API credentials
    Solution: Verify DEFENDER_API_KEY and DEFENDER_API_SECRET
    ```
 
 2. **Network Connection Issues**
+
    ```bash
    Error: Request timeout
    Solution: Check network connectivity and RPC endpoint
    ```
 
 3. **Insufficient Gas**
+
    ```bash
    Error: Transaction underpriced
    Solution: Increase gas price or use gas optimization
    ```
 
 4. **Multi-sig Threshold Not Met**
+
    ```bash
    Warning: Proposal awaiting approval
    Solution: Additional Safe signers need to approve
@@ -381,6 +392,7 @@ const productionStrategy = new OZDefenderDeploymentStrategy(
 ### Debugging Steps
 
 1. **Enable Verbose Logging**
+
    ```typescript
    const strategy = new OZDefenderDeploymentStrategy(
      // ... config
@@ -394,6 +406,7 @@ const productionStrategy = new OZDefenderDeploymentStrategy(
    - Verify proposal status
 
 3. **Validate Configuration**
+
    ```typescript
    // Verify network settings
    console.log('Network:', diamond.getDiamondConfig().networkName);

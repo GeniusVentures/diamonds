@@ -95,8 +95,10 @@ export function defaultDeployment(): DeployedDiamondData {
  * @param path - The path to the deployment file.
  */
 export function createNewDeployFile(path: string) {
+  // Ensure the directory exists before writing
+  ensureFileSync(path);
   // Validate the default deployment object before writing
-  const validated = DeployedDiamondDataSchema.parse(defaultDeployment);
+  const validated = DeployedDiamondDataSchema.parse(defaultDeployment());
   writeJsonSync(path, validated, { spaces: 2 });
 }
 
