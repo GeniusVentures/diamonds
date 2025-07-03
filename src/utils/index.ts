@@ -8,3 +8,4 @@ export * from './diffDeployedFacets'
 export * from './loupe';
 export * from './defenderStore';
 export * from './defenderClients';
+export * from './contractMapping';

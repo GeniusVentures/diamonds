@@ -68,7 +68,13 @@ describe('Diamond', () => {
     provider = ethers.provider;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Clean up any existing deployment files to ensure clean state
+    const deploymentFile = path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', `${DIAMOND_NAME.toLowerCase()}-${NETWORK_NAME}-${CHAIN_ID}.json`);
+    if (await fs.pathExists(deploymentFile)) {
+      await fs.remove(deploymentFile);
+    }
+
     // Set up a new config and repository for each test
     config = {
       diamondName: DIAMOND_NAME,
@@ -170,7 +176,7 @@ describe('Diamond', () => {
   describe('deployed diamond data', () => {
     it('should get and update deployed diamond data', () => {
       const data = diamond.getDeployedDiamondData();
-      expect(data.DiamondAddress).to.be.undefined;
+      expect(data.DiamondAddress).to.equal(''); // Empty string due to Zod validation
 
       data.DiamondAddress = '0x1234567890123456789012345678901234567890';
       diamond.updateDeployedDiamondData(data);

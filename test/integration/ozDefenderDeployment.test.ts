@@ -28,8 +28,8 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
   // Test constants
   const TEMP_DIR = path.join(__dirname, "../../.tmp-test-integration-oz");
   const DIAMOND_NAME = "TestDiamond";
-  const NETWORK_NAME = "goerli";
-  const CHAIN_ID = 5;
+  const NETWORK_NAME = "sepolia";
+  const CHAIN_ID = 11155111;
 
   // Use mock config from defender-setup
   const { API_KEY, API_SECRET, RELAYER_ADDRESS, SAFE_ADDRESS } = DEFAULT_DEFENDER_CONFIG;

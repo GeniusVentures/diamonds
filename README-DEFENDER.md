@@ -7,6 +7,7 @@ This project provides a comprehensive implementation of the ERC-2535 Diamond Pro
 ## ✨ Key Features
 
 ### Core Functionality
+
 - **ERC-2535 Diamond Proxy**: Full implementation of the Diamond standard
 - **Modular Facet System**: Add, replace, and remove functionality without changing the main contract
 - **Version Management**: Sophisticated versioning system for facets and protocols
@@ -14,6 +15,7 @@ This project provides a comprehensive implementation of the ERC-2535 Diamond Pro
 - **Repository Pattern**: Flexible data persistence (File-based, Database-ready)
 
 ### OpenZeppelin Defender Integration
+
 - **Secure Deployments**: Deploy contracts through Defender's secure infrastructure
 - **Multi-signature Support**: Integrate with Gnosis Safe and other multi-sig wallets
 - **Automated Execution**: Optional auto-approval for streamlined deployments
@@ -22,6 +24,7 @@ This project provides a comprehensive implementation of the ERC-2535 Diamond Pro
 - **Robust Error Handling**: Comprehensive retry logic and error recovery
 
 ### Enterprise Features
+
 - **TypeScript**: Full type safety with strict TypeScript configuration
 - **Comprehensive Testing**: Unit, integration, and end-to-end test suites
 - **Documentation**: Extensive documentation and examples
@@ -91,7 +94,7 @@ await deployer.deployDiamond();
 
 ## 📁 Project Structure
 
-```
+```bash
 diamonds/
 ├── src/                           # Source code
 │   ├── core/                      # Core classes (Diamond, DiamondDeployer, etc.)
@@ -115,11 +118,13 @@ diamonds/
 ## 🛡️ OpenZeppelin Defender Setup
 
 ### 1. Create Defender Account
+
 1. Visit [OpenZeppelin Defender](https://defender.openzeppelin.com/)
 2. Sign up or log in
 3. Generate API credentials with Deploy and Admin permissions
 
 ### 2. Configure Environment
+
 ```bash
 # Copy environment template
 cp .env.example .env
@@ -132,6 +137,7 @@ DEFENDER_SAFE_ADDRESS=0x0987654321098765432109876543210987654321
 ```
 
 ### 3. Deploy with Defender
+
 ```bash
 # Run the complete example
 cd examples/defender-deployment
@@ -172,14 +178,17 @@ TEST_NETWORK=sepolia npm test
 ## 📖 Documentation
 
 ### Core Documentation
+
 - [Defender Integration Guide](docs/defender-integration.md) - Complete setup and usage guide
 - [Testing Guide](docs/testing-guide.md) - Comprehensive testing documentation
 
 ### Examples
+
 - [Defender Deployment Example](examples/defender-deployment/) - Complete working example
 - [Local Deployment Example](examples/local-deployment/) - Local development setup
 
 ### API Reference
+
 - [Core Classes](src/core/) - Diamond, DiamondDeployer, DeploymentManager
 - [Strategies](src/strategies/) - Deployment strategy implementations
 - [Repositories](src/repositories/) - Data persistence implementations
@@ -246,6 +255,7 @@ const manualDefenderStrategy = new OZDefenderDeploymentStrategy(
 ## 🚀 Deployment Workflows
 
 ### Initial Deployment
+
 1. Deploy DiamondCutFacet through Defender
 2. Deploy main Diamond contract
 3. Deploy all configured facets
@@ -254,6 +264,7 @@ const manualDefenderStrategy = new OZDefenderDeploymentStrategy(
 6. Run post-deployment callbacks
 
 ### Upgrade Process
+
 1. Update diamond configuration with new versions
 2. Deploy only modified/new facets
 3. Create diamond cut proposal with changes
@@ -261,6 +272,7 @@ const manualDefenderStrategy = new OZDefenderDeploymentStrategy(
 5. Run upgrade callbacks and validation
 
 ### Monitoring and Management
+
 - Real-time status tracking through Defender dashboard
 - Automated transaction monitoring
 - Gas optimization recommendations
@@ -269,18 +281,21 @@ const manualDefenderStrategy = new OZDefenderDeploymentStrategy(
 ## 🔒 Security Features
 
 ### Access Control
+
 - Multi-signature support for critical operations
 - Role-based deployment permissions
 - API key security and rotation
 - Network-specific configurations
 
 ### Best Practices
+
 - Comprehensive input validation
 - State corruption protection
 - Transaction replay protection
 - Gas optimization and limits
 
 ### Audit Trail
+
 - Complete deployment history
 - Transaction logging and monitoring
 - Error tracking and recovery
@@ -289,9 +304,10 @@ const manualDefenderStrategy = new OZDefenderDeploymentStrategy(
 ## 🤝 Contributing
 
 ### Development Setup
+
 ```bash
 # Clone and setup
-git clone https://github.com/your-org/diamonds.git
+git clone https://github.com/geniusventures/diamonds.git
 cd diamonds
 npm install
 
@@ -306,6 +322,7 @@ npm run lint
 ```
 
 ### Contribution Guidelines
+
 1. Follow TypeScript best practices
 2. Maintain 90%+ test coverage
 3. Update documentation for new features
@@ -315,18 +332,21 @@ npm run lint
 ## 📋 Roadmap
 
 ### Current Version (1.0)
+
 - ✅ Core Diamond implementation
 - ✅ OpenZeppelin Defender integration
 - ✅ Comprehensive testing suite
 - ✅ Documentation and examples
 
 ### Upcoming Features (1.1)
+
 - 🔄 Defender Autotasks integration
 - 🔄 Defender Sentinel monitoring
 - 🔄 Multi-network deployment support
 - 🔄 Advanced upgrade patterns
 
 ### Future Enhancements (2.0)
+
 - 📅 Database repository implementation
 - 📅 GraphQL API for deployment data
 - 📅 Web dashboard for deployment management
@@ -352,10 +372,11 @@ npm run lint
    - Verify chain ID configuration
 
 ### Getting Help
+
 - Check [Documentation](docs/)
 - Review [Examples](examples/)
-- Open [GitHub Issue](https://github.com/your-org/diamonds/issues)
-- Join [Discord Community](https://discord.gg/your-server)
+- Open [GitHub Issue](https://github.com/genius/diamonds/issues)
+- Join [Telegram Community](https://t.me/geniustokens)
 
 ## 📄 License
 
@@ -370,4 +391,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ for the Ethereum ecosystem**
+Built with ❤️ for the Ethereum ecosystem

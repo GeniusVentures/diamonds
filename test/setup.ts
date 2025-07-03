@@ -60,36 +60,9 @@ export async function setupTestFiles(
   // Create sample config file
   const configPath = path.join(tempDir, diamondName, `${diamondName.toLowerCase()}.config.json`);
 
-  // Sample configuration
-  const sampleConfig = {
-    protocolVersion: 0.0,
-    facets: {
-      DiamondCutFacet: {
-        priority: 10,
-        versions: {
-          "0.0": {}
-        }
-      },
-      DiamondLoupeFacet: {
-        priority: 20,
-        versions: {
-          "0.0": {}
-        }
-      },
-      TestFacet: {
-        priority: 30,
-        versions: {
-          "0.0": {
-            callbacks: ["testCallback"],
-            deployInit: "initialize()",
-            upgradeInit: "reinitialize()"
-          }
-        }
-      }
-    }
-  };
-
-  await fs.writeJson(configPath, sampleConfig, { spaces: 2 });
+  // Copy the mock config file instead of creating a new one
+  const mockConfigPath = path.join(__dirname, 'mocks', 'testdiamond.config.json');
+  await fs.copy(mockConfigPath, configPath);
 
   // Create empty deployment data file
   const deploymentPath = path.join(
@@ -112,17 +85,9 @@ export async function setupTestFiles(
   // Create sample callback file
   const callbackPath = path.join(tempDir, diamondName, 'callbacks', 'TestFacet.ts');
 
-  const callbackContent = `
-import { CallbackArgs } from "../../../src/types";
-
-export async function testCallback(args: CallbackArgs) {
-  const { diamond } = args;
-  console.log(\`Running test callback for \${diamond.diamondName} on \${diamond.networkName}\`);
-  // Add any test callback logic here
-}
-`;
-
-  await fs.writeFile(callbackPath, callbackContent);
+  // Copy the mock callback file instead of creating a new one
+  const mockCallbackPath = path.join(__dirname, 'mocks', 'diamonds', 'callbacks', 'TestFacet.ts');
+  await fs.copy(mockCallbackPath, callbackPath);
 
   return {
     configPath,

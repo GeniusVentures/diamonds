@@ -23,6 +23,7 @@ import {
   ExternalApiCreateProposalRequest,
   ProposalTargetFunction
 } from "@openzeppelin/defender-sdk-proposal-client/lib/models/proposal";
+import { getContractName, getDiamondContractName, getContractArtifact } from '../utils/contractMapping';
 
 export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
   private client: Defender;
@@ -182,7 +183,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       // Get DiamondCutFacet interface for function selectors
       let diamondCutFacetFunctionSelectors: string[] = [];
       try {
-        const diamondCutFactory = await ethers.getContractFactory("DiamondCutFacet", diamond.getSigner()!);
+        const diamondCutContractName = await getContractName("DiamondCutFacet");
+        const diamondCutFactory = await ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
         diamondCutFacetFunctionSelectors = Object.keys(diamondCutFactory.interface.functions).map(fn =>
           diamondCutFactory.interface.getSighash(fn)
         );
@@ -301,12 +303,15 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const stepNameCut = 'deploy-diamondcutfacet';
     const cutStep = store.getStep(stepNameCut);
     if (!cutStep || (cutStep.status !== 'executed' && cutStep.status !== 'failed')) {
+      const diamondCutContractName = await getContractName('DiamondCutFacet');
+      const diamondCutArtifact = await getContractArtifact('DiamondCutFacet');
       const cutRequest: DeployContractRequest = {
         network,
-        contractName: 'DiamondCutFacet',
-        contractPath: `${diamond.contractsPath}/DiamondCutFacet.sol`,
+        contractName: diamondCutContractName,
+        contractPath: `${diamond.contractsPath}/${diamondCutContractName}.sol`,
         constructorInputs: [],
         verifySourceCode: true, // TODO Verify this should be true or optional
+        artifactPayload: JSON.stringify(diamondCutArtifact), // Provide the artifact payload
       };
 
       const cutDeployment = await this.client.deploy.deployContract(cutRequest);
@@ -326,10 +331,11 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const stepNameDiamond = 'deploy-diamond';
     const diamondStep = store.getStep(stepNameDiamond);
     if (!diamondStep || (diamondStep.status !== 'executed' && diamondStep.status !== 'failed')) {
+      const diamondContractName = await getDiamondContractName(diamond.diamondName);
       const diamondRequest: DeployContractRequest = {
         network,
-        contractName: diamond.diamondName,
-        contractPath: `${diamond.contractsPath}/${diamond.diamondName}.sol`,
+        contractName: diamondContractName,
+        contractPath: `${diamond.contractsPath}/${diamondContractName}.sol`,
         constructorInputs: [deployerAddress, ethers.constants.AddressZero], // Make sure constructor matches
         verifySourceCode: true, // TODO Verify this should be true or optional
       };
@@ -395,10 +401,11 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
       console.log(chalk.cyan(`🔧 Deploying facet ${facetName} to version ${targetVersion}...`));
 
+      const facetContractName = await getContractName(facetName);
       const deployRequest: DeployContractRequest = {
         network,
-        contractName: facetName,
-        contractPath: `${diamond.contractsPath}/${facetName}.sol`,
+        contractName: facetContractName,
+        contractPath: `${diamond.contractsPath}/${facetContractName}.sol`,
         constructorInputs: [],
         verifySourceCode: true, // TODO Verify this should be true or optional
       };

@@ -69,3 +69,9 @@ notes
 
 .tmp-test-integration
 jest.config.js
+.vscode/
+dist/
+coverage/
+*.tsbuildinfo
+cache/
+artifacts/

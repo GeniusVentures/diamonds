@@ -9,13 +9,10 @@ dotenv.config();
 const {
   MAINNET_RPC_URL,
   SEPOLIA_RPC_URL,
-  GOERLI_RPC_URL,
   POLYGON_RPC_URL,
   POLYGON_MUMBAI_RPC_URL,
   ARBITRUM_RPC_URL,
-  ARBITRUM_GOERLI_RPC_URL,
   OPTIMISM_RPC_URL,
-  OPTIMISM_GOERLI_RPC_URL,
   DEPLOYER_PRIVATE_KEY,
   TEST_PRIVATE_KEY_1,
   TEST_PRIVATE_KEY_2,
@@ -39,7 +36,6 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200
       },
-      viaIR: true // Enable intermediate representation for complex contracts
     }
   },
   networks: {
@@ -76,17 +72,6 @@ const config: HardhatUserConfig = {
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
     },
-    goerli: {
-      url: GOERLI_RPC_URL || "https://goerli.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: [
-        DEPLOYER_PRIVATE_KEY || DEFAULT_TEST_PRIVATE_KEY,
-        TEST_PRIVATE_KEY_1 || DEFAULT_TEST_PRIVATE_KEY,
-        TEST_PRIVATE_KEY_2 || DEFAULT_TEST_PRIVATE_KEY
-      ].filter(Boolean),
-      chainId: 5,
-      gas: parseInt(MAX_GAS_LIMIT),
-      gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
-    },
 
     // Polygon Networks
     polygon: {
@@ -116,34 +101,12 @@ const config: HardhatUserConfig = {
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
     },
-    arbitrumGoerli: {
-      url: ARBITRUM_GOERLI_RPC_URL || "https://arbitrum-goerli.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: [
-        DEPLOYER_PRIVATE_KEY || DEFAULT_TEST_PRIVATE_KEY,
-        TEST_PRIVATE_KEY_1 || DEFAULT_TEST_PRIVATE_KEY,
-        TEST_PRIVATE_KEY_2 || DEFAULT_TEST_PRIVATE_KEY
-      ].filter(Boolean),
-      chainId: 421613,
-      gas: parseInt(MAX_GAS_LIMIT),
-      gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
-    },
 
     // Optimism Networks
     optimism: {
       url: OPTIMISM_RPC_URL || "https://optimism-mainnet.infura.io/v3/YOUR_INFURA_KEY",
       accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
       chainId: 10,
-      gas: parseInt(MAX_GAS_LIMIT),
-      gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
-    },
-    optimismGoerli: {
-      url: OPTIMISM_GOERLI_RPC_URL || "https://optimism-goerli.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: [
-        DEPLOYER_PRIVATE_KEY || DEFAULT_TEST_PRIVATE_KEY,
-        TEST_PRIVATE_KEY_1 || DEFAULT_TEST_PRIVATE_KEY,
-        TEST_PRIVATE_KEY_2 || DEFAULT_TEST_PRIVATE_KEY
-      ].filter(Boolean),
-      chainId: 420,
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
     }
@@ -163,13 +126,10 @@ function getNetworkUrl(networkName: string): string {
   switch (networkName) {
     case "mainnet": return MAINNET_RPC_URL || "";
     case "sepolia": return SEPOLIA_RPC_URL || "";
-    case "goerli": return GOERLI_RPC_URL || "";
     case "polygon": return POLYGON_RPC_URL || "";
     case "mumbai": return POLYGON_MUMBAI_RPC_URL || "";
     case "arbitrum": return ARBITRUM_RPC_URL || "";
-    case "arbitrumGoerli": return ARBITRUM_GOERLI_RPC_URL || "";
     case "optimism": return OPTIMISM_RPC_URL || "";
-    case "optimismGoerli": return OPTIMISM_GOERLI_RPC_URL || "";
     default: return "";
   }
 }

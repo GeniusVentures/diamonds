@@ -81,22 +81,22 @@ describe('Integration: LocalDeploymentStrategy', function () {
 
   // Mock function to simulate contract deployments
   async function mockContractFactory(name: string) {
-    if (name === 'DiamondCutFacet') {
+    if (name === 'DiamondCutFacet' || name === 'MockDiamondCutFacet') {
       return {
         deploy: async () => diamondCutFacet,
         connect: () => ({ deploy: async () => diamondCutFacet })
       };
-    } else if (name === 'DiamondLoupeFacet') {
+    } else if (name === 'DiamondLoupeFacet' || name === 'MockDiamondLoupeFacet') {
       return {
         deploy: async () => diamondLoupeFacet,
         connect: () => ({ deploy: async () => diamondLoupeFacet })
       };
-    } else if (name === 'TestFacet') {
+    } else if (name === 'TestFacet' || name === 'MockTestFacet') {
       return {
         deploy: async () => testFacet,
         connect: () => ({ deploy: async () => testFacet })
       };
-    } else if (name.includes(DIAMOND_NAME)) {
+    } else if (name.includes(DIAMOND_NAME) || name.includes('Mock' + DIAMOND_NAME)) {
       return {
         deploy: async () => mockDiamond,
         connect: () => ({ deploy: async () => mockDiamond })

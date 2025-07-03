@@ -18,7 +18,7 @@ export const ExternalLibrariesSchema = z.record(z.string());
 // Schema for the network deployment information
 export const DeployedDiamondDataSchema = z.object({
   DiamondAddress: z.string().optional(), // Address of the deployed diamond
-  DeployerAddress: z.string(), // Address of the deployer
+  DeployerAddress: z.string().optional(), // Address of the deployer
   // FacetDeployedInfo: FacetDeployedInfoRecordSchema.optional(), // Information about deployed facets
   DeployedFacets: DeployedFacetsSchema.optional(), // Information about deployed facets
   ExternalLibraries: ExternalLibrariesSchema.optional(), // External libraries used in the deployment

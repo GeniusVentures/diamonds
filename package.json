@@ -32,7 +32,7 @@
     "lint": "tslint --config tslint.json --project tsconfig.json",
     "build": "tsc",
     "watch": "tsc -w",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "yarn build",
     "defender:deploy": "ts-node scripts/defender-cli.ts deploy",
     "defender:upgrade": "ts-node scripts/defender-cli.ts upgrade",
     "defender:status": "ts-node scripts/defender-cli.ts status",

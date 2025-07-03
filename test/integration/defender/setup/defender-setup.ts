@@ -45,6 +45,7 @@ export function createDefenderMocks(): MockDefenderClients {
   // Create mock proposal client
   const mockProposalClient = {
     create: sinon.stub(),
+    createProposal: sinon.stub(), // Add createProposal for compatibility
     get: sinon.stub(),
     execute: sinon.stub(),
     list: sinon.stub(),

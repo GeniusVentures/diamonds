@@ -16,6 +16,7 @@ This guide provides comprehensive instructions for monitoring Diamond deployment
 ### 1. Defender Dashboard Monitoring
 
 #### Setting Up Monitoring
+
 ```bash
 # Check deployment status
 npm run defender:status
@@ -25,6 +26,7 @@ npx defender-cli status --diamond MyDiamond --verbose
 ```
 
 #### Key Metrics to Monitor
+
 - **Proposal Status**: Track proposal creation, approval, and execution
 - **Gas Usage**: Monitor gas consumption for diamond cuts
 - **Transaction Confirmations**: Ensure transactions are properly confirmed
@@ -121,11 +123,13 @@ performHealthCheck();
 ### 1. Proposal Creation Failures
 
 #### Issue: "Insufficient permissions" Error
-```
+
+```bash
 Error: Insufficient permissions to create proposal
 ```
 
 **Solution:**
+
 1. Verify API key permissions in Defender dashboard
 2. Ensure relayer has sufficient ETH balance
 3. Check that the Safe/multisig has proper signers
@@ -140,11 +144,13 @@ curl -H "Authorization: Bearer $DEFENDER_API_KEY" \
 ```
 
 #### Issue: "Contract not found" Error
-```
+
+```bash
 Error: Contract not found at address 0x...
 ```
 
 **Solution:**
+
 1. Verify contract address in deployment files
 2. Ensure contract is deployed on correct network
 3. Check if contract is verified on Etherscan
@@ -160,11 +166,13 @@ if (code === '0x') {
 ### 2. Diamond Cut Execution Issues
 
 #### Issue: Diamond Cut Fails with "Selector Collision"
-```
+
+```bash
 Error: Function selector collision detected
 ```
 
 **Solution:**
+
 1. Check for duplicate function selectors across facets
 2. Use `deployExclude` to remove conflicting selectors
 3. Verify function selector registry
@@ -189,11 +197,13 @@ function checkSelectorCollisions(facets: any[]) {
 ```
 
 #### Issue: "Orphaned Selectors" Error
-```
+
+```bash
 Error: Orphaned selectors found for facet TestFacet
 ```
 
 **Solution:**
+
 1. Ensure all function selectors are properly mapped
 2. Remove old facet addresses from registry
 3. Use the validation utility to check state
@@ -206,11 +216,13 @@ await strategy.validateNoOrphanedSelectors(facetCuts);
 ### 3. Network and Connectivity Issues
 
 #### Issue: "Network timeout" Error
-```
+
+```bash
 Error: Network timeout - operation took too long
 ```
 
 **Solution:**
+
 1. Increase timeout values in strategy configuration
 2. Check network congestion and gas prices
 3. Use retry mechanisms
@@ -234,11 +246,13 @@ const strategy = new OZDefenderDeploymentStrategy(
 ```
 
 #### Issue: Rate Limiting
-```
+
+```bash
 Error: Rate limit exceeded (429)
 ```
 
 **Solution:**
+
 1. Implement exponential backoff
 2. Reduce concurrent operations
 3. Contact OpenZeppelin for rate limit increases
@@ -264,11 +278,13 @@ async function withRetry(operation: () => Promise<any>, maxRetries = 3) {
 ### 4. Gas and Transaction Issues
 
 #### Issue: "Gas estimation failed"
-```
+
+```bash
 Error: Gas estimation failed for diamond cut
 ```
 
 **Solution:**
+
 1. Check if all facets are properly deployed
 2. Verify initialization parameters
 3. Test with hardhat fork before mainnet
@@ -534,6 +550,7 @@ npm run defender:deploy
 Proper monitoring and troubleshooting procedures are essential for successful Diamond deployments with OpenZeppelin Defender. This guide provides the foundation for maintaining robust, reliable diamond proxy deployments in production environments.
 
 For additional support:
-- OpenZeppelin Defender Documentation: https://docs.openzeppelin.com/defender/
-- Diamond Standard (ERC-2535): https://eips.ethereum.org/EIPS/eip-2535
-- Community Support: https://forum.openzeppelin.com/
+
+- OpenZeppelin Defender Documentation: <https://docs.openzeppelin.com/defender/>
+- Diamond Standard (ERC-2535): <https://eips.ethereum.org/EIPS/eip-2535>
+- Community Support: <https://forum.openzeppelin.com/>

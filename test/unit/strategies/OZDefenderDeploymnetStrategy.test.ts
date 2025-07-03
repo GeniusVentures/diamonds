@@ -110,6 +110,39 @@ describe('OZDefenderDeploymentStrategy', () => {
     // Reset sinon stubs
     sinon.resetHistory();
 
+    // Reset mock stubs completely
+    mockDeployClient.deployContract.resetHistory();
+    mockDeployClient.getDeployedContract.resetHistory();
+    mockProposalClient.create.resetHistory();
+    mockProposalClient.get.resetHistory();
+    mockProposalClient.execute.resetHistory();
+
+    // Set up default mock responses
+    mockDeployClient.deployContract.resolves({
+      deploymentId: 'defender-deploy-id-default',
+      status: 'pending'
+    });
+
+    mockDeployClient.getDeployedContract.resolves({
+      status: 'completed',
+      contractAddress: '0x1234567890123456789012345678901234567890'
+    });
+
+    mockProposalClient.create.resolves({
+      proposalId: 'test-proposal-id',
+      url: 'https://defender.openzeppelin.com/proposal/test-proposal-id'
+    });
+
+    mockProposalClient.get.resolves({
+      proposalId: 'test-proposal-id',
+      status: 'approved'
+    });
+
+    mockProposalClient.execute.resolves({
+      proposalId: 'test-proposal-id',
+      status: 'executed'
+    });
+
     // Set up a fresh config and repository for each test
     config = {
       diamondName: DIAMOND_NAME,
@@ -122,6 +155,12 @@ describe('OZDefenderDeploymentStrategy', () => {
       deployedDiamondDataFilePath: path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', `${DIAMOND_NAME.toLowerCase()}-${NETWORK_NAME}-${CHAIN_ID}.json`)
     };
 
+    // Clean up any existing deployment files to ensure clean state
+    const deploymentFile = config.deployedDiamondDataFilePath;
+    if (deploymentFile && await fs.pathExists(deploymentFile)) {
+      await fs.remove(deploymentFile);
+    }
+
     repository = new FileDeploymentRepository(config);
     diamond = new Diamond(config, repository);
 
@@ -129,31 +168,22 @@ describe('OZDefenderDeploymentStrategy', () => {
     diamond.setProvider(provider);
     diamond.setSigner(signers[0]);
 
-    // Create the strategy with constructor that accepts everything we'll use
+    // Create the strategy with a mock Defender client
+    const mockDefenderClient = {
+      deploy: mockDeployClient,
+      proposal: mockProposalClient
+    };
+
     strategy = new OZDefenderDeploymentStrategy(
       API_KEY,
       API_SECRET,
       RELAYER_ADDRESS,
       true, // autoApprove
       SAFE_ADDRESS,
-      'Safe'
+      'Safe',
+      true, // verbose
+      mockDefenderClient as any // customClient
     );
-
-    // Replace the deployClient in the strategy
-    const originalModule = await import('../../../src/utils/defenderClients');
-    // Save original module references
-    const originalDeployClient = originalModule.deployClient;
-    const originalAdminClient = originalModule.adminClient;
-
-    // Temporarily replace the clients
-    Object.defineProperty(originalModule, 'deployClient', {
-      value: mockDeployClient,
-      writable: true
-    });
-    Object.defineProperty(originalModule, 'adminClient', {
-      value: mockDefender,
-      writable: true
-    });
   });
 
   after(async () => {
