@@ -1,5 +1,6 @@
 {
   "protocolVersion": 0,
+  "protocolInitFacet": "TestFacet",
   "facets": {
     "DiamondCutFacet": {
       "priority": 10,

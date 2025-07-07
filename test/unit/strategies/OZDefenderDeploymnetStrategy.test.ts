@@ -234,11 +234,11 @@ describe('OZDefenderDeploymentStrategy', () => {
       expect(mockDeployClient.deployContract.calledTwice).to.be.true;
 
       const firstCallArgs = mockDeployClient.deployContract.firstCall.args[0];
-      expect(firstCallArgs.contractName).to.equal('DiamondCutFacet');
+      expect(firstCallArgs.contractName).to.equal('MockDiamondCutFacet');
       expect(firstCallArgs.network).to.equal(NETWORK_NAME);
 
       const secondCallArgs = mockDeployClient.deployContract.secondCall.args[0];
-      expect(secondCallArgs.contractName).to.equal(DIAMOND_NAME);
+      expect(secondCallArgs.contractName).to.equal('MockDiamond'); // Mapped from TestDiamond
       expect(secondCallArgs.network).to.equal(NETWORK_NAME);
     });
   });
@@ -264,7 +264,7 @@ describe('OZDefenderDeploymentStrategy', () => {
       expect(mockDeployClient.deployContract.callCount).to.equal(3);
 
       // Check each call is for a different facet
-      const facets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'TestFacet'];
+      const facets = ['MockDiamondCutFacet', 'MockDiamondLoupeFacet', 'MockTestFacet'];
       for (let i = 0; i < mockDeployClient.deployContract.callCount; i++) {
         const args = mockDeployClient.deployContract.getCall(i).args[0];
         expect(facets).to.include(args.contractName);
@@ -299,7 +299,8 @@ describe('OZDefenderDeploymentStrategy', () => {
       const deployFacetsTasks = Object.getPrototypeOf(strategy).constructor.prototype.deployFacetsTasks;
       await deployFacetsTasks.call(strategy, diamond);
 
-      // Should be called 2 times for the 2 facets not already deployed
+      // Since DiamondCutFacet is deployed at version 0, and DiamondLoupeFacet and TestFacet
+      // are not deployed (version -1), only 2 facets should be deployed
       expect(mockDeployClient.deployContract.callCount).to.equal(2);
     });
   });

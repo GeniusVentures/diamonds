@@ -36,8 +36,8 @@ This project provides a comprehensive implementation of the ERC-2535 Diamond Pro
 ### Prerequisites
 
 ```bash
-# Node.js 16+ and npm
-node --version  # v16.0.0 or higher
+# Node.js 18+ and npm
+node --version  # v18.0.0 or higher
 npm --version   # 8.0.0 or higher
 
 # Git

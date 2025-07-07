@@ -119,7 +119,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: parseInt(process.env.TEST_TIMEOUT || "300000")
-  }
+  },
 };
 
 function getNetworkUrl(networkName: string): string {

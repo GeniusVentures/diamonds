@@ -1,0 +1,247 @@
+<diagram program="umletino" version="15.1"><zoom_level>9</zoom_level><help_text>lt=&lt;&lt;
+exclusionFilter</help_text><element><id>UMLClass</id><coordinates><x>486</x><y>487</y><w>225</w><h>108</h></coordinates><panel_attributes>prioritySortedDeployedFuncSelectors
+--
+&gt; funcSel: 0x
+&gt; facetAddress: 0x address
+&gt; priority: int
+
+From previous deployment file
+sorted by priority
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>477</x><y>631</y><w>234</w><h>369</h></coordinates><panel_attributes>functionSelectorRegistry
+--
+&gt; key: 0x function selector
+&gt; facetAddress: 0x address
+&gt; priority: number
+&gt; status: enum {
+		 deployed,
+		add
+		replace
+		remove
+
+Initiallly includes all selectors from deployedFuncSelectors as deployed
+
+style=wordwrap
+
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>405</x><y>1054</y><w>189</w><h>36</h></coordinates><panel_attributes>*5. DiamonCut Transaction*
+
+fontsize=15
+
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>585</x><y>586</y><w>27</w><h>63</h></coordinates><panel_attributes>lt=&lt;&lt;-
+group=group-0
+layer=3</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>801</x><y>469</y><w>207</w><h>99</h></coordinates><panel_attributes>higherPriorityDeployedFuncSelectors
+--
+&gt; funcSel: 0x
+&gt; priority: int
+
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>801</x><y>829</y><w>189</w><h>63</h></coordinates><panel_attributes>lowerPriorityDeployedFuncSelectors
+--
+&gt; funcSel: 0x
+&gt; priority: int
+
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1323</x><y>397</y><w>135</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-
+</panel_attributes><additional_attributes>10;10;130;60</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1152</x><y>316</y><w>180</w><h>135</h></coordinates><panel_attributes>diamond.newDeployedFacets
+--
+&gt; facetName {
+	&gt; facetAddress: 0x address
+	&gt; tx_hash: string
+	&gt; initFunction: string
+	&gt; priority: int
+	&gt; version: number	
+	&gt; allFuncSels: string[ ]
+	&gt; deployInclude: string[ ];
+	&gt; verified: boolean;
+}
+
+style=wordwrap
+layer=3
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1125</x><y>163</y><w>189</w><h>90</h></coordinates><panel_attributes>facetConfig
+--
+&gt; facetName:
+&gt;&gt; address
+&gt;&gt; priority
+&gt;&gt; versions
+layer=3
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>198</x><y>163</y><w>252</w><h>180</h></coordinates><panel_attributes>*deployedDiamondData*
+--
+&gt; DiamondAddress: 0x address
+&gt; DiamondDeployer: 0x address
+&gt; Version: float
+&gt; Facets: [  
+	&gt; facetName:
+	&gt; address
+	&gt; version
+	&gt; functionSelectors: funcSelector[ ]
+
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>882</x><y>172</y><w>189</w><h>81</h></coordinates><panel_attributes>diamond.config.facets
+--
+ProtocolInitFacet: string facetName
+exlude: 0x[ ] (function selectors to be excluded from all facets)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>702</x><y>631</y><w>126</w><h>81</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>120;10;10;70</additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>810</x><y>622</y><w>171</w><h>36</h></coordinates><panel_attributes>lt=-
+priority split
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>441</x><y>190</y><w>117</w><h>54</h></coordinates><panel_attributes>*facets*
+
+lt=&lt;&lt;-
+
+layer=3
+group=group-0</panel_attributes><additional_attributes>110;22;10;20</additional_attributes></element><element><id>Relation</id><coordinates><x>972</x><y>694</y><w>108</w><h>99</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;90;100;10</additional_attributes></element><element><id>Relation</id><coordinates><x>891</x><y>559</y><w>27</w><h>81</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>Relation</id><coordinates><x>1206</x><y>244</y><w>63</w><h>90</h></coordinates><panel_attributes>lt=&lt;&lt;-
+
+</panel_attributes><additional_attributes>50;80;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1062</x><y>199</y><w>81</w><h>27</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>70;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1440</x><y>433</y><w>90</w><h>36</h></coordinates><panel_attributes>facetContractAbi
+layer=3
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>702</x><y>379</y><w>144</w><h>306</h></coordinates><panel_attributes>add/replace
+lt=&lt;&lt;-</panel_attributes><additional_attributes>10;320;140;10</additional_attributes></element><element><id>Relation</id><coordinates><x>891</x><y>406</y><w>27</w><h>81</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>Relation</id><coordinates><x>972</x><y>370</y><w>198</w><h>54</h></coordinates><panel_attributes>lt=&lt;&lt;.
+
+confirm function selector
+in facet</panel_attributes><additional_attributes>10;20;200;20</additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>828</x><y>352</y><w>153</w><h>63</h></coordinates><panel_attributes>lt=.
+adhoc
+inclusion Filter
+fg=red
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>549</x><y>424</y><w>108</w><h>36</h></coordinates><panel_attributes>lt=.
+prioritySort
+
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>648</x><y>217</y><w>252</w><h>243</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;250;80;250;80;10;260;10</additional_attributes></element><element><id>Relation</id><coordinates><x>594</x><y>451</y><w>27</w><h>54</h></coordinates><panel_attributes>lt=&lt;&lt;-
+group=group-0
+layer=3</panel_attributes><additional_attributes>10;40;10;10</additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>1071</x><y>568</y><w>126</w><h>63</h></coordinates><panel_attributes>lt=.
+priority removal filter
+halign=center
+style=wordwrap
+fg=red
+layer=3
+	</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>999</x><y>505</y><w>90</w><h>108</h></coordinates><panel_attributes>lt=&lt;&lt;.
+bg=red
+fg=red</panel_attributes><additional_attributes>80;100;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1134</x><y>442</y><w>72</w><h>144</h></coordinates><panel_attributes>lt=&lt;&lt;-
+</panel_attributes><additional_attributes>17;140;60;10</additional_attributes></element><element><id>Relation</id><coordinates><x>675</x><y>190</y><w>225</w><h>36</h></coordinates><panel_attributes>facets in config
+lt=&lt;&lt;.</panel_attributes><additional_attributes>10;20;230;20</additional_attributes></element><element><id>UMLClass</id><coordinates><x>495</x><y>280</y><w>216</w><h>99</h></coordinates><panel_attributes>filteredDeployedFacets
+--
+&gt; facetName:
+&gt; address
+&gt; version
+&gt; status: deployed | remove
+&gt; functionSelectors: [ ]functionselector
+
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>540</x><y>190</y><w>144</w><h>45</h></coordinates><panel_attributes>lt=.
+removedFacetFilter
+group=group-0
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>594</x><y>226</y><w>27</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-
+group=group-0
+layer=3</panel_attributes><additional_attributes>10;60;10;10</additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>819</x><y>919</y><w>153</w><h>63</h></coordinates><panel_attributes>lt=.
+replace existing lower priority filter
+fg=red
+style=wordwrap
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>891</x><y>883</y><w>27</w><h>54</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;40;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>594</x><y>370</y><w>27</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-
+group=group-0
+layer=3</panel_attributes><additional_attributes>10;60;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>702</x><y>928</y><w>135</w><h>36</h></coordinates><panel_attributes>lt=&lt;&lt;-
+          replace existing</panel_attributes><additional_attributes>10;20;130;20</additional_attributes></element><element><id>Relation</id><coordinates><x>621</x><y>973</y><w>297</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-
+add new function selectors</panel_attributes><additional_attributes>10;30;10;60;310;60;310;10</additional_attributes></element><element><id>Relation</id><coordinates><x>495</x><y>991</y><w>126</w><h>81</h></coordinates><panel_attributes>lt=&lt;&lt;-
+add,replace,remove
+
+group=group-0
+layer=3</panel_attributes><additional_attributes>10;70;10;10</additional_attributes></element><element><id>UMLGeneric</id><coordinates><x>774</x><y>271</y><w>864</w><h>783</h></coordinates><panel_attributes>*3. Iterate over facets*
+  - Perform Filtering
+  - Update FunctionSelectorRegistry
+bg=dark_gray
+halign=left
+valign=top
+fontsize=16</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1278</x><y>595</y><w>369</w><h>423</h></coordinates><panel_attributes>Filtering Details
+--
+--
+*1. adhoc inclusion filter*
+This is essentially an "override higher priority" function. Currently, if a multiple facets list the same FuncSel as 'include' the LOWER PRIORITY will be used.
+
+   A. Confirm this FuncSel is in the facet list and the  higherPriorityDeployedFuncSelectors, return if not.
+   B. FuncSels present in Facet Config 'include' list and already in Registry but associated with higher priority facets will have the Registry updated with the new Facet Address. Additionally:
+       i.  If the FuncSel is already be set to 'add' or 'replace' then these should remain.
+       ii. If the status is set to 'deployed' then set status to 'replace'
+       iii. If the status is set to 'remove' then set status to 'replace'
+   
+*2. Priority Removal Filter*
+Removes FunSels that are already being included by other higher priority facets (different names) and aren't being overridden by the adhoc include list
+
+3. Replace Existing from Same Facet Name
+
+*4. Replace Existing Lower Priority Filter*
+Change facet address for FuncSels.
+Set status to `replace` for existing `deploy` FuncSels, facets that are first time deployments of lower priority will not have been processed yet there is no need to account for FuncSels marked as 'add'.
+
+*5.  Add New Function Selectors*
+Remaining FuncSels are added.  
+
+
+style=wordwrap
+bg=blue
+layer=2
+
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>189</x><y>388</y><w>261</w><h>612</h></coordinates><panel_attributes>Diamonds Module Base Strategy
+--
+--
+
+Function Selector DiamondCut Process
+
+1. Deploy Facet contracts for new versions
+2. Create functionSelectorRegistry from deployedf facets
+
+3. Iterate over facets in facetConfig
+   a. Perform facet function selector filtering
+   b. Update action functionSelectorRegistry
+
+4. Protocol Wide Exclusion Filter: Remove FuncSels in ProtocolExclude
+
+5. DiamondCut Transaction
+
+fontsize=14
+style=wordwrap
+bg=blue
+halign=left
+transparency=0
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1359</x><y>163</y><w>234</w><h>90</h></coordinates><panel_attributes>*1. Deploy Facets*
+--
+Version comparison / existance
+Config -&gt; deployedDiamondData
+Deploy New Facets
+
+bg=dark_gray
+
+fontsize=15</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1305</x><y>199</y><w>72</w><h>27</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>60;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1476</x><y>244</y><w>27</w><h>207</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;210;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>954</x><y>694</y><w>126</w><h>27</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;120;10</additional_attributes></element><element><id>Text</id><coordinates><x>576</x><y>100</y><w>792</w><h>63</h></coordinates><panel_attributes>*Base Strategy:  Facet Deployment and Upgrades, Function Selector &amp; DiamondCut Process*
+
+fg=#a3ffff
+fontsize=19
+valign=top
+halign=center
+style=autoresize</panel_attributes><additional_attributes></additional_attributes></element><element><id>Text</id><coordinates><x>873</x><y>37</y><w>225</w><h>72</h></coordinates><panel_attributes>*Diamonds Module*
+fontsize=25
+valign=top
+halign=center
+style=autoresize
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Text</id><coordinates><x>612</x><y>73</y><w>738</w><h>36</h></coordinates><panel_attributes>Robust Extensible Deployment of ERC-2535 Diamond Proxy Standard Contract Systems
+
+fontsize=13
+valign=top
+halign=center
+style=wordwrap</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>468</x><y>163</y><w>261</w><h>846</h></coordinates><panel_attributes>*2. Create FunctionSelectorRegistry*
+
+fontsize=15
+fg=white
+bg=#8F20EF
+layer=1
+transparency=97
+group=group-0</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1062</x><y>676</y><w>189</w><h>63</h></coordinates><panel_attributes>priorityFilteredNewDeployedFacets
+--
+id: Long="36548"
+[waiting for message]</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>837</x><y>676</y><w>126</w><h>63</h></coordinates><panel_attributes>lt=.
+replace existing 
+same facet filter
+halign=center
+style=wordwrap
+fg=red
+layer=3
+	</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>954</x><y>442</y><w>216</w><h>207</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;210;220;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1125</x><y>622</y><w>63</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>50;60;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>702</x><y>676</y><w>171</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-
+replace for same name facet</panel_attributes><additional_attributes>10;60;170;10</additional_attributes></element><element><id>UMLUseCase</id><coordinates><x>810</x><y>757</y><w>171</w><h>36</h></coordinates><panel_attributes>lt=-
+priority split
+layer=3</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>702</x><y>766</y><w>126</w><h>45</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>120;10;10;30</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1053</x><y>955</y><w>189</w><h>63</h></coordinates><panel_attributes>remove Function selectors that have same facet name but different address
+--
+id: Long="36548"
+[waiting for message]</panel_attributes><additional_attributes></additional_attributes></element></diagram>

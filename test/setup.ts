@@ -56,6 +56,7 @@ export async function setupTestFiles(
   await fs.ensureDir(path.join(tempDir, diamondName, 'deployments'));
   await fs.ensureDir(path.join(tempDir, diamondName, 'deployments', 'defender'));
   await fs.ensureDir(path.join(tempDir, diamondName, 'callbacks'));
+  await fs.ensureDir(path.join(tempDir, diamondName, 'deployments', diamondName, 'callbacks'));
 
   // Create sample config file
   const configPath = path.join(tempDir, diamondName, `${diamondName.toLowerCase()}.config.json`);
@@ -82,17 +83,20 @@ export async function setupTestFiles(
 
   await fs.writeJson(deploymentPath, emptyDeployment, { spaces: 2 });
 
-  // Create sample callback file
-  const callbackPath = path.join(tempDir, diamondName, 'callbacks', 'TestFacet.ts');
+  // Create sample callback file in both locations for compatibility
+  const callbackPath1 = path.join(tempDir, diamondName, 'callbacks', 'TestFacet.ts');
+  const callbackPath2 = path.join(tempDir, diamondName, 'deployments', diamondName, 'callbacks', 'TestFacet.ts');
 
-  // Copy the mock callback file instead of creating a new one
+  // Copy the mock callback file to both locations
   const mockCallbackPath = path.join(__dirname, 'mocks', 'diamonds', 'callbacks', 'TestFacet.ts');
-  await fs.copy(mockCallbackPath, callbackPath);
+  await fs.copy(mockCallbackPath, callbackPath1);
+  await fs.copy(mockCallbackPath, callbackPath2);
 
   return {
     configPath,
     deploymentPath,
-    callbackPath
+    callbackPath1,
+    callbackPath2
   };
 }
 

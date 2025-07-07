@@ -19,9 +19,7 @@
         "0.0": {
           "callbacks": [
             "testCallback"
-          ],
-          "deployInit": "initialize()",
-          "upgradeInit": "reinitialize()"
+          ]
         }
       }
     }

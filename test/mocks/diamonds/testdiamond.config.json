@@ -13,13 +13,15 @@
         "0.0": {}
       }
     },
-    "MockTestFacet": {
-      "priority": 40,
+    "TestFacet": {
+      "priority": 30,
       "versions": {
         "0.0": {
           "callbacks": [
-            "createXMPLToken"
-          ]
+            "testCallback"
+          ],
+          "deployInit": "initialize()",
+          "upgradeInit": "reinitialize()"
         }
       }
     }

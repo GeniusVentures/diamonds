@@ -30,15 +30,7 @@ export async function getContractName(logicalName: string): Promise<string> {
 export async function getDiamondContractName(diamondName: string): Promise<string> {
   // Special mappings for test environments
   const testMappings: Record<string, string> = {
-    'TestDiamond': 'MockDiamond',
-    'ConfigTestDiamond': 'MockDiamond',
-    'ProxyDiamond': 'MockDiamond',
-    'BenchmarkDiamond': 'BenchmarkDiamond',
-    'ConcurrentDiamond0': 'MockDiamond',
-    'ConcurrentDiamond1': 'MockDiamond',
-    'ConcurrentDiamond2': 'MockDiamond',
-    'ConcurrentDiamond3': 'MockDiamond',
-    'ConcurrentDiamond4': 'MockDiamond',
+    'TestDiamond': 'MockDiamond'
   };
 
   // Check if there's a test mapping first

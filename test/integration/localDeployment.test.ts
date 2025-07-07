@@ -56,7 +56,7 @@ describe('Integration: LocalDeploymentStrategy', function () {
       chainId: CHAIN_ID,
       deploymentsPath: TEMP_DIR,
       contractsPath: 'contracts', // This will be mocked
-      callbacksPath: path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'),
+      callbacksPath: path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', DIAMOND_NAME, 'callbacks'),
       configFilePath: path.join(TEMP_DIR, DIAMOND_NAME, `${DIAMOND_NAME.toLowerCase()}.config.json`),
       deployedDiamondDataFilePath: path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', `${DIAMOND_NAME.toLowerCase()}-${NETWORK_NAME}-${CHAIN_ID}.json`)
     };
@@ -96,7 +96,7 @@ describe('Integration: LocalDeploymentStrategy', function () {
         deploy: async () => testFacet,
         connect: () => ({ deploy: async () => testFacet })
       };
-    } else if (name.includes(DIAMOND_NAME) || name.includes('Mock' + DIAMOND_NAME)) {
+    } else if (name.includes(DIAMOND_NAME) || name.includes('Mock' + DIAMOND_NAME) || name === 'MockDiamond') {
       return {
         deploy: async () => mockDiamond,
         connect: () => ({ deploy: async () => mockDiamond })
@@ -162,13 +162,13 @@ describe('Integration: LocalDeploymentStrategy', function () {
 
         // Now simulate an upgrade
         // Create new facet version
-        const config = repository.loadDeployConfig();
-        if (!config.facets.TestFacet.versions) {
-          config.facets.TestFacet.versions = {} as Record<number, any>;
+        const deployConfig = repository.loadDeployConfig();
+        if (!deployConfig.facets.TestFacet.versions) {
+          deployConfig.facets.TestFacet.versions = {} as Record<number, any>;
         }
-        config.facets.TestFacet.versions[1.0] = {
-          deployInit: "initialize()",
-          upgradeInit: "reinitialize()",
+        deployConfig.facets.TestFacet.versions[1.0] = {
+          deployInit: "",
+          upgradeInit: "",
           callbacks: ["testCallback"],
           deployInclude: [],
           deployExclude: []
@@ -177,25 +177,31 @@ describe('Integration: LocalDeploymentStrategy', function () {
         // Write updated config
         await fs.writeJson(
           path.join(TEMP_DIR, DIAMOND_NAME, `${DIAMOND_NAME.toLowerCase()}.config.json`),
-          config,
+          deployConfig,
           { spaces: 2 }
         );
 
+        // Create new repository and diamond instance to pick up the updated config
+        const upgradeRepository = new FileDeploymentRepository(config);
+        const upgradeDiamond = new Diamond(config, upgradeRepository);
+        upgradeDiamond.setProvider(ethers.provider);
+        upgradeDiamond.setSigner(deployer);
+
         // Create new strategy and deployer for upgrade
         const upgradeStrategy = new LocalDeploymentStrategy();
-        const upgradeDeployer = new DiamondDeployer(diamond, upgradeStrategy);
+        const upgradeDeployer = new DiamondDeployer(upgradeDiamond, upgradeStrategy);
 
         // Perform upgrade
         await upgradeDeployer.deployDiamond();
 
         // Get upgraded deployment data
-        const upgradedData = diamond.getDeployedDiamondData();
+        const upgradedData = upgradeDiamond.getDeployedDiamondData();
 
         // Diamond address should be the same
         expect(upgradedData.DiamondAddress).to.equal(initialData.DiamondAddress);
 
         // TestFacet should be updated
-        expect(upgradedData.DeployedFacets?.TestFacet.version).to.equal(1.0);
+        expect(upgradedData.DeployedFacets?.TestFacet.version).to.equal(1);
 
         // Callback should have been called again
         expect((console.log as sinon.SinonSpy).calledWith(sinon.match(/Running test callback/))).to.be.true;
