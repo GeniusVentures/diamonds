@@ -34,10 +34,10 @@ interface BenchmarkResult {
 }
 
 describe('Performance Benchmarks', function () {
-  this.timeout(300000); // 5 minutes for performance tests
+  this.timeout(120000); // 2 minutes for performance tests
 
   const TEMP_DIR = path.join(__dirname, '../../.tmp-benchmark');
-  const DIAMOND_NAME = 'BenchmarkDiamond';
+  const DIAMOND_NAME = 'TestDiamond'; // Use a diamond name that maps to MockDiamond
 
   let signers: SignerWithAddress[];
   let benchmarkResults: BenchmarkResult[] = [];
@@ -45,6 +45,29 @@ describe('Performance Benchmarks', function () {
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
     signers = await ethers.getSigners();
+
+    // Setup callback files for tests
+    await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'));
+    const callbackSourcePath = path.join(__dirname, '../../mocks/callbacks/TestFacet.js');
+    const callbackDestPath = path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks', 'TestFacet.js');
+
+    // Copy existing callback or create a simple one
+    try {
+      await fs.copy(callbackSourcePath, callbackDestPath);
+    } catch (error) {
+      // Create a simple callback file if the source doesn't exist
+      const simpleCallback = `
+module.exports = {
+  initialize: function() {
+    console.log('Facet initialized');
+  },
+  upgrade: function() {
+    console.log('Facet upgraded');
+  }
+};
+`;
+      await fs.writeFile(callbackDestPath, simpleCallback);
+    }
 
     // Setup performance monitoring
     if (global.gc) {
@@ -158,29 +181,50 @@ describe('Performance Benchmarks', function () {
       chainId: networkName === 'hardhat' ? 31337 : 1,
       deploymentsPath: TEMP_DIR,
       contractsPath: 'contracts',
+      callbacksPath: path.join(TEMP_DIR, diamondName, 'callbacks'),
       writeDeployedDiamondData: true
     };
 
-    // Create facets configuration
+    // Create facets configuration using existing test facets
     const facetsConfig: any = {
       version: 1,
       protocolVersion: 1,
-      protocolInitFacet: 'ProtocolInitFacet',
-      facets: {} as any
-    };
-
-    for (let i = 1; i <= facetCount; i++) {
-      (facetsConfig.facets as any)[`BenchmarkFacet${i}`] = {
-        priority: i * 100,
-        versions: {
-          1: {
-            deployInit: i === 1 ? 'initialize()' : undefined,
-            upgradeInit: i === 1 ? 'upgrade()' : undefined,
-            deployInclude: i % 3 === 0 ? [`selector${i}_1`, `selector${i}_2`] : undefined,
-            deployExclude: i % 5 === 0 ? [`selector${i}_3`] : undefined
+      protocolInitFacet: 'TestFacet',
+      facets: {
+        DiamondCutFacet: {
+          priority: 10,
+          versions: { "1": {} }
+        },
+        DiamondLoupeFacet: {
+          priority: 20,
+          versions: { "1": {} }
+        },
+        TestFacet: {
+          priority: 30,
+          versions: {
+            "1": {
+              deployInit: "initialize()",
+              upgradeInit: "reinitialize()",
+              callbacks: ["testCallback"]
+            }
           }
         }
-      };
+      }
+    };
+
+    // For larger facet counts, just duplicate the test facet with different names
+    if (facetCount > 3) {
+      for (let i = 4; i <= facetCount; i++) {
+        (facetsConfig.facets as any)[`TestFacet${i}`] = {
+          priority: i * 100,
+          contractName: 'TestFacet', // All map to the same contract
+          versions: {
+            "1": {
+              callbacks: ["testCallback"]
+            }
+          }
+        };
+      }
     }
 
     // Write configuration
@@ -226,12 +270,29 @@ describe('Performance Benchmarks', function () {
           DeployedFacets: {} as any
         };
 
-        for (let i = 1; i <= facetCount; i++) {
-          (existingDeployment.DeployedFacets as any)[`BenchmarkFacet${i}`] = {
+        const existingFacets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'TestFacet'];
+
+        for (let i = 1; i <= Math.min(facetCount, existingFacets.length); i++) {
+          // Generate valid 4-byte function selectors for local deployment
+          const selector = `0x${(0x40000000 + i * 0x1000).toString(16).padStart(8, '0')}`;
+
+          (existingDeployment.DeployedFacets as any)[existingFacets[i - 1]] = {
             address: `0x${i.toString(16).padStart(40, '0')}`,
             tx_hash: `0x${i.toString(16).padStart(64, '0')}`,
             version: 1,
-            funcSelectors: [`0x${i.toString(16).padStart(8, '0')}`]
+            funcSelectors: [selector]
+          };
+        }
+
+        // For additional facets beyond the basic 3, use TestFacet variants
+        for (let i = 4; i <= facetCount; i++) {
+          const selector = `0x${(0x40000000 + i * 0x1000).toString(16).padStart(8, '0')}`;
+
+          (existingDeployment.DeployedFacets as any)[`TestFacet${i}`] = {
+            address: `0x${i.toString(16).padStart(40, '0')}`,
+            tx_hash: `0x${i.toString(16).padStart(64, '0')}`,
+            version: 1,
+            funcSelectors: [selector]
           };
         }
 
@@ -254,15 +315,13 @@ describe('Performance Benchmarks', function () {
       const mocks = setupBatchOperationMocks();
       (global as any).defenderMocks = mocks;
 
-      // Mock the defender clients module
-      const defenderClientsModule = await import('../../../src/utils/defenderClients');
-      sinon.stub(defenderClientsModule, 'deployClient').value(mocks.mockDeployClient);
-      sinon.stub(defenderClientsModule, 'adminClient').value(mocks.mockDefender);
+      // No need to mock modules since we're passing custom client directly
     });
 
     facetCounts.forEach(facetCount => {
       it(`should benchmark Defender deployment with ${facetCount} facets`, async function () {
         const config = createBenchmarkConfig(facetCount, 'mainnet');
+        const mocks = (global as any).defenderMocks as MockDefenderClients;
         const strategy = new OZDefenderDeploymentStrategy(
           'benchmark-api-key',
           'benchmark-secret',
@@ -270,7 +329,8 @@ describe('Performance Benchmarks', function () {
           true, // Auto-approve for faster benchmarking
           signers[1].address,
           'EOA',
-          true
+          true,
+          mocks.mockDefender // Pass the mocked client
         );
 
         const result = await runBenchmark('Defender', 'deploy', facetCount, strategy, config);
@@ -300,17 +360,35 @@ describe('Performance Benchmarks', function () {
           DeployedFacets: {} as any
         };
 
-        for (let i = 1; i <= facetCount; i++) {
-          (existingDeployment.DeployedFacets as any)[`BenchmarkFacet${i}`] = {
+        const existingFacets = ['DiamondCutFacet', 'DiamondLoupeFacet', 'TestFacet'];
+
+        for (let i = 1; i <= Math.min(facetCount, existingFacets.length); i++) {
+          // Generate valid 4-byte function selectors for Defender deployment
+          const selector = `0x${(0x50000000 + i * 0x1000).toString(16).padStart(8, '0')}`;
+
+          (existingDeployment.DeployedFacets as any)[existingFacets[i - 1]] = {
             address: `0x${i.toString(16).padStart(40, '0')}`,
             tx_hash: `0x${i.toString(16).padStart(64, '0')}`,
             version: 1,
-            funcSelectors: [`0x${i.toString(16).padStart(8, '0')}`]
+            funcSelectors: [selector]
+          };
+        }
+
+        // For additional facets beyond the basic 3, use TestFacet variants
+        for (let i = 4; i <= facetCount; i++) {
+          const selector = `0x${(0x50000000 + i * 0x1000).toString(16).padStart(8, '0')}`;
+
+          (existingDeployment.DeployedFacets as any)[`TestFacet${i}`] = {
+            address: `0x${i.toString(16).padStart(40, '0')}`,
+            tx_hash: `0x${i.toString(16).padStart(64, '0')}`,
+            version: 1,
+            funcSelectors: [selector]
           };
         }
 
         fs.writeJsonSync(deploymentPath, existingDeployment);
 
+        const mocks = (global as any).defenderMocks as MockDefenderClients;
         const strategy = new OZDefenderDeploymentStrategy(
           'benchmark-api-key',
           'benchmark-secret',
@@ -318,7 +396,8 @@ describe('Performance Benchmarks', function () {
           true,
           signers[1].address,
           'EOA',
-          true
+          true,
+          mocks.mockDefender // Pass the mocked client
         );
 
         const result = await runBenchmark('Defender', 'upgrade', facetCount, strategy, config);

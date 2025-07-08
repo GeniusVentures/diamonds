@@ -322,6 +322,37 @@
       "smartStep": true,
       "console": "integratedTerminal",
     },
+        {
+      "name": "OZDefender Deployment Tests",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "program": "${workspaceFolder}/node_modules/hardhat/internal/cli/cli.js",
+      "args": [
+        "test",
+        "${workspaceFolder}/test/integration/defender/deployment.test.ts",
+      ],
+      "runtimeArgs": [
+        "--preserve-symlinks"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ],
+      "skipFiles": [
+        "<node_internals>/**",
+        // "${workspaceFolder}/node_modules/**/*.js", 
+      ],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/dist/**/*.js",
+        "${workspaceFolder}/src/**/*.ts",
+        "${workspaceFolder}/scripts/**/*.ts",
+        "${workspaceFolder}/test/**/*.ts",
+        "${workspaceFolder}/hardhat.config.ts",
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "console": "integratedTerminal",
+    },
     {
       "name": "Integration Tests",
       "type": "node",

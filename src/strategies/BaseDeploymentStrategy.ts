@@ -101,7 +101,12 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     await this.preDeployFacetsTasks(diamond);
   }
 
-  protected async preDeployFacetsTasks(diamond: Diamond): Promise<void> { }
+  protected async preDeployFacetsTasks(diamond: Diamond): Promise<void> {
+    // This can be overridden by subclasses for custom pre-deploy logic
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 No pre-deploy tasks defined for facets of diamond ${diamond.diamondName}`));
+    }
+  }
 
   async deployFacets(diamond: Diamond): Promise<void> {
     await this.deployFacetsTasks(diamond);
@@ -365,7 +370,12 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     await this.prePerformDiamondCutTasks(diamond);
   }
 
-  protected async prePerformDiamondCutTasks(diamond: Diamond): Promise<void> { }
+  protected async prePerformDiamondCutTasks(diamond: Diamond): Promise<void> {
+    // This can be overridden by subclasses for custom pre-diamond cut logic
+    if (this.verbose) {
+      console.log(chalk.gray(`🔧 No pre-diamond cut tasks defined for diamond ${diamond.diamondName}`));
+    }
+  }
 
   async performDiamondCut(diamond: Diamond): Promise<void> {
     if (this.verbose) {

@@ -52,10 +52,11 @@ export function createDefenderMocks(): MockDefenderClients {
     archive: sinon.stub(),
   };
 
-  // Create mock defender instance
+  // Create mock defender instance with proper structure
   const mockDefender = {
     deploy: mockDeployClient,
     proposal: mockProposalClient,
+    admin: mockProposalClient, // For backwards compatibility
   };
 
   return {
@@ -76,23 +77,40 @@ export function createDefenderMocks(): MockDefenderClients {
 export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
   const { mockDeployClient, mockProposalClient } = mocks;
 
+  // Reset all existing stubs first
+  mockDeployClient.deployContract.reset();
+  mockDeployClient.getDeployedContract.reset();
+  mockProposalClient.create.reset();
+  mockProposalClient.get.reset();
+  mockProposalClient.execute.reset();
+
   // Standard deployment response pattern
   let deploymentCounter = 0;
-  mockDeployClient.deployContract.callsFake(() => {
+  mockDeployClient.deployContract.callsFake(async (request: any) => {
     deploymentCounter++;
-    return Promise.resolve({
+    console.log(`[MOCK] deployContract called ${deploymentCounter} times with:`, request.contractName);
+
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    return {
       deploymentId: `defender-deploy-id-${deploymentCounter}`,
       status: "pending",
       createdAt: new Date().toISOString(),
-      contractName: `Contract${deploymentCounter}`,
-      contractPath: `contracts/Contract${deploymentCounter}.sol`,
-      network: "sepolia",
-      artifactPayload: "",
-    });
+      contractName: request.contractName || `Contract${deploymentCounter}`,
+      contractPath: request.contractPath || `contracts/Contract${deploymentCounter}.sol`,
+      network: request.network || "sepolia",
+      artifactPayload: request.artifactPayload || "",
+    };
   });
 
   // Standard get deployed contract response pattern
-  mockDeployClient.getDeployedContract.callsFake((deploymentId: string) => {
+  mockDeployClient.getDeployedContract.callsFake(async (deploymentId: string) => {
+    console.log(`[MOCK] getDeployedContract called for:`, deploymentId);
+
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 10));
+
     const contractAddresses = [
       "0x1234567890123456789012345678901234567890", // DiamondCutFacet
       "0x2345678901234567890123456789012345678901", // Diamond
@@ -102,7 +120,7 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
     ];
 
     const index = parseInt(deploymentId.split("-").pop() || "1", 10) - 1;
-    return Promise.resolve({
+    return {
       deploymentId,
       status: "completed",
       contractAddress: contractAddresses[index] || contractAddresses[0],
@@ -112,27 +130,28 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
       contractPath: `contracts/Contract${index + 1}.sol`,
       network: "sepolia",
       artifactPayload: "",
-    });
+    };
   });
 
   // Standard proposal creation response
-  mockProposalClient.create.callsFake(() => {
-    return Promise.resolve({
+  mockProposalClient.create.callsFake(async (request: any) => {
+    console.log(`[MOCK] proposal.create called with:`, request?.title || "untitled");
+
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    return {
       proposalId: `test-proposal-${Date.now()}`,
       url: `https://defender.openzeppelin.com/proposal/test-proposal-${Date.now()}`,
-    });
+    };
   });
 
-  // Standard proposal status response - simulate execution after a few calls
-  // Use a counter that resets each time this function is called
-  let proposalCheckCount = 0;
+  // Standard proposal status response - execute immediately for test speed
   mockProposalClient.get.callsFake(() => {
-    proposalCheckCount++;
-    const isExecuted = proposalCheckCount >= 3; // Execute after 3 status checks
     return Promise.resolve({
       proposalId: "test-proposal-id",
       transaction: {
-        isExecuted,
+        isExecuted: true,
         isReverted: false,
       },
     });
@@ -154,6 +173,13 @@ export function setupFailedDeploymentMocks(
   failureType: "deploy" | "proposal" | "execution"
 ) {
   const { mockDeployClient, mockProposalClient } = mocks;
+
+  // Reset all existing stubs first
+  mockDeployClient.deployContract.reset();
+  mockDeployClient.getDeployedContract.reset();
+  mockProposalClient.create.reset();
+  mockProposalClient.get.reset();
+  mockProposalClient.execute.reset();
 
   switch (failureType) {
     case "deploy":
@@ -188,12 +214,10 @@ export function setupFailedDeploymentMocks(
 
     case "execution":
       setupSuccessfulDeploymentMocks(mocks);
-      mockProposalClient.get.resolves({
-        proposalId: "test-proposal-id",
-        transaction: {
-          isExecuted: true,
-          isReverted: true,
-        },
+
+      // For execution failure, just throw an error immediately
+      mockProposalClient.get.callsFake(() => {
+        return Promise.reject(new Error("Proposal execution reverted: test-proposal-id"));
       });
       break;
   }
