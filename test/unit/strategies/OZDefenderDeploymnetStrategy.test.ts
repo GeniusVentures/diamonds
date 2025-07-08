@@ -161,12 +161,61 @@ describe('OZDefenderDeploymentStrategy', () => {
       await fs.remove(deploymentFile);
     }
 
+    // Clean up any existing defender store files 
+    const defenderStoreDir = path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', 'defender');
+    if (await fs.pathExists(defenderStoreDir)) {
+      await fs.remove(defenderStoreDir);
+    }
+
+    // Create the config file for the diamond
+    const configFile = config.configFilePath;
+    if (configFile) {
+      await fs.ensureFile(configFile);
+      const testConfig = {
+        "protocolVersion": 0.0,
+        "facets": {
+          "MockDiamondCutFacet": {
+            "priority": 10,
+            "versions": {
+              "0.0": {}
+            }
+          },
+          "MockDiamondLoupeFacet": {
+            "priority": 20,
+            "versions": {
+              "0.0": {}
+            }
+          },
+          "MockTestFacet": {
+            "priority": 40,
+            "versions": {
+              "0.0": {
+                "callbacks": [
+                  "createXMPLToken"
+                ]
+              }
+            }
+          }
+        }
+      };
+      await fs.writeJson(configFile, testConfig, { spaces: 2 });
+    }
+
     repository = new FileDeploymentRepository(config);
     diamond = new Diamond(config, repository);
 
     // Setup the diamond
     diamond.setProvider(provider);
     diamond.setSigner(signers[0]);
+
+    // Ensure diamond has clean state
+    diamond.updateDeployedDiamondData({
+      DiamondAddress: "",
+      DeployerAddress: "",
+      DeployedFacets: {},
+      ExternalLibraries: {},
+      protocolVersion: 0,
+    });
 
     // Create the strategy with a mock Defender client
     const mockDefenderClient = {
@@ -275,7 +324,7 @@ describe('OZDefenderDeploymentStrategy', () => {
       // Set an existing deployment for one facet
       const deployedData = diamond.getDeployedDiamondData();
       deployedData.DeployedFacets = {
-        DiamondCutFacet: {
+        MockDiamondCutFacet: {
           address: '0x1234567890123456789012345678901234567890',
           tx_hash: '0x123456789abcdef',
           version: 0,
@@ -299,7 +348,7 @@ describe('OZDefenderDeploymentStrategy', () => {
       const deployFacetsTasks = Object.getPrototypeOf(strategy).constructor.prototype.deployFacetsTasks;
       await deployFacetsTasks.call(strategy, diamond);
 
-      // Since DiamondCutFacet is deployed at version 0, and DiamondLoupeFacet and TestFacet
+      // Since MockDiamondCutFacet is deployed at version 0, and MockDiamondLoupeFacet and MockTestFacet
       // are not deployed (version -1), only 2 facets should be deployed
       expect(mockDeployClient.deployContract.callCount).to.equal(2);
     });
@@ -478,13 +527,14 @@ describe('OZDefenderDeploymentStrategy', () => {
         ]
       });
 
-      // Mock getDeployedContract to transition from pending to failed
-      mockDeployClient.getDeployedContract.onFirstCall().resolves({
+      // Reset the mock and set up specific call responses
+      mockDeployClient.getDeployedContract.resetHistory();
+      mockDeployClient.getDeployedContract.onCall(0).resolves({
         status: 'pending',
         deploymentId: proposalId
       });
 
-      mockDeployClient.getDeployedContract.onSecondCall().resolves({
+      mockDeployClient.getDeployedContract.onCall(1).resolves({
         status: 'failed',
         deploymentId: proposalId,
         error: 'Test error'
@@ -492,19 +542,25 @@ describe('OZDefenderDeploymentStrategy', () => {
 
       // Execute the protected method via reflection
       const pollUntilComplete = Object.getPrototypeOf(strategy).constructor.prototype.pollUntilComplete;
-      const result = await pollUntilComplete.call(strategy, stepName, diamond, {
-        maxAttempts: 5,
-        initialDelayMs: 10, // Short delay for tests
-        maxDelayMs: 50,
-        jitter: false
-      });
+
+      try {
+        const result = await pollUntilComplete.call(strategy, stepName, diamond, {
+          maxAttempts: 5,
+          initialDelayMs: 10, // Short delay for tests
+          maxDelayMs: 50,
+          jitter: false
+        });
+
+        // The method should throw an error when deployment fails
+        expect.fail('Expected method to throw an error on failed deployment');
+      } catch (error: any) {
+        // This is expected - the method should throw when deployment fails
+        expect(error).to.be.an('error');
+        expect(error.message).to.include('Deployment failed');
+      }
 
       // Verify getDeployedContract was called until failed
       expect(mockDeployClient.getDeployedContract.callCount).to.equal(2);
-
-      // Verify result indicates failure
-      expect(result).to.not.be.null;
-      expect(result.status).to.equal('failed');
     });
   });
 });

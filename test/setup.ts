@@ -84,11 +84,11 @@ export async function setupTestFiles(
   await fs.writeJson(deploymentPath, emptyDeployment, { spaces: 2 });
 
   // Create sample callback file in both locations for compatibility
-  const callbackPath1 = path.join(tempDir, diamondName, 'callbacks', 'TestFacet.ts');
-  const callbackPath2 = path.join(tempDir, diamondName, 'deployments', diamondName, 'callbacks', 'TestFacet.ts');
+  const callbackPath1 = path.join(tempDir, diamondName, 'callbacks', 'TestFacet.js');
+  const callbackPath2 = path.join(tempDir, diamondName, 'deployments', diamondName, 'callbacks', 'TestFacet.js');
 
   // Copy the mock callback file to both locations
-  const mockCallbackPath = path.join(__dirname, 'mocks', 'diamonds', 'callbacks', 'TestFacet.ts');
+  const mockCallbackPath = path.join(__dirname, 'mocks', 'callbacks', 'TestFacet.js');
   await fs.copy(mockCallbackPath, callbackPath1);
   await fs.copy(mockCallbackPath, callbackPath2);
 

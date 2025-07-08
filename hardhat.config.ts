@@ -56,7 +56,7 @@ const config: HardhatUserConfig = {
     // Ethereum Networks
     mainnet: {
       url: MAINNET_RPC_URL || "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
+      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [DEFAULT_TEST_PRIVATE_KEY],
       chainId: 1,
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
@@ -76,7 +76,7 @@ const config: HardhatUserConfig = {
     // Polygon Networks
     polygon: {
       url: POLYGON_RPC_URL || "https://polygon-mainnet.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
+      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [DEFAULT_TEST_PRIVATE_KEY],
       chainId: 137,
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
@@ -96,7 +96,7 @@ const config: HardhatUserConfig = {
     // Arbitrum Networks
     arbitrum: {
       url: ARBITRUM_RPC_URL || "https://arbitrum-mainnet.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
+      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [DEFAULT_TEST_PRIVATE_KEY],
       chainId: 42161,
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9
@@ -105,7 +105,7 @@ const config: HardhatUserConfig = {
     // Optimism Networks
     optimism: {
       url: OPTIMISM_RPC_URL || "https://optimism-mainnet.infura.io/v3/YOUR_INFURA_KEY",
-      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
+      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [DEFAULT_TEST_PRIVATE_KEY],
       chainId: 10,
       gas: parseInt(MAX_GAS_LIMIT),
       gasPrice: parseInt(MAX_GAS_PRICE) * 1e9

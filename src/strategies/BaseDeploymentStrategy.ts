@@ -534,7 +534,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     const deployConfig = diamond.getDeployConfig();
     const deployedDiamondData = diamond.getDeployedDiamondData();
     const selectorRegistry = diamond.functionSelectorRegistry;
-    const currentVersion = deployedDiamondData.protocolVersion ?? 0;
+    const newDeployedFacets = diamond.getNewDeployedFacets();
 
     deployedDiamondData.protocolVersion = deployConfig.protocolVersion;
 
@@ -555,10 +555,21 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
     for (const [facetName, { address, selectors }] of Object.entries(facetSelectorsMap)) {
       if (selectors.length > 0) {
+        let facetVersion: number;
+
+        if (newDeployedFacets[facetName]) {
+          // Use the version from newly deployed facet
+          facetVersion = newDeployedFacets[facetName].version;
+        } else {
+          // For facets not in newDeployedFacets (like existing deployed facets),
+          // preserve their existing version or use 0 as default
+          facetVersion = deployedDiamondData.DeployedFacets[facetName]?.version ?? 0;
+        }
+
         deployedDiamondData.DeployedFacets[facetName] = {
           address,
           tx_hash: txHash,
-          version: currentVersion,
+          version: facetVersion,
           funcSelectors: selectors,
         };
       }

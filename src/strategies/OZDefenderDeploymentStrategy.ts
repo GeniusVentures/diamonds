@@ -135,11 +135,18 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
           console.error(chalk.red(`❌ Deployment failed for ${stepName}.`));
           store.updateStatus(stepName, 'failed');
           const errorMsg = (deployment as any).error || 'Unknown deployment error';
-          throw new Error(`Deployment failed for ${stepName}: ${errorMsg}`);
+          // Don't catch this error - let it bubble up immediately
+          const error = new Error(`Deployment failed for ${stepName}: ${errorMsg}`);
+          (error as any).deployment = deployment;
+          throw error;
         }
 
         console.log(chalk.yellow(`⏳ Deployment ${stepName} still ${status}. Retrying in ${delay}ms...`));
       } catch (err) {
+        // Only catch network/API errors, not deployment failures
+        if (err instanceof Error && err.message.includes('Deployment failed')) {
+          throw err; // Re-throw deployment failures immediately
+        }
         console.error(chalk.red(`⚠️ Error polling Defender for ${stepName}:`), err);
         if (attempt >= maxAttempts - 1) {
           throw err;
@@ -311,7 +318,11 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         contractPath: `${diamond.contractsPath}/${diamondCutContractName}.sol`,
         constructorInputs: [],
         verifySourceCode: true, // TODO Verify this should be true or optional
-        artifactPayload: JSON.stringify(diamondCutArtifact), // Provide the artifact payload
+        artifactPayload: JSON.stringify({
+          contracts: {
+            [diamondCutContractName]: diamondCutArtifact
+          }
+        }), // Format for Defender SDK
       };
 
       const cutDeployment = await this.client.deploy.deployContract(cutRequest);
@@ -332,12 +343,18 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const diamondStep = store.getStep(stepNameDiamond);
     if (!diamondStep || (diamondStep.status !== 'executed' && diamondStep.status !== 'failed')) {
       const diamondContractName = await getDiamondContractName(diamond.diamondName);
+      const diamondArtifact = await getContractArtifact(diamond.diamondName);
       const diamondRequest: DeployContractRequest = {
         network,
         contractName: diamondContractName,
         contractPath: `${diamond.contractsPath}/${diamondContractName}.sol`,
         constructorInputs: [deployerAddress, ethers.constants.AddressZero], // Make sure constructor matches
         verifySourceCode: true, // TODO Verify this should be true or optional
+        artifactPayload: JSON.stringify({
+          contracts: {
+            [diamondContractName]: diamondArtifact
+          }
+        }), // Format for Defender SDK
       };
 
       const diamondDeployment = await this.client.deploy.deployContract(diamondRequest);
@@ -402,12 +419,18 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       console.log(chalk.cyan(`🔧 Deploying facet ${facetName} to version ${targetVersion}...`));
 
       const facetContractName = await getContractName(facetName);
+      const facetArtifact = await getContractArtifact(facetName);
       const deployRequest: DeployContractRequest = {
         network,
         contractName: facetContractName,
         contractPath: `${diamond.contractsPath}/${facetContractName}.sol`,
         constructorInputs: [],
         verifySourceCode: true, // TODO Verify this should be true or optional
+        artifactPayload: JSON.stringify({
+          contracts: {
+            [facetContractName]: facetArtifact
+          }
+        }), // Format for Defender SDK
       };
 
       const deployResult = await this.client.deploy.deployContract(deployRequest);

@@ -259,6 +259,20 @@ export function setupTimeoutMocks(): MockDefenderClients {
     };
   });
 
+  // Also mock the proposal.create method
+  mocks.mockProposalClient.create.callsFake(async (request: any) => {
+    // Add 6-second delay to simulate slow network
+    await new Promise((resolve) => setTimeout(resolve, 6000));
+
+    return {
+      proposalId: `timeout-proposal-${Date.now()}`,
+      url: `https://defender.openzeppelin.com/proposal/timeout-proposal-${Date.now()}`,
+      transaction: {
+        hash: `0xtimeout${Date.now().toString(16).padStart(56, "0")}`,
+      },
+    };
+  });
+
   mocks.adminClient.get.callsFake(async (proposalId: string) => {
     // Add 3-second delay for status checks
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -276,6 +290,24 @@ export function setupTimeoutMocks(): MockDefenderClients {
     };
   });
 
+  // Also mock the proposal.get method
+  mocks.mockProposalClient.get.callsFake(async (proposalId: string) => {
+    // Add 3-second delay for status checks
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    return {
+      proposalId,
+      title: "Timeout Test Proposal",
+      description: "Testing timeout handling",
+      type: "custom",
+      status: "approved",
+      transaction: {
+        isExecuted: true,
+        isReverted: false,
+      },
+    };
+  });
+
   mocks.adminClient.execute.callsFake(async (proposalId: string) => {
     // Add 5-second delay for execution
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -285,6 +317,39 @@ export function setupTimeoutMocks(): MockDefenderClients {
       transaction: {
         hash: `0xexecuted${Date.now().toString(16).padStart(56, "0")}`,
       },
+    };
+  });
+
+  // Also set up deployment client mocks for contract deployment
+  mocks.deployClient.deployContract.callsFake(async (request: any) => {
+    // Add delay to simulate slow deployment
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    return {
+      deploymentId: `timeout-deploy-${Date.now()}`,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      contractName: request.contractName,
+      contractPath: `contracts/${request.contractName}.sol`,
+      network: "sepolia",
+      artifactPayload: "",
+    };
+  });
+
+  mocks.deployClient.getDeployedContract.callsFake(async (deploymentId: string) => {
+    // Add delay to simulate slow status check
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    return {
+      deploymentId,
+      status: "completed",
+      contractAddress: `0x${Date.now().toString(16).padStart(40, '0')}`,
+      txHash: `0xslowdeploy${Date.now().toString(16).padStart(52, "0")}`,
+      createdAt: new Date().toISOString(),
+      contractName: "SlowContract",
+      contractPath: "contracts/SlowContract.sol",
+      network: "sepolia",
+      artifactPayload: "",
     };
   });
 
@@ -303,6 +368,55 @@ export function setupBatchOperationMocks(): MockDefenderClients {
   // Track all proposals for batch validation
   const proposals = new Map();
 
+  // Setup deploy contract mock
+  mocks.mockDeployClient.deployContract.callsFake(async (request: any) => {
+    deployCounter++;
+    const deploymentId = `batch-deploy-${deployCounter}`;
+
+    return {
+      deploymentId,
+      status: 'pending',
+      contractName: request.contractName,
+      network: request.network,
+    };
+  });
+
+  // Setup get deployed contract mock
+  mocks.mockDeployClient.getDeployedContract.callsFake(async (deploymentId: string) => {
+    // Simulate deployment completion
+    return {
+      deploymentId,
+      status: 'completed',
+      contractAddress: `0x${deployCounter.toString(16).padStart(40, '0')}`,
+    };
+  });
+
+  // Setup proposal client mock
+  mocks.mockProposalClient.create.callsFake(async (request: any) => {
+    proposalCounter++;
+    const proposalId = `batch-proposal-${proposalCounter}`;
+
+    const proposal = {
+      proposalId,
+      title: request.title || `Batch Proposal ${proposalCounter}`,
+      description: request.description || "Batch operation proposal",
+      type: request.type || "custom",
+      status: "approved",
+      isExecuted: false,
+      transaction: {
+        hash: `0xbatch${proposalCounter.toString(16).padStart(60, "0")}`,
+      },
+      checksCount: 0,
+    };
+
+    proposals.set(proposalId, proposal);
+
+    return {
+      proposalId,
+      url: `https://defender.openzeppelin.com/proposal/${proposalId}`,
+    };
+  });
+
   mocks.adminClient.createProposal.callsFake(async (request: any) => {
     proposalCounter++;
     const proposalId = `batch-proposal-${proposalCounter}`;
@@ -317,6 +431,7 @@ export function setupBatchOperationMocks(): MockDefenderClients {
       transaction: {
         hash: `0xbatch${proposalCounter.toString(16).padStart(60, "0")}`,
       },
+      checksCount: 0,
     };
 
     proposals.set(proposalId, proposal);
@@ -349,6 +464,15 @@ export function setupBatchOperationMocks(): MockDefenderClients {
 
     // Simulate quick status checks for batch operations
     await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Simulate proposal becoming ready after a few checks
+    proposal.checksCount = (proposal.checksCount || 0) + 1;
+    if (proposal.checksCount >= 3) {
+      proposal.transaction = {
+        isExecuted: true,
+        isReverted: false
+      };
+    }
 
     return proposal;
   });

@@ -47,6 +47,11 @@ describe('Integration: Defender Deployment', function () {
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', 'defender'));
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'));
 
+    // Copy callback files to the test directory
+    const callbackSourcePath = path.join(__dirname, '../../mocks/callbacks/TestFacet.js');
+    const callbackDestPath = path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks', 'TestFacet.js');
+    await fs.copy(callbackSourcePath, callbackDestPath);
+
     // Get hardhat signers
     signers = await ethers.getSigners();
 
@@ -122,14 +127,16 @@ describe('Integration: Defender Deployment', function () {
     diamond.setProvider(ethers.provider);
     diamond.setSigner(signers[0]);
 
-    // Create the strategy
+    // Create the strategy with the mocked client
     strategy = new OZDefenderDeploymentStrategy(
       DEFAULT_DEFENDER_CONFIG.API_KEY,
       DEFAULT_DEFENDER_CONFIG.API_SECRET,
       DEFAULT_DEFENDER_CONFIG.RELAYER_ADDRESS,
       DEFAULT_DEFENDER_CONFIG.AUTO_APPROVE,
       DEFAULT_DEFENDER_CONFIG.SAFE_ADDRESS,
-      'Safe'
+      'Safe',
+      true,
+      mocks.mockDefender // Pass the mocked client
     );
 
     // Create deployer

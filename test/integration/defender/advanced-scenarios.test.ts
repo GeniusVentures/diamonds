@@ -15,6 +15,8 @@ import { DiamondConfig } from '../../../src/types/config';
 import {
   createDefenderMocks,
   setupBatchOperationMocks,
+  setupSuccessfulDeploymentMocks,
+  setupTimeoutMocks,
   MockDefenderClients
 } from './setup/defender-setup';
 
@@ -77,7 +79,24 @@ describe('Integration: Defender Advanced Scenarios', function () {
       await fs.ensureDir(path.dirname(configPath));
       await fs.writeJson(configPath, largeFacetsConfig, { spaces: 2 });
 
+      // Ensure callbacks directory exists and copy mock callback files
+      const callbacksPath = path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks');
+      await fs.ensureDir(callbacksPath);
+
+      // Copy mock callback files for facets that need them (TestFacet4, TestFacet8, TestFacet12)
+      const mockCallbacksPath = path.join(__dirname, '../../mocks/callbacks');
+      const callbackFiles = ['TestFacet4.js', 'TestFacet8.js', 'TestFacet12.js'];
+      for (const file of callbackFiles) {
+        const srcPath = path.join(mockCallbacksPath, file);
+        const destPath = path.join(callbacksPath, file);
+        await fs.copy(srcPath, destPath);
+      }
+
       const repository = new FileDeploymentRepository(config);
+
+      // Setup mocks for batch operations BEFORE creating strategy
+      mocks = setupBatchOperationMocks();
+
       const strategy = new OZDefenderDeploymentStrategy(
         'test-api-key',
         'test-secret',
@@ -85,11 +104,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         true, // Auto-approve
         signers[1].address,
         'EOA',
-        true
+        true,
+        mocks.mockDefender // Pass the mocked client
       );
-
-      // Setup mocks for batch operations
-      mocks = setupBatchOperationMocks();
 
       const diamond = new Diamond(config, repository);
       diamond.setProvider(ethers.provider);
@@ -137,8 +154,25 @@ describe('Integration: Defender Advanced Scenarios', function () {
         }
       });
 
+      // Create basic config file for the upgrade test
+      const configPath = path.join(TEMP_DIR, DIAMOND_NAME, `${DIAMOND_NAME.toLowerCase()}.config.json`);
+      await fs.ensureDir(path.dirname(configPath));
+      await fs.writeJson(configPath, {
+        version: 1,
+        protocolVersion: 1,
+        facets: {
+          TestFacet1: {
+            priority: 100,
+            versions: {
+              1: {}
+            }
+          }
+        }
+      }, { spaces: 2 });
+
       const repository = new FileDeploymentRepository(config);
       mocks = createDefenderMocks();
+      setupSuccessfulDeploymentMocks(mocks);
 
       // Simulate multiple rapid upgrades
       for (let version = 2; version <= 5; version++) {
@@ -149,7 +183,8 @@ describe('Integration: Defender Advanced Scenarios', function () {
           true,
           signers[1].address,
           'EOA',
-          true
+          true,
+          mocks.mockDefender // Pass the mocked client
         );
 
         const diamond = new Diamond(config, repository);
@@ -178,6 +213,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
 
       // Setup config
       const configPath = path.join(TEMP_DIR, DIAMOND_NAME, `${DIAMOND_NAME.toLowerCase()}.config.json`);
+      await fs.ensureDir(path.dirname(configPath));
       await fs.writeJson(configPath, {
         version: 1,
         protocolVersion: 1,
@@ -191,6 +227,10 @@ describe('Integration: Defender Advanced Scenarios', function () {
       });
 
       const repository = new FileDeploymentRepository(config);
+
+      // Create mocks that simulate slow operations
+      mocks = setupTimeoutMocks();
+
       const strategy = new OZDefenderDeploymentStrategy(
         'test-api-key',
         'test-secret',
@@ -198,11 +238,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         true,
         signers[1].address,
         'EOA',
-        true
+        true,
+        mocks.mockDefender // Pass the mocked client
       );
-
-      // Create mocks that simulate slow operations
-      mocks = createDefenderMocks();
 
       const diamond = new Diamond(config, repository);
       diamond.setProvider(ethers.provider);

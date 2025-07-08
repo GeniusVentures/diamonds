@@ -151,9 +151,9 @@ describe('Performance Benchmarks', function () {
     return result;
   }
 
-  function createBenchmarkConfig(facetCount: number, networkName: string = 'hardhat'): DiamondConfig {
+  function createBenchmarkConfig(facetCount: number, networkName: string = 'hardhat', diamondName: string = DIAMOND_NAME): DiamondConfig {
     const config: DiamondConfig = {
-      diamondName: DIAMOND_NAME,
+      diamondName,
       networkName,
       chainId: networkName === 'hardhat' ? 31337 : 1,
       deploymentsPath: TEMP_DIR,
@@ -184,7 +184,7 @@ describe('Performance Benchmarks', function () {
     }
 
     // Write configuration
-    const configPath = path.join(TEMP_DIR, DIAMOND_NAME, `${DIAMOND_NAME.toLowerCase()}.config.json`);
+    const configPath = path.join(TEMP_DIR, diamondName, `${diamondName.toLowerCase()}.config.json`);
     fs.ensureDirSync(path.dirname(configPath));
     fs.writeJsonSync(configPath, facetsConfig, { spaces: 2 });
 
@@ -249,10 +249,15 @@ describe('Performance Benchmarks', function () {
   describe('Defender Deployment Strategy Benchmarks', function () {
     const facetCounts = [1, 5, 10, 15];
 
-    beforeEach(function () {
+    beforeEach(async function () {
       // Setup Defender mocks for benchmarking
       const mocks = setupBatchOperationMocks();
       (global as any).defenderMocks = mocks;
+
+      // Mock the defender clients module
+      const defenderClientsModule = await import('../../../src/utils/defenderClients');
+      sinon.stub(defenderClientsModule, 'deployClient').value(mocks.mockDeployClient);
+      sinon.stub(defenderClientsModule, 'adminClient').value(mocks.mockDefender);
     });
 
     facetCounts.forEach(facetCount => {
@@ -384,14 +389,22 @@ describe('Performance Benchmarks', function () {
       const concurrentCount = 5;
       const facetCount = 5;
 
-      const configs = Array.from({ length: concurrentCount }, (_, i) => ({
-        ...createBenchmarkConfig(facetCount),
-        diamondName: `ConcurrentDiamond${i}`
-      }));
+      const configs = Array.from({ length: concurrentCount }, (_, i) => {
+        const diamondName = `ConcurrentDiamond${i}`;
+        return {
+          ...createBenchmarkConfig(facetCount, 'hardhat', diamondName),
+          diamondName
+        };
+      });
 
       // Setup mocks for concurrent operations
       const mocks = setupBatchOperationMocks();
       (global as any).defenderMocks = mocks;
+
+      // Mock the defender clients module
+      const defenderClientsModule = await import('../../../src/utils/defenderClients');
+      sinon.stub(defenderClientsModule, 'deployClient').value(mocks.mockDeployClient);
+      sinon.stub(defenderClientsModule, 'adminClient').value(mocks.mockDefender);
 
       const startTime = Date.now();
 
