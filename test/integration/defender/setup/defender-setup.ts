@@ -392,6 +392,12 @@ export function setupBatchOperationMocks(): MockDefenderClients {
   // Track all proposals for batch validation
   const proposals = new Map();
 
+  // Reset counters and tracking for fresh test state
+  mocks.mockProposalClient.create.resetHistory();
+  mocks.adminClient.createProposal.resetHistory();
+  mocks.mockDeployClient.deployContract.resetHistory();
+  mocks.deployClient.deployContract.resetHistory();
+
   // Setup deploy contract mock
   mocks.mockDeployClient.deployContract.callsFake(async (request: any) => {
     deployCounter++;
