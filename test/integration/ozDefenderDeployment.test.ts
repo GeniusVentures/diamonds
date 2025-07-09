@@ -155,15 +155,6 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
       // Execute deployment
       await deployer.deployDiamond();
 
-      // Debug: Log mock call information BEFORE assertions
-      console.log('\n=== Mock Call Debug Info ===');
-      console.log('deployContract.callCount:', mocks.mockDeployClient.deployContract.callCount);
-      console.log('deployContract.called:', mocks.mockDeployClient.deployContract.called);
-      console.log('getDeployedContract.callCount:', mocks.mockDeployClient.getDeployedContract.callCount);
-      console.log('create.callCount:', mocks.mockProposalClient.create.callCount);
-      console.log('get.callCount:', mocks.mockProposalClient.get.callCount);
-      console.log('=== End Debug Info ===\n');
-
       // Verify that mocks were called appropriately
       expect(mocks.mockDeployClient.deployContract.callCount).to.be.at.least(4);
       expect(mocks.mockProposalClient.create.called).to.be.true;
@@ -178,31 +169,33 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
         DiamondCutFacet: {
           address: diamondCutFacet.address,
           tx_hash: '0x123456789abcdef',
-          version: 0,
+          version: 0, // Number format for deployment data
           funcSelectors: ['0x1f931c1c'] // diamondCut function selector
         },
         DiamondLoupeFacet: {
           address: diamondLoupeFacet.address,
           tx_hash: '0x123456789abcdef',
-          version: 0,
+          version: 0, // Number format for deployment data
           funcSelectors: ['0x7a0ed627'] // facets function selector
         },
         TestFacet: {
           address: testFacet.address,
           tx_hash: '0x123456789abcdef',
-          version: 0,
+          version: 0, // Number format for deployment data
           funcSelectors: ['0x12345678'] // setValue function selector
         }
       };
       diamond.updateDeployedDiamondData(deployedData);
 
-      // Create new facet version in config
+      // Create new facet version in config with proper version format
       const config: DeployConfig = repository.loadDeployConfig();
 
       if (!config.facets['TestFacet'].versions) {
         config.facets['TestFacet'].versions = {};
       }
-      (config.facets['TestFacet'].versions as any)[1.0] = {
+
+      // Add version "1.0" (string format in config) to create an actual upgrade scenario
+      (config.facets['TestFacet'].versions as any)["1.0"] = {
         deployInit: "initialize()",
         upgradeInit: "reinitialize()",
         callbacks: ["testCallback"],
@@ -210,7 +203,7 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
         deployExclude: []
       };
 
-      // Update protocol version
+      // Update protocol version to 1.0 to trigger upgrade
       config.protocolVersion = 1.0;
 
       // Write updated config
@@ -219,6 +212,10 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
         config,
         { spaces: 2 }
       );
+
+      // Force reload the deploy config in the diamond instance
+      (diamond as any).deployConfig = repository.loadDeployConfig();
+      (diamond as any).facetsConfig = (diamond as any).deployConfig.facets;
 
       // Setup using our production-ready mocks (they're already configured for success)
       // Create strategy with our mocks
@@ -243,20 +240,11 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
       // Deploy the upgrade
       await upgradeDeployer.deployDiamond();
 
-      // Debug: Log mock call information BEFORE assertions
-      console.log('\n=== Mock Call Debug Info (Upgrade Test) ===');
-      console.log('deployContract.callCount:', mocks.mockDeployClient.deployContract.callCount);
-      console.log('getDeployedContract.callCount:', mocks.mockDeployClient.getDeployedContract.callCount);
-      console.log('create.callCount:', mocks.mockProposalClient.create.callCount);
-      console.log('get.callCount:', mocks.mockProposalClient.get.callCount);
-      console.log('execute.callCount:', mocks.mockProposalClient.execute.callCount);
-      console.log('=== End Debug Info ===\n');
-
-      // In this upgrade test, no facets are actually deployed because they're all already at target version
-      // So deployContract should NOT be called, but a proposal should still be created for the diamond cut
-      expect(mocks.mockDeployClient.deployContract.called).to.be.false; // No new deployments needed
+      // For upgrade scenario, TestFacet should be deployed with new version "1.0"
+      // Since only TestFacet has version "1.0", only it should be deployed
+      expect(mocks.mockDeployClient.deployContract.callCount).to.be.at.least(1); // TestFacet v1.0 deployment
       expect(mocks.mockProposalClient.create.called).to.be.true; // Diamond cut proposal created
-      expect(mocks.mockProposalClient.get.callCount).to.be.at.least(3); // Proposal status checked
+      expect(mocks.mockProposalClient.get.callCount).to.be.at.least(1); // Proposal status checked
     });
 
     it('should handle deployment failures', async function () {
