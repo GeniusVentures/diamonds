@@ -19,6 +19,14 @@ export class CallbackManager {
     return this.instances.get(diamondName)!;
   }
 
+  public static clearInstances(): void {
+    this.instances.clear();
+  }
+
+  public static clearInstance(diamondName: string): void {
+    this.instances.delete(diamondName);
+  }
+
   private loadCallbacks(): void {
     if (!fs.existsSync(this.callbacksPath)) {
       console.error(`Facet callbacks path "${this.callbacksPath}" does not exist.`);

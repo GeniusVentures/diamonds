@@ -37,7 +37,7 @@ describe('Performance Benchmarks', function () {
   this.timeout(120000); // 2 minutes for performance tests
 
   const TEMP_DIR = path.join(__dirname, '../../.tmp-benchmark');
-  const DIAMOND_NAME = 'TestDiamond'; // Use a diamond name that maps to MockDiamond
+  const DIAMOND_NAME = 'BenchmarkDiamond'; // Use a unique diamond name to avoid conflicts with other tests
 
   let signers: SignerWithAddress[];
   let benchmarkResults: BenchmarkResult[] = [];
@@ -89,6 +89,10 @@ module.exports = {
   after(async function () {
     await fs.remove(TEMP_DIR);
     sinon.restore();
+
+    // Clear callback manager instances to avoid conflicts with other tests
+    const { CallbackManager } = await import('../../../src/core/CallbackManager');
+    CallbackManager.clearInstances();
 
     // Output benchmark results
     console.log('\n📊 PERFORMANCE BENCHMARK RESULTS:');

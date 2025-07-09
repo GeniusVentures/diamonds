@@ -127,6 +127,10 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
     // Clean up temp directory after tests
     await cleanupTestEnvironment(TEMP_DIR);
 
+    // Clear callback manager instances to avoid conflicts with other tests
+    const { CallbackManager } = await import('../../src/core/CallbackManager');
+    CallbackManager.clearInstances();
+
     // Restore console stubs
     sinon.restore();
   });
