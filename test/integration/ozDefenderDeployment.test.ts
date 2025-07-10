@@ -1,6 +1,6 @@
 // test/integration/ozDefenderDeployment.test.ts
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import hre from "hardhat";;
 import sinon from "sinon";
 import { Diamond } from "../../src/core/Diamond";
 import { DiamondDeployer } from "../../src/core/DiamondDeployer";
@@ -8,7 +8,7 @@ import { FileDeploymentRepository } from "../../src/repositories/FileDeploymentR
 import { DeployConfig } from "../../src/schemas";
 import { OZDefenderDeploymentStrategy } from "../../src/strategies/OZDefenderDeploymentStrategy";
 import { DiamondConfig } from "../../src/types";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -38,12 +38,12 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
   let config: DiamondConfig;
   let repository: FileDeploymentRepository;
   let diamond: Diamond;
-  let deployer: SignerWithAddress;
-  let accounts: SignerWithAddress[];
-  let diamondCutFacet: Contract;
-  let diamondLoupeFacet: Contract;
-  let testFacet: Contract;
-  let mockDiamond: Contract;
+  let deployer: HardhatEthersSigner;
+  let accounts: HardhatEthersSigner[];
+  let diamondCutFacet: any;
+  let diamondLoupeFacet: any;
+  let testFacet: any;
+  let mockDiamond: any;
   let mocks: MockDefenderClients;
 
   before(async function () {
@@ -65,7 +65,7 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
     setupSuccessfulDeploymentMocks(mocks);
 
     // Mock ethers.getContractFactory to avoid artifact lookup issues in tests
-    (sinon.stub(ethers, 'getContractFactory') as any).callsFake((...args: any[]) => {
+    (sinon.stub((hre as any).ethers, 'getContractFactory') as any).callsFake((...args: any[]) => {
       // Return a mock factory with a minimal interface
       return Promise.resolve({
         interface: {
@@ -119,7 +119,7 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
     diamond = new Diamond(config, repository);
 
     // Set provider and signer
-    diamond.setProvider(ethers.provider);
+    diamond.setProvider((hre as any).ethers.provider);
     diamond.setSigner(deployer);
   });
 
@@ -167,23 +167,23 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
     it('should handle facet upgrades correctly', async function () {
       // First set up with an existing deployment
       const deployedData = diamond.getDeployedDiamondData();
-      deployedData.DiamondAddress = mockDiamond.address;
+      deployedData.DiamondAddress = await mockDiamond.getAddress();
       deployedData.DeployerAddress = deployer.address;
       deployedData.DeployedFacets = {
         DiamondCutFacet: {
-          address: diamondCutFacet.address,
+          address: await diamondCutFacet.getAddress(),
           tx_hash: '0x123456789abcdef',
           version: 0, // Number format for deployment data
           funcSelectors: ['0x1f931c1c'] // diamondCut function selector
         },
         DiamondLoupeFacet: {
-          address: diamondLoupeFacet.address,
+          address: await diamondLoupeFacet.getAddress(),
           tx_hash: '0x123456789abcdef',
           version: 0, // Number format for deployment data
           funcSelectors: ['0x7a0ed627'] // facets function selector
         },
         TestFacet: {
-          address: testFacet.address,
+          address: await testFacet.getAddress(),
           tx_hash: '0x123456789abcdef',
           version: 0, // Number format for deployment data
           funcSelectors: ['0x12345678'] // setValue function selector

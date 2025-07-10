@@ -1,8 +1,6 @@
-import { BigNumber } from 'ethers';
-import hre, { ethers } from 'hardhat';
+import hre from 'hardhat';
 import { toWei } from './common';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Signer } from 'ethers';
+import { JsonRpcProvider, Signer } from 'ethers';
 
 /**
  * Impersonates a signer account. This is primarily used in Hardhat's testing environment
@@ -12,9 +10,8 @@ import { Signer } from 'ethers';
  * @returns The impersonated signer object.
  */
 export async function impersonateSigner(signerAddress: string, provider: JsonRpcProvider): Promise<Signer> {
-  ethers.provider = provider; // Set the provider to the one passed in
   // Request Hardhat to impersonate the account at the specified address
-  await ethers.provider.send("hardhat_impersonateAccount", [signerAddress]);
+  await provider.send("hardhat_impersonateAccount", [signerAddress]);
   return provider.getSigner(signerAddress); // Return the impersonated signer
 }
 
@@ -25,11 +22,10 @@ export async function impersonateSigner(signerAddress: string, provider: JsonRpc
  * @param address - The address to set the Ether balance for.
  * @param amount - The desired balance as a `BigNumber`.
  */
-export async function setEtherBalance(address: string, amount: BigNumber, provider: JsonRpcProvider) {
-  ethers.provider = provider;
-  await ethers.provider.send('hardhat_setBalance', [
+export async function setEtherBalance(address: string, amount: bigint, provider: JsonRpcProvider) {
+  await provider.send('hardhat_setBalance', [
     address, // Address to modify the balance of
-    amount.toHexString().replace('0x0', '0x'), // Amount to set, formatted as a hex string
+    '0x' + amount.toString(16), // Amount to set, formatted as a hex string
   ]);
 }
 
@@ -68,10 +64,10 @@ export async function impersonateAndFundSigner(deployerAddress: string, provider
  */
 export const updateOwnerForTest = async (rootAddress: string, provider: JsonRpcProvider) => {
   // Retrieve the current signer in the Hardhat environment
-  const curOwner = (await ethers.getSigners())[0];
+  const curOwner = (await (hre as any).ethers.getSigners())[0];
 
   // Get a reference to the GeniusOwnershipFacet contract at the specified root address
-  const ownership = await ethers.getContractAt('GeniusOwnershipFacet', rootAddress);
+  const ownership = await (hre as any).ethers.getContractAt('GeniusOwnershipFacet', rootAddress);
 
   // Retrieve the current owner of the contract
   const oldOwnerAddress = await ownership.owner();

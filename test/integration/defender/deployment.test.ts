@@ -1,7 +1,7 @@
 // test/integration/defender/deployment.test.ts
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import hre from "hardhat";;
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import sinon from 'sinon';
@@ -36,7 +36,7 @@ describe('Integration: Defender Deployment', function () {
   let repository: FileDeploymentRepository;
   let strategy: OZDefenderDeploymentStrategy;
   let deployer: DiamondDeployer;
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let mocks: MockDefenderClients;
 
   before(async function () {
@@ -53,7 +53,7 @@ describe('Integration: Defender Deployment', function () {
     await fs.copy(callbackSourcePath, callbackDestPath);
 
     // Get hardhat signers
-    signers = await ethers.getSigners();
+    signers = await (hre as any).ethers.getSigners();
 
     // Stub console.log for cleaner test output
     sinon.stub(console, 'log');
@@ -121,7 +121,7 @@ describe('Integration: Defender Deployment', function () {
     diamond = new Diamond(config, repository);
 
     // Setup the diamond
-    diamond.setProvider(ethers.provider);
+    diamond.setProvider((hre as any).ethers.provider);
     diamond.setSigner(signers[0]);
 
     // Create the strategy with the mocked client
@@ -263,7 +263,7 @@ describe('Integration: Defender Deployment', function () {
       // Create new deployer with updated configuration
       const newRepository = new FileDeploymentRepository(diamond.getDiamondConfig());
       const newDiamond = new Diamond(diamond.getDiamondConfig(), newRepository);
-      newDiamond.setProvider(ethers.provider);
+      newDiamond.setProvider((hre as any).ethers.provider);
       newDiamond.setSigner(signers[0]);
       newDiamond.updateDeployedDiamondData(existingDeployedData);
 

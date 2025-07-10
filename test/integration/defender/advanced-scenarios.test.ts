@@ -1,7 +1,7 @@
 // test/integration/defender/advanced-scenarios.test.ts
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import hre from 'hardhat';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import sinon from 'sinon';
@@ -26,12 +26,12 @@ describe('Integration: Defender Advanced Scenarios', function () {
   const TEMP_DIR = path.join(__dirname, '../../.tmp-defender-advanced');
   const DIAMOND_NAME = 'AdvancedTestDiamond';
 
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let mocks: any;
 
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
-    signers = await ethers.getSigners();
+    signers = await (hre as any).ethers.getSigners();
   });
 
   after(async function () {
@@ -109,7 +109,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       );
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider(ethers.provider);
+      diamond.setProvider((hre as any).ethers.provider);
       diamond.setSigner(signers[0]);
 
       const deployer = new DiamondDeployer(diamond, strategy);
@@ -188,7 +188,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
         );
 
         const diamond = new Diamond(config, repository);
-        diamond.setProvider(ethers.provider);
+        diamond.setProvider((hre as any).ethers.provider);
         diamond.setSigner(signers[0]);
 
         const deployer = new DiamondDeployer(diamond, strategy);
@@ -243,7 +243,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       );
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider(ethers.provider);
+      diamond.setProvider((hre as any).ethers.provider);
       diamond.setSigner(signers[0]);
 
       const deployer = new DiamondDeployer(diamond, strategy);
@@ -298,7 +298,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       mocks = createDefenderMocks();
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider(ethers.provider);
+      diamond.setProvider((hre as any).ethers.provider);
       diamond.setSigner(signers[0]);
 
       const deployer = new DiamondDeployer(diamond, strategy);
@@ -364,7 +364,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       const initialMemory = process.memoryUsage();
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider(ethers.provider);
+      diamond.setProvider((hre as any).ethers.provider);
       diamond.setSigner(signers[0]);
 
       const loadMemory = process.memoryUsage();

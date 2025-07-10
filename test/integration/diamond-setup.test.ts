@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import hre from "hardhat";;
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -14,11 +14,11 @@ describe('Diamond Setup Test', function () {
   const TEMP_DIR = path.join(__dirname, '../.tmp-diamond-setup');
   const DIAMOND_NAME = 'SetupTestDiamond';
 
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
 
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
-    signers = await ethers.getSigners();
+    signers = await (hre as any).ethers.getSigners();
   });
 
   after(async function () {
@@ -83,7 +83,7 @@ module.exports = {
     const diamond = new Diamond(config, repository);
 
     // Setup the diamond
-    diamond.setProvider(ethers.provider);
+    diamond.setProvider((hre as any).ethers.provider);
     diamond.setSigner(signers[0]);
 
     // Test basic functionality

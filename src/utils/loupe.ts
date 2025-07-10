@@ -1,7 +1,6 @@
-import { utils, ContractTransaction, ContractInterface, providers, Contract, Signer } from "ethers";
+import { ContractTransactionResponse, Interface, Contract, Signer, JsonRpcProvider, TransactionReceipt, LogDescription, Log, InterfaceAbi } from "ethers";
 import chalk from "chalk";
-import { Interface } from "ethers/lib/utils";
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { logTx } from "./txlogging";
 
 /** ----------------------------------------------------------------
@@ -10,9 +9,9 @@ import { logTx } from "./txlogging";
  *   by the real contract, so we can decode it safely.)
  *  ----------------------------------------------------------------
  */
-const DIAMOND_LOUPE_ABI: ContractInterface = [
+const DIAMOND_LOUPE_ABI = new Interface([
   "function facets() view returns (tuple(address facetAddress, bytes4[] functionSelectors)[])"
-];
+]);
 
 /** Optional convenience type for TS consumers (no TypeChain) */
 export interface FacetStruct {
@@ -42,49 +41,60 @@ export interface FacetStruct {
  * @returns              The transaction receipt
  */
 export async function logDiamondLoupe(
-  tx: ContractTransaction,
+  tx: ContractTransactionResponse,
   diamondLoupe: string,
-  facetABIs: readonly (ContractInterface | utils.Interface)[] = []
-): Promise<providers.TransactionReceipt> {
-  const receipt = await logTx(tx, `DiamondLoupe (${diamondLoupe})`, [...facetABIs]);
+  facetABIs: readonly (InterfaceAbi | Interface)[] = []
+): Promise<TransactionReceipt> {
+  const receipt = await logTx(tx, `DiamondLoupe (${diamondLoupe})`, facetABIs.map(abi => abi instanceof Interface ? abi : new Interface(abi)));
 
   const iface = Array.isArray(facetABIs) && facetABIs.length
-    ? new utils.Interface(
-      facetABIs.map(i => (utils.Interface.isInterface(i) ? i.fragments : i)).reduce((acc, val) => acc.concat(val), [])
+    ? new Interface(
+      facetABIs.map(i => (i instanceof Interface ? i.fragments : i)).reduce((acc, val) => acc.concat(val), [])
     )
     : undefined;
 
   console.log(chalk.cyan("\n📜 Decoded Loupe logs:"));
-  receipt.logs.forEach((log, idx) => {
-    if (!iface) {
-      console.log(chalk.dim(`  Event[${idx}] – no ABI supplied`));
-      return;
-    }
+  if (receipt && receipt.logs) {
+    receipt.logs.forEach((log: Log, idx: number) => {
+      if (!iface) {
+        console.log(chalk.dim(`  Event[${idx}] – no ABI supplied`));
+        return;
+      }
 
-    let parsed: utils.LogDescription | undefined;
-    try {
-      parsed = iface.parseLog(log);
-    } catch {
-      /* swallow – this log wasn’t emitted by any of the supplied facets */
-    }
+      let parsed: LogDescription | undefined;
+      try {
+        const result = iface.parseLog(log);
+        if (result !== null) {
+          parsed = result;
+        }
+      } catch {
+        /* swallow – this log wasn’t emitted by any of the supplied facets */
+      }
 
-    if (parsed) {
-      const argsPretty = parsed.args
-        .map((arg: any, i: number) => `${parsed?.eventFragment.inputs[i].name}: ${arg}`)
-        .join(", ");
+      if (parsed) {
+        const argsPretty = parsed.args
+          .map((arg: any, i: number) => `${parsed?.fragment.inputs[i].name}: ${arg}`)
+          .join(", ");
 
-      console.log(
-        chalk.yellowBright(`  Event[${idx}]`) +
-        chalk.bold(` ${parsed.name}`) +
-        `  →  ${argsPretty}`
-      );
-    } else {
-      console.log(
-        chalk.dim(`  Event[${idx}]`) + ` – unable to decode (topic0 = ${log.topics[0]})`
-      );
-    }
-  });
+        console.log(
+          chalk.yellowBright(`  Event[${idx}]`) +
+          chalk.bold(` ${parsed.name}`) +
+          `  →  ${argsPretty}`
+        );
+      } else {
+        console.log(
+          chalk.dim(`  Event[${idx}]`) + ` – unable to decode (topic0 = ${log.topics[0]})`
+        );
+      }
+    });
 
+    return receipt;
+  }
+
+  // Always return the receipt, even if logs are missing
+  if (!receipt) {
+    throw new Error("Transaction receipt is null");
+  }
   return receipt;
 }
 
@@ -106,8 +116,8 @@ export async function logDiamondLoupe(
  */
 export async function getDeployedFacets(
   diamondAddress: string,
-  signerOrProvider: Signer | providers.JsonRpcSigner | providers.Provider = ethers.provider,
-  receiptToDecode?: providers.TransactionReceipt,
+  signerOrProvider: Signer | JsonRpcProvider = (hre as any).ethers.provider,
+  receiptToDecode?: TransactionReceipt,
   logDeployedFacets?: boolean, // default: assumed false
 ): Promise<FacetStruct[]> {
   // Generic ethers.Contract instance built only from the tiny ABI above
@@ -138,7 +148,7 @@ export async function getDeployedFacets(
       {
         ...receiptToDecode,
         wait: async () => receiptToDecode,
-      } as unknown as ContractTransaction,
+      } as unknown as ContractTransactionResponse,
       diamondAddress,
       [loupe.interface]
     );

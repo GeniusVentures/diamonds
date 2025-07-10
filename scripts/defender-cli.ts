@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
-import { ethers } from 'hardhat';
+import hre from 'hardhat';
 
 import { Diamond } from '../src/core/Diamond';
 import { DiamondDeployer } from '../src/core/DiamondDeployer';
@@ -99,10 +99,10 @@ async function createDiamond(config: CLIConfig): Promise<Diamond> {
   const diamond = new Diamond(diamondConfig, repository);
 
   // Setup provider and signer
-  diamond.setProvider(ethers.provider);
+  diamond.setProvider((hre as any).ethers.provider);
 
   // Get signer from environment or use default
-  const signers = await ethers.getSigners();
+  const signers = await (hre as any).ethers.getSigners();
   diamond.setSigner(signers[0]);
 
   return diamond;

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import hre from "hardhat";;
 import { Diamond } from '../../src/core/Diamond';
 import { FileDeploymentRepository } from '../../src/repositories/FileDeploymentRepository';
 import { DiamondDeployer } from '../../src/core/DiamondDeployer';
@@ -9,7 +9,7 @@ import { ConfigurationResolver } from '../../src/utils/configurationResolver';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { setupTestEnvironment, cleanupTestEnvironment } from '../setup';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('Integration: Dual Configuration Support', function () {
   this.timeout(30000);
@@ -19,8 +19,8 @@ describe('Integration: Dual Configuration Support', function () {
   const NETWORK_NAME = 'hardhat';
   const CHAIN_ID = 31337;
 
-  let deployer: SignerWithAddress;
-  let accounts: SignerWithAddress[];
+  let deployer: HardhatEthersSigner;
+  let accounts: HardhatEthersSigner[];
 
   before(async function () {
     const setupData = await setupTestEnvironment(TEMP_DIR, DIAMOND_NAME, NETWORK_NAME, CHAIN_ID);
@@ -105,13 +105,13 @@ describe('Integration: Dual Configuration Support', function () {
       const diamond = new Diamond(resolvedConfig, repository);
 
       // Set provider and signer
-      diamond.setProvider(ethers.provider);
+      diamond.setProvider((hre as any).ethers.provider);
       diamond.setSigner(deployer);
 
       // Mock ethers.getContractFactory for this test
-      const originalGetContractFactory = ethers.getContractFactory;
+      const originalGetContractFactory = (hre as any).ethers.getContractFactory;
       // @ts-ignore
-      ethers.getContractFactory = async (name: string) => {
+      (hre as any).ethers.getContractFactory = async (name: string) => {
         // Simple mock that returns a deployable contract
         return {
           deploy: async () => ({
@@ -149,7 +149,7 @@ describe('Integration: Dual Configuration Support', function () {
 
       } finally {
         // Restore original function
-        ethers.getContractFactory = originalGetContractFactory;
+        (hre as any).ethers.getContractFactory = originalGetContractFactory;
       }
     });
   });

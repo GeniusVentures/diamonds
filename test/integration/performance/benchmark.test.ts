@@ -1,7 +1,7 @@
 // test/integration/performance/benchmark.test.ts
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import hre from "hardhat";;
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import sinon from 'sinon';
@@ -39,12 +39,12 @@ describe('Performance Benchmarks', function () {
   const TEMP_DIR = path.join(__dirname, '../../.tmp-benchmark');
   const DIAMOND_NAME = 'BenchmarkDiamond'; // Use a unique diamond name to avoid conflicts with other tests
 
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let benchmarkResults: BenchmarkResult[] = [];
 
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
-    signers = await ethers.getSigners();
+    signers = await (hre as any).ethers.getSigners();
 
     // Setup callback files for tests
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'));
@@ -138,7 +138,7 @@ module.exports = {
 
     const repository = new FileDeploymentRepository(config);
     const diamond = new Diamond(config, repository);
-    diamond.setProvider(ethers.provider);
+    diamond.setProvider((hre as any).ethers.provider);
     diamond.setSigner(signers[0]);
 
     const deployer = new DiamondDeployer(diamond, strategyInstance);
@@ -523,7 +523,7 @@ module.exports = {
 
         const repository = new FileDeploymentRepository(config);
         const diamond = new Diamond(config, repository);
-        diamond.setProvider(ethers.provider);
+        diamond.setProvider((hre as any).ethers.provider);
         diamond.setSigner(signers[0]);
 
         const deployer = new DiamondDeployer(diamond, strategy);

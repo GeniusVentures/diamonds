@@ -24,11 +24,11 @@ describe('Basic Environment Test', () => {
   });
 
   it('should have ethers available from hardhat', async () => {
-    const { ethers } = await import('hardhat');
-    expect(ethers).to.not.be.undefined;
+    const hre = await import('hardhat');
+    expect((hre.default as any).ethers).to.not.be.undefined;
 
     // Should be able to get signers
-    const signers = await ethers.getSigners();
+    const signers = await (hre.default as any).ethers.getSigners();
     expect(signers).to.be.an('array');
     expect(signers.length).to.be.at.least(1);
   });

@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import hre from "hardhat";;
 import { Diamond } from '../../../src/core/Diamond';
 import { FileDeploymentRepository } from '../../../src/repositories/FileDeploymentRepository';
 import { DiamondConfig, RegistryFacetCutAction } from '../../../src/types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import sinon from 'sinon';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
 describe('Diamond', () => {
@@ -20,7 +20,7 @@ describe('Diamond', () => {
   let diamond: Diamond;
   let config: DiamondConfig;
   let repository: FileDeploymentRepository;
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let provider: JsonRpcProvider;
 
   before(async () => {
@@ -64,8 +64,8 @@ describe('Diamond', () => {
     );
 
     // Get hardhat signers and provider
-    signers = await ethers.getSigners();
-    provider = ethers.provider;
+    signers = await (hre as any).ethers.getSigners();
+    provider = (hre as any).ethers.provider;
   });
 
   beforeEach(async () => {

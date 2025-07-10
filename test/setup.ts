@@ -1,35 +1,35 @@
 // test/setup.ts
-import { ethers } from 'hardhat';
+import hre from "hardhat";;
 import { Contract, ContractFactory } from 'ethers';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 
 /**
  * Test setup helper that deploys mock contracts for diamond testing
  */
 export async function setupMockContracts() {
-  const [deployer, ...accounts] = await ethers.getSigners();
+  const [deployer, ...accounts] = await (hre as any).ethers.getSigners();
 
   // Deploy mock diamond cut facet
-  const DiamondCutFacet: ContractFactory = await ethers.getContractFactory('MockDiamondCutFacet');
-  const diamondCutFacet: Contract = await DiamondCutFacet.deploy();
-  await diamondCutFacet.deployed();
+  const DiamondCutFacet: ContractFactory = await (hre as any).ethers.getContractFactory('MockDiamondCutFacet');
+  const diamondCutFacet = await DiamondCutFacet.deploy();
+  await diamondCutFacet.waitForDeployment();
 
   // Deploy mock diamond loupe facet
-  const DiamondLoupeFacet: ContractFactory = await ethers.getContractFactory('MockDiamondLoupeFacet');
-  const diamondLoupeFacet: Contract = await DiamondLoupeFacet.deploy();
-  await diamondLoupeFacet.deployed();
+  const DiamondLoupeFacet: ContractFactory = await (hre as any).ethers.getContractFactory('MockDiamondLoupeFacet');
+  const diamondLoupeFacet = await DiamondLoupeFacet.deploy();
+  await diamondLoupeFacet.waitForDeployment();
 
   // Deploy mock test facet
-  const TestFacet: ContractFactory = await ethers.getContractFactory('MockTestFacet');
-  const testFacet: Contract = await TestFacet.deploy();
-  await testFacet.deployed();
+  const TestFacet: ContractFactory = await (hre as any).ethers.getContractFactory('MockTestFacet');
+  const testFacet = await TestFacet.deploy();
+  await testFacet.waitForDeployment();
 
   // Deploy mock diamond
-  const Diamond: ContractFactory = await ethers.getContractFactory('MockDiamond');
-  const diamond: Contract = await Diamond.deploy(deployer.address, diamondCutFacet.address);
-  await diamond.deployed();
+  const Diamond: ContractFactory = await (hre as any).ethers.getContractFactory('MockDiamond');
+  const diamond = await Diamond.deploy(deployer.address, await diamondCutFacet.getAddress());
+  await diamond.waitForDeployment();
 
   return {
     deployer,

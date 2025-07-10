@@ -21,7 +21,6 @@ import {
   DeployedDiamondData,
   DeployConfig
 } from "../schemas/DeploymentSchema";
-import { OK } from "zod";
 
 export function readDeployFilePathDiamondNetwork(
   networkName: string,

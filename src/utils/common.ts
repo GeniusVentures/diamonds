@@ -1,13 +1,9 @@
-import { ethers } from 'hardhat';
+import hre from 'hardhat';
 import { debug } from 'debug';
-import { TransactionReceipt } from "@ethersproject/abstract-provider";
-import { Interface } from "@ethersproject/abi";
-import { Fragment } from '@ethersproject/abi';
+import { TransactionReceipt, Interface, Fragment, ContractInterface, ContractTransaction } from "ethers";
 import { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
-import { providers, utils, ContractInterface, BigNumber, ContractTransaction } from "ethers";
 import chalk from 'chalk';
 import { Artifact } from "hardhat/types";
-import { artifacts } from "hardhat";
 import { DeployedDiamondData } from "../schemas";
 
 declare global {
@@ -19,16 +15,16 @@ global.debuglog.color = '158';
 
 export const debuglog = global.debuglog;
 
-export const toBN = BigNumber.from;
+export const toBN = (value: string | number | bigint) => BigInt(value);
 export const GNUS_TOKEN_ID = toBN(0);
 export const XMPL_TOKEN_ID = toBN(1234567890);
 
-export function toWei(value: number | string): BigNumber {
-  return ethers.utils.parseEther(value.toString());
+export function toWei(value: number | string): bigint {
+  return (hre as any).ethers.parseEther(value.toString());
 }
 
 export function getSighash(funcSig: string): string {
-  return ethers.utils.Interface.getSighash(Fragment.fromString(funcSig));
+  return new Interface([`function ${funcSig}`]).getFunction(funcSig.split('(')[0])?.selector || '';
 }
 
 export interface IDefenderViaInfo {
@@ -46,7 +42,7 @@ export function getDeployedFacetInterfaces(deployedInfo: DeployedDiamondData): I
 
   for (const facetName of Object.keys(deployedInfo.DeployedFacets || {})) {
     try {
-      const artifact: Artifact = artifacts.readArtifactSync(facetName);
+      const artifact: Artifact = hre.artifacts.readArtifactSync(facetName);
       interfaces.push(new Interface(artifact.abi));
     } catch (err) {
       console.warn(`⚠️ Could not load artifact for facet ${facetName}:`, (err as Error).message);

@@ -1,6 +1,6 @@
 import { DeployedDiamondData } from "../schemas";
 import { getDeployedFacets } from "./loupe";
-import { providers } from "ethers";
+import { JsonRpcProvider } from "ethers";
 import { Interface } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import chalk from "chalk";
@@ -8,11 +8,11 @@ import { boolean } from "zod";
 
 export async function diffDeployedFacets(
   deployedDiamondData: DeployedDiamondData,
-  signerOrProvider: Signer | providers.Provider,
+  signerOrProvider: Signer | JsonRpcProvider,
   verboseGetDeployedFacets?: boolean,
 ): Promise<boolean> {
   const diamondAddress = deployedDiamondData.DiamondAddress!;
-  const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);
+  const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider as any, undefined, verboseGetDeployedFacets);
 
   const localFacets = deployedDiamondData.DeployedFacets || {};
 

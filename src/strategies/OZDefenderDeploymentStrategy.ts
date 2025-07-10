@@ -2,7 +2,8 @@ import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
 import { Diamond } from '../core';
 import { FacetCutAction, PollOptions } from '../types';
 import chalk from 'chalk';
-import { artifacts, ethers } from 'hardhat';
+import hre from 'hardhat';
+import { ethers } from 'ethers';
 import { Artifact } from 'hardhat/types';
 import { join } from 'path';
 import { object } from 'zod';
@@ -191,10 +192,11 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       let diamondCutFacetFunctionSelectors: string[] = [];
       try {
         const diamondCutContractName = await getContractName("DiamondCutFacet");
-        const diamondCutFactory = await ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
-        diamondCutFacetFunctionSelectors = Object.keys(diamondCutFactory.interface.functions).map(fn =>
-          diamondCutFactory.interface.getSighash(fn)
-        );
+        const diamondCutFactory = await (hre as any).ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
+        diamondCutFacetFunctionSelectors = [];
+        diamondCutFactory.interface.forEachFunction((func: any) => {
+          diamondCutFacetFunctionSelectors.push(func.selector);
+        });
       } catch (error) {
         console.log(chalk.yellow(`⚠️ Could not get function selectors for DiamondCutFacet (likely in test environment): ${error}`));
         // Use default selectors for DiamondCutFacet in test environments
@@ -233,10 +235,11 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         // Get facet interface for function selectors
         let facetSelectors: string[] = [];
         try {
-          const facetFactory = await ethers.getContractFactory(facetName, diamond.getSigner()!);
-          facetSelectors = Object.keys(facetFactory.interface.functions).map(fn =>
-            facetFactory.interface.getSighash(fn)
-          );
+          const facetFactory = await (hre as any).ethers.getContractFactory(facetName, diamond.getSigner()!);
+          facetSelectors = [];
+          facetFactory.interface.forEachFunction((func: any) => {
+            facetSelectors.push(func.selector);
+          });
         } catch (error) {
           console.log(chalk.yellow(`⚠️ Could not get function selectors for ${facetName} (likely in test environment): ${error}`));
           // Use empty selectors in test environments
@@ -348,7 +351,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         network,
         contractName: diamondContractName,
         contractPath: `${diamond.contractsPath}/${diamondContractName}.sol`,
-        constructorInputs: [deployerAddress, ethers.constants.AddressZero], // Make sure constructor matches
+        constructorInputs: [deployerAddress, ethers.ZeroAddress], // Make sure constructor matches
         verifySourceCode: true, // TODO Verify this should be true or optional
         artifactPayload: JSON.stringify({
           contracts: {
@@ -470,7 +473,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         console.log(chalk.bold(`- ${FacetCutAction[cut.action]} for facet ${cut.name} at ${cut.facetAddress}`));
         console.log(chalk.gray(`  Selectors:`), cut.functionSelectors);
       }
-      if (initAddress !== ethers.constants.AddressZero) {
+      if (initAddress !== ethers.ZeroAddress) {
         console.log(chalk.cyan(`Initializing with functionSelector ${initCalldata} on ProtocolInitFacet ${deployConfig.protocolInitFacet} @ ${initAddress}`));
       }
     }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Schema for a single facet's deployment information
 export const DeployedFacetSchema = z.object({
@@ -10,10 +10,10 @@ export const DeployedFacetSchema = z.object({
 });
 
 // Schema for all deployed facets
-export const DeployedFacetsSchema = z.record(DeployedFacetSchema);
+export const DeployedFacetsSchema = z.record(z.string(), DeployedFacetSchema);
 
 // Schema for external libraries
-export const ExternalLibrariesSchema = z.record(z.string());
+export const ExternalLibrariesSchema = z.record(z.string(), z.string());
 
 // Schema for the network deployment information
 export const DeployedDiamondDataSchema = z.object({
@@ -44,19 +44,19 @@ export const FacetConfigSchema = z.object({
   // Infer TypeScript types from schemas
   priority: z.number(),
   libraries: z.array(z.string()).optional(),
-  versions: z.record(z.coerce.number(), FacetVersionConfigSchema).optional()
+  versions: z.record(z.string(), FacetVersionConfigSchema).optional()
 });
 
 /**
  * Schema for the deployment configuration information of ALL facets to be deployed
  */
-export const FacetsConfigSchema = z.record(FacetConfigSchema);
+export const FacetsConfigSchema = z.record(z.string(), FacetConfigSchema);
 
 export const DeployConfigSchema = z.object({
   protocolVersion: z.number(),
   protocolInitFacet: z.string().optional(),
   protocolCallback: z.string().optional(),
-  facets: z.record(FacetConfigSchema)
+  facets: z.record(z.string(), FacetConfigSchema)
 });
 
 // Inferred types from Zod schemas

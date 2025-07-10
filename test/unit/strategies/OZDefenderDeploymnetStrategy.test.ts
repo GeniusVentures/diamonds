@@ -1,6 +1,6 @@
 // test/unit/strategies/OZDefenderDeploymentStrategy.test.ts
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
+import hre from "hardhat";;
 import sinon from 'sinon';
 import { Diamond } from '../../../src/core/Diamond';
 import { OZDefenderDeploymentStrategy } from '../../../src/strategies/OZDefenderDeploymentStrategy';
@@ -8,7 +8,7 @@ import { FileDeploymentRepository } from '../../../src/repositories/FileDeployme
 import { DiamondConfig, RegistryFacetCutAction, FacetCutAction } from '../../../src/types';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
 // Create stub for the defender module - this avoids the need to mock imports
@@ -45,7 +45,7 @@ describe('OZDefenderDeploymentStrategy', () => {
   let config: DiamondConfig;
   let repository: FileDeploymentRepository;
   let strategy: OZDefenderDeploymentStrategy;
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let provider: JsonRpcProvider;
 
   // OZ Defender config
@@ -98,8 +98,8 @@ describe('OZDefenderDeploymentStrategy', () => {
     );
 
     // Get hardhat signers and provider
-    signers = await ethers.getSigners();
-    provider = ethers.provider;
+    signers = await (hre as any).ethers.getSigners();
+    provider = (hre as any).ethers.provider;
 
     // Stub console.log for testing
     sinon.stub(console, 'log');
