@@ -114,18 +114,34 @@ describe('Integration: Dual Configuration Support', function () {
       (hre as any).ethers.getContractFactory = async (name: string) => {
         // Simple mock that returns a deployable contract
         return {
-          deploy: async () => ({
-            address: '0x' + Math.random().toString(16).substring(2, 42).padStart(40, '0'),
-            deployed: async () => ({}),
-            deployTransaction: { hash: '0x' + Math.random().toString(16).substring(2) },
-            interface: {
-              functions: {},
-              getSighash: () => '0x12345678'
-            }
-          }),
+          deploy: async () => {
+            const mockAddress = '0x' + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+            const mockTxHash = '0x' + Math.random().toString(16).substring(2);
+            return {
+              address: mockAddress,
+              getAddress: async () => mockAddress,
+              deployed: async () => ({}),
+              waitForDeployment: async () => ({}),
+              deploymentTransaction: () => ({ hash: mockTxHash }),
+              interface: {
+                functions: {},
+                getSighash: () => '0x12345678',
+                forEachFunction: (callback: (func: any) => void) => {
+                  // Mock some function selectors
+                  callback({ selector: '0x1f931c1c' }); // diamondCut
+                  callback({ selector: '0xcdffacc6' }); // facets
+                }
+              }
+            };
+          },
           interface: {
             functions: {},
-            getSighash: () => '0x12345678'
+            getSighash: () => '0x12345678',
+            forEachFunction: (callback: (func: any) => void) => {
+              // Mock some function selectors
+              callback({ selector: '0x1f931c1c' }); // diamondCut
+              callback({ selector: '0xcdffacc6' }); // facets
+            }
           }
         };
       };

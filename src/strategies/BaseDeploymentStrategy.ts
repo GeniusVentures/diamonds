@@ -49,7 +49,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     // Deploy the Diamond - use contract mapping to get correct name
     const diamondContractName = await getDiamondContractName(diamond.diamondName);
     const diamondFactory = await (hre as any).ethers.getContractFactory(diamondContractName, diamond.getSigner()!);
-    const diamondContract = await diamondFactory.deploy(diamond.getSigner()!.getAddress(), await diamondCutFacet.getAddress());
+    const diamondContract = await diamondFactory.deploy(await diamond.getSigner()!.getAddress(), await diamondCutFacet.getAddress());
     await diamondContract.waitForDeployment();
 
     // Get function selectors for DiamondCutFacet
@@ -89,7 +89,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
     diamond.updateDeployedDiamondData(deployedDiamondData);
 
-    console.log(chalk.green(`✅ Diamond deployed at ${diamondContract.address}, DiamondCutFacet at ${diamondCutFacet.address}`));
+    console.log(chalk.green(`✅ Diamond deployed at ${await diamondContract.getAddress()}, DiamondCutFacet at ${await diamondCutFacet.getAddress()}`));
   }
 
   async postDeployDiamond(diamond: Diamond): Promise<void> {
@@ -151,7 +151,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         const facetContractName = await getContractName(facetName);
         const facetFactory = await (hre as any).ethers.getContractFactory(facetContractName, { signer });
         const facetContract = await facetFactory.deploy();
-        await facetContract.deployed();
+        await facetContract.waitForDeployment();
 
         const deployedFacets = new Map<string, DeployedFacet>();
         const availableVersions = Object.keys(facetConfig.versions ?? {}).map(Number);
@@ -183,7 +183,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
         diamond.updateNewDeployedFacets(facetName, newFacetData);
 
-        console.log(chalk.cyan(`⛵ Deployed at ${facetContract.address} with ${facetSelectors.length} selectors.`));
+        console.log(chalk.cyan(`⛵ Deployed at ${await facetContract.getAddress()} with ${facetSelectors.length} selectors.`));
         // Log the deployment transaction and selectors
         if (this.verbose) {
           console.log(chalk.gray(`  Selectors:`), facetSelectors);
