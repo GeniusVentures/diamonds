@@ -2,11 +2,18 @@
   "name": "diamonds",
   "version": "1.0.0",
   "description": "Tools for deploying and interfacing with ERC-2535 Diamond Proxies",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "authors": [
-    "SuperGenius",
-    "Am0rfu5"
+    "Am0rfu5",
+    "SuperGenius"
   ],
   "license": "MIT",
   "keywords": [
@@ -24,17 +31,18 @@
     "url": "https://github.com/GeniusVentures/diamonds/issues"
   },
   "scripts": {
-    "test": "hardhat test",
-    "test:unit": "hardhat test test/unit/**/*.test.ts",
-    "test:integration": "hardhat test test/integration/**/*.test.ts",
-    "test:coverage": "hardhat coverage",
-    "test:performance": "hardhat test test/integration/performance/**/*.test.ts",
-    "compile": "hardhat compile",
-    "clean": "hardhat clean && rimraf .tmp-test*",
-    "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.json",
-    "lint": "tslint --config tslint.json --project tsconfig.json",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "test": "hardhat test --config hardhat.config.ts",
+    "test:unit": "hardhat test test/unit/**/*.test.ts --config hardhat.config.ts",
+    "test:integration": "hardhat test test/integration/**/*.test.ts --config hardhat.config.ts",
+    "test:coverage": "hardhat coverage --config hardhat.config.ts",
+    "test:performance": "hardhat test test/integration/performance/**/*.test.ts --config hardhat.config.ts",
+    "compile": "hardhat compile --config hardhat.config.ts",
+    "clean": "hardhat clean && rimraf dist .tmp-test*",
+    "lint:fix": "prettier --write 'src/**/*.{js,ts}' 'test/**/*.{js,ts}' && tslint --fix --config tslint.json --project tsconfig.dev.json",
+    "lint": "tslint --config tslint.json --project tsconfig.dev.json",
+    "build": "rimraf dist && tsc --project tsconfig.json",
+    "build:dev": "tsc --project tsconfig.dev.json --noEmit",
+    "watch": "tsc --project tsconfig.json -w",
     "prepublishOnly": "yarn build",
     "defender:deploy": "ts-node scripts/defender-cli.ts deploy",
     "defender:upgrade": "ts-node scripts/defender-cli.ts upgrade",
@@ -44,9 +52,9 @@
   },
   "files": [
     "dist/",
-    "src/",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "package.json"
   ],
   "devDependencies": {
     "@ethersproject/abi": "^5.8.0",
