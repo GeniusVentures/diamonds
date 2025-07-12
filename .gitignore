@@ -60,7 +60,7 @@ typings/
 # environment variables
 .env
 
-# faltten files
+# flatten files
 flat
 .ignore
 

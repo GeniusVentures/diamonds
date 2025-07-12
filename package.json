@@ -40,7 +40,12 @@
     "defender:upgrade": "ts-node scripts/defender-cli.ts upgrade",
     "defender:status": "ts-node scripts/defender-cli.ts status",
     "defender:verify": "ts-node scripts/defender-cli.ts verify",
-    "defender:init": "ts-node scripts/defender-cli.ts init"
+    "defender:init": "ts-node scripts/defender-cli.ts init",
+    "diamond-abi": "ts-node scripts/diamond-abi-cli.ts",
+    "create-diamond-abi": "ts-node scripts/create-diamond-abi.ts"
+  },
+  "bin": {
+    "diamond-abi": "dist/scripts/diamond-abi-cli.js"
   },
   "files": [
     "dist/",
