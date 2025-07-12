@@ -30,4 +30,5 @@ __exportStar(require("./defenderClients"), exports);
 __exportStar(require("./contractMapping"), exports);
 __exportStar(require("./configurationResolver"), exports);
 __exportStar(require("./workspaceSetup"), exports);
+__exportStar(require("./diamondAbiGenerator"), exports);
 //# sourceMappingURL=index.js.map

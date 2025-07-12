@@ -57,12 +57,9 @@
   },
   "files": [
     "dist/",
-<<<<<<< HEAD
     "src/",
     "test/",
     "docs/",
-=======
->>>>>>> main
     "LICENSE",
     "README.md",
     "package.json"
