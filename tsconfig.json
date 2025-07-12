@@ -25,8 +25,7 @@
     "./src/**/*",
     "./test/**/*",
     "./scripts/**/*",
-    "./types/**/*",
-    "./docs/**/*"
+    "./types/**/*"
   ],
   "exclude": ["dist", "node_modules", "notes", "notes-local", ".tmp-*"]
 }
