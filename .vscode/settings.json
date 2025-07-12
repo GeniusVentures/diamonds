@@ -1,7 +1,9 @@
 {
   "sarif-viewer.connectToGithubCodeScanning": "off",
   "cSpell.words": [
+    "dont",
     "eslintcache",
+    "integrationtestdiamond",
     "jspm",
     "xefgh"
   ]

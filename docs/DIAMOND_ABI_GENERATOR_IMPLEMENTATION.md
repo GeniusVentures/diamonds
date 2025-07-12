@@ -12,7 +12,7 @@ The Diamond ABI Generator is a comprehensive tool for generating unified ABI (Ap
 4. [Programmatic Usage](#programmatic-usage)
 5. [TypeChain Integration](#typechain-integration)
 6. [Viem Integration](#viem-integration)
-7. [AbityPe Integration](#abitype-integration)
+7. [ABIType Integration](#abitype-integration)
 8. [Configuration Options](#configuration-options)
 9. [Advanced Features](#advanced-features)
 10. [Best Practices](#best-practices)
@@ -409,7 +409,7 @@ export type ${diamond.diamondName}ABI = typeof ${diamond.diamondName}ABI;
 }
 ```
 
-## AbityPe Integration
+## ABIType Integration
 
 ### 1. Installation
 
@@ -417,7 +417,7 @@ export type ${diamond.diamondName}ABI = typeof ${diamond.diamondName}ABI;
 npm install abitype
 ```
 
-### 2. Generate AbityPe Types
+### 2. Generate ABIType Types
 
 ```typescript
 // scripts/generate-abitype.ts
@@ -428,7 +428,7 @@ async function generateAbiTypes() {
   const result = await generateDiamondAbi(diamond);
   
   const abiTypesContent = `
-// Auto-generated AbityPe types for ${diamond.diamondName}
+// Auto-generated ABIType types for ${diamond.diamondName}
 import { Abi } from 'abitype';
 
 export const ${diamond.diamondName}ABI = ${JSON.stringify(result.abi, null, 2)} as const satisfies Abi;
@@ -446,7 +446,7 @@ export type ${diamond.diamondName}Events = Extract<${diamond.diamondName}ABI[num
 }
 ```
 
-### 3. Use AbityPe Types
+### 3. Use ABIType Types
 
 ```typescript
 import { YourDiamondABI, YourDiamondFunctionNames } from './types/diamond-abitype';
@@ -939,7 +939,7 @@ async function runTests() {
 The Diamond ABI Generator provides a comprehensive solution for managing ERC-2535 Diamond Proxy ABIs. By following this implementation guide, you can:
 
 - Generate unified ABIs for complex diamond contracts
-- Integrate with modern development tools (TypeChain, Viem, AbityPe)
+- Integrate with modern development tools (TypeChain, Viem, ABIType)
 - Automate ABI generation in your development workflow
 - Maintain type safety across your entire application stack
 - Preview and validate changes before deployment
