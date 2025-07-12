@@ -37,28 +37,30 @@ The OpenZeppelin Defender integration for the Diamonds module is now complete an
 
 ## 🚀 Future Enhancements (Roadmap)
 
-### Phase 1: Advanced Defender Features (Q1 2024)
+### Phase 1: Advanced Defender Features 
+
+>> DEFENDER PHASE OUT: Open source equivalent will be developed
 
 - [ ] **Sentinel Integration**: Automated monitoring and alerting
 - [ ] **Autotask Support**: Custom automation scripts for diamond operations
 - [ ] **Timelock Integration**: Support for timelock controllers
 - [ ] **Advanced Multi-sig**: Support for complex multi-sig workflows
 
-### Phase 2: Developer Experience (Q2 2024)
+### Phase 2: Developer Experience
 
 - [ ] **Visual Dashboard**: Web-based dashboard for diamond management
 - [ ] **GraphQL API**: Rich API for diamond state queries
 - [ ] **IDE Extensions**: VS Code extension for diamond development
 - [ ] **Template Generator**: Interactive project template generator
 
-### Phase 3: Enterprise Features (Q3 2024)
+### Phase 3: Enterprise Features
 
 - [ ] **Role-based Access**: Granular permission system
 - [ ] **Audit Trail**: Comprehensive operation logging
 - [ ] **Compliance Tools**: SOX/SOC2 compliance features
 - [ ] **Multi-tenant Support**: Organization and team management
 
-### Phase 4: Ecosystem Integration (Q4 2024)
+### Phase 4: Ecosystem Integration
 
 - [ ] **DeFi Protocol Integration**: Pre-built DeFi protocol diamonds
 - [ ] **NFT Marketplace Support**: NFT-specific diamond patterns
