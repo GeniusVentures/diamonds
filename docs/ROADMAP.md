@@ -1,18 +1,8 @@
-# Diamonds OpenZeppelin Defender Integration - Project Roadmap
+# Project Roadmap
 
 ## Current Status: Production Ready ✅
 
-The OpenZeppelin Defender integration for the Diamonds module is now complete and production-ready. This document outlines the current state, future enhancements, and maintenance roadmap.
-
-## ✅ Completed Features
-
-### Core Functionality
-
-- ✅ **OZDefenderDeploymentStrategy**: Complete implementation with robust error handling
-- ✅ **Auto-approval System**: Automated proposal approval and execution with polling
-- ✅ **Multi-sig Support**: Support for Safe (Gnosis) and EOA via configurations
-- ✅ **Contract Verification**: Automatic contract verification on Etherscan
-- ✅ **State Management**: Comprehensive diamond state tracking and updates
+The Diamonds module is now complete and production-ready. This document outlines the current state, future enhancements, and maintenance roadmap.
 
 ### Testing Infrastructure
 
@@ -39,7 +29,7 @@ The OpenZeppelin Defender integration for the Diamonds module is now complete an
 
 ### Phase 1: Advanced Defender Features
 
->> DEFENDER PHASE OUT: Open source equivalent will be developed
+>> DEFENDER is phasing out so focus will be on switching to the open source equivalents.
 
 - [ ] **Sentinel Integration**: Automated monitoring and alerting
 - [ ] **Autotask Support**: Custom automation scripts for diamond operations
@@ -217,14 +207,14 @@ Diamond Platform
 - CLI tools and example projects
 - Performance optimization for enterprise use
 
-### Next Version: 1.1.0 (Target: Q1 2024)
+### Next Version: 1.1.0 (Target: Q3 2025)
 
 - Sentinel and Autotask integration
 - Enhanced multi-sig workflows
 - Performance improvements
 - Additional example projects
 
-### Version 2.0.0 (Target: Q3 2024)
+### Version 2.0.0 (Target: Q4 2025)
 
 - Major architecture refactor
 - Web dashboard and visual tools
