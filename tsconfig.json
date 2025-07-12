@@ -25,7 +25,8 @@
     "./src/**/*",
     "./test/**/*",
     "./scripts/**/*",
-    "./types/**/*"
-, "notes/create-diamond-abi"  ],
+    "./types/**/*",
+    "./docs/**/*"
+  ],
   "exclude": ["dist", "node_modules", "notes", "notes-local", ".tmp-*"]
 }
