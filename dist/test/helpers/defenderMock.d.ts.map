@@ -1,0 +1,1 @@
+{"version":3,"file":"defenderMock.d.ts","sourceRoot":"","sources":["../../../test/helpers/defenderMock.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,MAAM,OAAO,CAAC;AAG1B;;;GAGG;AACH,wBAAgB,mBAAmB;;;;;;;;;;;;;;;;;;EAgDlC;AAED;;;GAGG;AACH,wBAAgB,wBAAwB,CAAC,KAAK,EAAE;IAC9C,gBAAgB,EAAE,GAAG,CAAC;IACtB,kBAAkB,EAAE,GAAG,CAAC;IACxB,YAAY,EAAE,GAAG,CAAA;CAClB,QA6BA"}
