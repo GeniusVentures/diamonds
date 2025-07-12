@@ -1,0 +1,35 @@
+# Source files
+src/
+test/
+scripts/
+examples/
+docs/
+notes/
+coverage/
+flat/
+cache/
+artifacts/
+typechain-types/
+
+# Config files
+hardhat.config.ts
+tsconfig.dev.json
+tslint.json
+jest.config.js
+test-mock-verify.js
+.env*
+.tmp-*
+
+# Build artifacts
+*.tsbuildinfo
+*.log
+node_modules/
+.nyc_output/
+
+# Development files
+.git/
+.github/
+.vscode/
+*.swp
+*.swo
+*~

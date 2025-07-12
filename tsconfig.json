@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
     "allowJs": true,
     "checkJs": false,
     "baseUrl": "./",
@@ -13,8 +12,8 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
-    "rootDirs": ["./src", "./test"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
@@ -22,10 +21,7 @@
     "moduleResolution": "node"
   },
   "include": [
-    "./src/**/*",
-    "./test/**/*",
-    "./scripts/**/*",
-    "./types/**/*"
+    "./src/**/*"
   ],
-  "exclude": ["dist", "node_modules", "notes", "notes-local", ".tmp-*"]
+  "exclude": ["dist", "node_modules", "notes", "notes-local", ".tmp-*", "test", "scripts"]
 }
