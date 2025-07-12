@@ -37,7 +37,7 @@ The OpenZeppelin Defender integration for the Diamonds module is now complete an
 
 ## 🚀 Future Enhancements (Roadmap)
 
-### Phase 1: Advanced Defender Features 
+### Phase 1: Advanced Defender Features
 
 >> DEFENDER PHASE OUT: Open source equivalent will be developed
 
