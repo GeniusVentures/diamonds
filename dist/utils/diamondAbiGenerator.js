@@ -160,10 +160,27 @@ class DiamondAbiGenerator {
                 console.log(chalk_1.default.cyan(`📄 Processing ${facetName}...`));
             }
             // Get the contract artifact
-            const artifact = await (0, contractMapping_1.getContractArtifact)(facetName);
+            let artifact;
+            try {
+                artifact = await (0, contractMapping_1.getContractArtifact)(facetName);
+            }
+            catch (artifactError) {
+                if (this.options.verbose) {
+                    console.log(chalk_1.default.yellow(`⚠️  Artifact loading failed for ${facetName}: ${artifactError}`));
+                }
+                artifact = null;
+            }
             if (!artifact || !artifact.abi) {
                 if (this.options.verbose) {
                     console.log(chalk_1.default.yellow(`⚠️  No ABI found for ${facetName}`));
+                }
+                // Still add selectors to mapping even if artifact can't be loaded
+                // This handles cases where selectors are in the registry but no artifact exists
+                for (const selector of facetInfo.selectors) {
+                    if (!this.seenSelectors.has(selector)) {
+                        this.selectorToFacet[selector] = facetName;
+                        this.seenSelectors.add(selector);
+                    }
                 }
                 return;
             }
@@ -173,10 +190,27 @@ class DiamondAbiGenerator {
             for (const abiItem of artifact.abi) {
                 await this.processAbiItem(abiItem, facetName, facetInfo, iface);
             }
+            // For facets from the registry, add any selectors that weren't found in the ABI
+            // This handles cases where selectors are manually registered but don't have corresponding ABI items
+            if (facetInfo.source === 'registry') {
+                for (const selector of facetInfo.selectors) {
+                    if (!this.seenSelectors.has(selector)) {
+                        this.selectorToFacet[selector] = facetName;
+                        this.seenSelectors.add(selector);
+                    }
+                }
+            }
             this.stats.facetCount++;
         }
         catch (error) {
             console.error(chalk_1.default.red(`❌ Error processing ${facetName}:`), error);
+            // Still add selectors to mapping even if there was an error
+            for (const selector of facetInfo.selectors) {
+                if (!this.seenSelectors.has(selector)) {
+                    this.selectorToFacet[selector] = facetName;
+                    this.seenSelectors.add(selector);
+                }
+            }
         }
     }
     /**
