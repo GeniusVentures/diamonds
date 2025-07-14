@@ -13,6 +13,7 @@ import { DiamondConfig } from '../src/types';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import hre from 'hardhat';
+import "@nomicfoundation/hardhat-ethers";
 
 const program = new Command();
 
@@ -316,8 +317,8 @@ program
 // Helper functions
 async function setupDiamondConnection(diamond: Diamond, verbose: boolean): Promise<void> {
     try {
-        diamond.setProvider((hre as any).ethers.provider);
-        const signers = await (hre as any).ethers.getSigners();
+        diamond.setProvider(hre.ethers.provider);
+        const signers = await hre.ethers.getSigners();
         if (signers.length > 0) {
             diamond.setSigner(signers[0]);
         }

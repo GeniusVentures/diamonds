@@ -15,9 +15,10 @@ import {
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Signer, ethers } from 'ethers';
 import hre from 'hardhat';
+import "@nomicfoundation/hardhat-ethers";
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { join } from 'path';
-import '@gnus.ai/hardhat-diamonds';
+import 'hardhat-diamonds';
 
 export interface LocalDiamondDeployerConfig extends DiamondConfig {
   provider?: JsonRpcProvider;

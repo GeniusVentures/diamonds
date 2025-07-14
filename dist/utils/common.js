@@ -9,6 +9,7 @@ exports.getSighash = getSighash;
 exports.cutKey = cutKey;
 exports.getDeployedFacetInterfaces = getDeployedFacetInterfaces;
 const hardhat_1 = __importDefault(require("hardhat"));
+require("@nomicfoundation/hardhat-ethers");
 const debug_1 = require("debug");
 const ethers_1 = require("ethers");
 global.debuglog = (0, debug_1.debug)('UnitTest:log');

@@ -1,4 +1,5 @@
 import { ContractTransactionResponse, Interface, TransactionReceipt, InterfaceAbi } from "ethers";
+import "@nomicfoundation/hardhat-ethers";
 /**
  * Pretty‑prints a transaction receipt **and** decodes its logs.
  *

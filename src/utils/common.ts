@@ -1,4 +1,5 @@
 import hre from 'hardhat';
+import "@nomicfoundation/hardhat-ethers";
 import { debug } from 'debug';
 import { TransactionReceipt, Interface, Fragment, ContractInterface, ContractTransaction } from "ethers";
 import { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
@@ -20,7 +21,7 @@ export const GNUS_TOKEN_ID = toBN(0);
 export const XMPL_TOKEN_ID = toBN(1234567890);
 
 export function toWei(value: number | string): bigint {
-  return (hre as any).ethers.parseEther(value.toString());
+  return hre.ethers.parseEther(value.toString());
 }
 
 export function getSighash(funcSig: string): string {

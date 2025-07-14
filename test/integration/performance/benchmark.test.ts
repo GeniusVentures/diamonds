@@ -44,7 +44,7 @@ describe('Performance Benchmarks', function () {
 
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
-    signers = await (hre as any).ethers.getSigners();
+    signers = await hre.ethers.getSigners();
 
     // Setup callback files for tests
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'));
@@ -138,7 +138,7 @@ module.exports = {
 
     const repository = new FileDeploymentRepository(config);
     const diamond = new Diamond(config, repository);
-    diamond.setProvider((hre as any).ethers.provider);
+    diamond.setProvider(hre.ethers.provider);
     diamond.setSigner(signers[0]);
 
     const deployer = new DiamondDeployer(diamond, strategyInstance);
@@ -523,7 +523,7 @@ module.exports = {
 
         const repository = new FileDeploymentRepository(config);
         const diamond = new Diamond(config, repository);
-        diamond.setProvider((hre as any).ethers.provider);
+        diamond.setProvider(hre.ethers.provider);
         diamond.setSigner(signers[0]);
 
         const deployer = new DiamondDeployer(diamond, strategy);

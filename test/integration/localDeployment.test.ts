@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import hre from "hardhat";;
+import hre from "hardhat";
+import "@nomicfoundation/hardhat-ethers";
 import { Diamond } from '../../src/core/Diamond';
 import { FileDeploymentRepository } from '../../src/repositories/FileDeploymentRepository';
 import { DiamondDeployer } from '../../src/core/DiamondDeployer';
@@ -65,7 +66,7 @@ describe('Integration: LocalDeploymentStrategy', function () {
     diamond = new Diamond(config, repository);
 
     // Set provider and signer
-    diamond.setProvider((hre as any).ethers.provider);
+    diamond.setProvider(hre.ethers.provider);
     diamond.setSigner(deployer);
 
     // Reset sinon spies
@@ -108,9 +109,9 @@ describe('Integration: LocalDeploymentStrategy', function () {
   describe('End-to-end deployment', () => {
     it('should deploy a diamond with facets using LocalDeploymentStrategy', async function () {
       // Mock ethers.getContractFactory
-      const originalGetContractFactory = (hre as any).ethers.getContractFactory;
+      const originalGetContractFactory = hre.ethers.getContractFactory;
       // @ts-ignore - We need to mock this
-      (hre as any).ethers.getContractFactory = mockContractFactory;
+      hre.ethers.getContractFactory = mockContractFactory;
 
       try {
         // Create strategy
@@ -140,16 +141,16 @@ describe('Integration: LocalDeploymentStrategy', function () {
 
       } finally {
         // Restore original function
-        (hre as any).ethers.getContractFactory = originalGetContractFactory;
+        hre.ethers.getContractFactory = originalGetContractFactory;
       }
     });
 
     it('should handle facet upgrades correctly', async function () {
       // First deploy the diamond
       // Mock ethers.getContractFactory
-      const originalGetContractFactory = (hre as any).ethers.getContractFactory;
+      const originalGetContractFactory = hre.ethers.getContractFactory;
       // @ts-ignore - We need to mock this
-      (hre as any).ethers.getContractFactory = mockContractFactory;
+      hre.ethers.getContractFactory = mockContractFactory;
 
       try {
         // Create and deploy with initial strategy
@@ -187,7 +188,7 @@ describe('Integration: LocalDeploymentStrategy', function () {
         // Create new repository and diamond instance to pick up the updated config
         const upgradeRepository = new FileDeploymentRepository(config);
         const upgradeDiamond = new Diamond(config, upgradeRepository);
-        upgradeDiamond.setProvider((hre as any).ethers.provider);
+        upgradeDiamond.setProvider(hre.ethers.provider);
         upgradeDiamond.setSigner(deployer);
 
         // Create new strategy and deployer for upgrade
@@ -216,7 +217,7 @@ describe('Integration: LocalDeploymentStrategy', function () {
 
       } finally {
         // Restore original function
-        (hre as any).ethers.getContractFactory = originalGetContractFactory;
+        hre.ethers.getContractFactory = originalGetContractFactory;
       }
     });
   });

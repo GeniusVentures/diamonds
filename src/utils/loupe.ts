@@ -1,4 +1,5 @@
-import { ContractTransactionResponse, Interface, Contract, Signer, JsonRpcProvider, TransactionReceipt, LogDescription, Log, InterfaceAbi } from "ethers";
+import { ContractTransactionResponse, Interface, Contract, Signer, JsonRpcProvider, TransactionReceipt, LogDescription, Log, InterfaceAbi, Provider } from "ethers";
+import '@nomicfoundation/hardhat-ethers';
 import chalk from "chalk";
 import hre from "hardhat";
 import { logTx } from "./txlogging";
@@ -116,7 +117,7 @@ export async function logDiamondLoupe(
  */
 export async function getDeployedFacets(
   diamondAddress: string,
-  signerOrProvider: Signer | JsonRpcProvider = (hre as any).ethers.provider,
+  signerOrProvider: Signer | Provider = hre.ethers.provider,
   receiptToDecode?: TransactionReceipt,
   logDeployedFacets?: boolean, // default: assumed false
 ): Promise<FacetStruct[]> {

@@ -64,8 +64,8 @@ describe('Diamond', () => {
     );
 
     // Get hardhat signers and provider
-    signers = await (hre as any).ethers.getSigners();
-    provider = (hre as any).ethers.provider;
+    signers = await hre.ethers.getSigners();
+    provider = hre.ethers.provider;
   });
 
   beforeEach(async () => {

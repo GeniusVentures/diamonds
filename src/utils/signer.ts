@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { toWei } from './common';
 import { JsonRpcProvider, Signer } from 'ethers';
+import '@nomicfoundation/hardhat-ethers';
 
 /**
  * Impersonates a signer account. This is primarily used in Hardhat's testing environment
@@ -64,10 +65,10 @@ export async function impersonateAndFundSigner(deployerAddress: string, provider
  */
 export const updateOwnerForTest = async (rootAddress: string, provider: JsonRpcProvider) => {
   // Retrieve the current signer in the Hardhat environment
-  const curOwner = (await (hre as any).ethers.getSigners())[0];
+  const curOwner = (await hre.ethers.getSigners())[0];
 
   // Get a reference to the GeniusOwnershipFacet contract at the specified root address
-  const ownership = await (hre as any).ethers.getContractAt('GeniusOwnershipFacet', rootAddress);
+  const ownership = await hre.ethers.getContractAt('GeniusOwnershipFacet', rootAddress);
 
   // Retrieve the current owner of the contract
   const oldOwnerAddress = await ownership.owner();
@@ -82,8 +83,8 @@ export const updateOwnerForTest = async (rootAddress: string, provider: JsonRpcP
     // Ensure the old owner has enough Ether to perform the ownership transfer
     await setEtherBalance(oldOwnerAddress, toWei(10), provider);
 
-    await ownership.connect(await oldOwner).transferOwnership(curOwner.address);
-    await ownership.connect(oldOwner).transferOwnership(curOwner.address);
+    await (ownership as any).connect(await oldOwner).transferOwnership(curOwner.address);
+    await (ownership as any).connect(oldOwner).transferOwnership(curOwner.address);
   }
 
   // Return the address of the old owner

@@ -7,6 +7,7 @@ exports.BaseDeploymentStrategy = void 0;
 const types_1 = require("../types");
 const chalk_1 = __importDefault(require("chalk"));
 const hardhat_1 = __importDefault(require("hardhat"));
+require("@nomicfoundation/hardhat-ethers");
 const ethers_1 = require("ethers");
 const utils_1 = require("../utils");
 class BaseDeploymentStrategy {
@@ -30,12 +31,12 @@ class BaseDeploymentStrategy {
     async deployDiamondTasks(diamond) {
         console.log(chalk_1.default.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`));
         // Deploy the DiamondCutFacet - use contract mapping to get correct name
-        const diamondCutContractName = await (0, utils_1.getContractName)("DiamondCutFacet");
+        const diamondCutContractName = await (0, utils_1.getContractName)("DiamondCutFacet", diamond);
         const diamondCutFactory = await hardhat_1.default.ethers.getContractFactory(diamondCutContractName, diamond.getSigner());
         const diamondCutFacet = await diamondCutFactory.deploy();
         await diamondCutFacet.waitForDeployment();
         // Deploy the Diamond - use contract mapping to get correct name
-        const diamondContractName = await (0, utils_1.getDiamondContractName)(diamond.diamondName);
+        const diamondContractName = await (0, utils_1.getDiamondContractName)(diamond.diamondName, diamond);
         const diamondFactory = await hardhat_1.default.ethers.getContractFactory(diamondContractName, diamond.getSigner());
         const diamondContract = await diamondFactory.deploy(await diamond.getSigner().getAddress(), await diamondCutFacet.getAddress());
         await diamondContract.waitForDeployment();
@@ -119,7 +120,7 @@ class BaseDeploymentStrategy {
                 }
                 // Deploy the facet contract - use contract mapping to get correct name
                 const signer = diamond.getSigner();
-                const facetContractName = await (0, utils_1.getContractName)(facetName);
+                const facetContractName = await (0, utils_1.getContractName)(facetName, diamond);
                 const facetFactory = await hardhat_1.default.ethers.getContractFactory(facetContractName, { signer });
                 const facetContract = await facetFactory.deploy();
                 await facetContract.waitForDeployment();
@@ -377,7 +378,7 @@ class BaseDeploymentStrategy {
         for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
             console.log(chalk_1.default.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
             // const contract = await ethers.getContractAt(facetName, diamondSignerAddress!);
-            const facetContractName = await (0, utils_1.getContractName)(facetName);
+            const facetContractName = await (0, utils_1.getContractName)(facetName, diamond);
             const initContract = await hardhat_1.default.ethers.getContractAt(facetContractName, diamond.getDeployedDiamondData().DiamondAddress);
             const signerDiamondContract = initContract.connect(signer);
             const tx = await initContract[initFunction]();

@@ -11,6 +11,8 @@ export declare class Diamond {
     chainId: number;
     deploymentsPath: string;
     contractsPath: string;
+    diamondAbiPath: string;
+    diamondAbiFileName: string;
     deploymentId: string;
     facetSelectors: string[];
     callbackManager: CallbackManager;
@@ -47,6 +49,9 @@ export declare class Diamond {
     registerInitializers(facetName: string, initFunction: string): void;
     setInitAddress(initAddress: string): void;
     getInitAddress(): string | undefined;
+    getDiamondAbiPath(): string;
+    getDiamondAbiFileName(): string;
+    getDiamondAbiFilePath(): string;
 }
 export default Diamond;
 //# sourceMappingURL=Diamond.d.ts.map

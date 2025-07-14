@@ -68,8 +68,8 @@ describe('Diamond ABI Integration Tests', () => {
         diamond = new Diamond(config, repository);
 
         // Set up provider and signer
-        diamond.setProvider((hre as any).ethers.provider);
-        const signers = await (hre as any).ethers.getSigners();
+        diamond.setProvider(hre.ethers.provider);
+        const signers = await hre.ethers.getSigners();
         diamond.setSigner(signers[0]);
 
         testOutputDir = './test-output-integration/diamond-abi';

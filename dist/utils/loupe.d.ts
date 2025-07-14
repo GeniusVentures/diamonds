@@ -1,4 +1,5 @@
 import { ContractTransactionResponse, Interface, Signer, JsonRpcProvider, TransactionReceipt, InterfaceAbi } from "ethers";
+import '@nomicfoundation/hardhat-ethers';
 /** Optional convenience type for TS consumers (no TypeChain) */
 export interface FacetStruct {
     facetAddress: string;

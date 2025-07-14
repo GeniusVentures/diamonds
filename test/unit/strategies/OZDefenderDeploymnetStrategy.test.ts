@@ -98,8 +98,8 @@ describe('OZDefenderDeploymentStrategy', () => {
     );
 
     // Get hardhat signers and provider
-    signers = await (hre as any).ethers.getSigners();
-    provider = (hre as any).ethers.provider;
+    signers = await hre.ethers.getSigners();
+    provider = hre.ethers.provider;
 
     // Stub console.log for testing
     sinon.stub(console, 'log');

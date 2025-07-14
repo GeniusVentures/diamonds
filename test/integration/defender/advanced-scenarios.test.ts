@@ -31,7 +31,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
 
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
-    signers = await (hre as any).ethers.getSigners();
+    signers = await hre.ethers.getSigners();
   });
 
   after(async function () {
@@ -111,7 +111,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       );
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider((hre as any).ethers.provider);
+      diamond.setProvider(hre.ethers.provider);
       diamond.setSigner(signers[0]);
 
       const deployer = new DiamondDeployer(diamond, strategy);
@@ -192,7 +192,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
         );
 
         const diamond = new Diamond(config, repository);
-        diamond.setProvider((hre as any).ethers.provider);
+        diamond.setProvider(hre.ethers.provider);
         diamond.setSigner(signers[0]);
 
         const deployer = new DiamondDeployer(diamond, strategy);
@@ -249,7 +249,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       );
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider((hre as any).ethers.provider);
+      diamond.setProvider(hre.ethers.provider);
       diamond.setSigner(signers[0]);
 
       const deployer = new DiamondDeployer(diamond, strategy);
@@ -306,7 +306,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       mocks = createDefenderMocks();
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider((hre as any).ethers.provider);
+      diamond.setProvider(hre.ethers.provider);
       diamond.setSigner(signers[0]);
 
       const deployer = new DiamondDeployer(diamond, strategy);
@@ -346,7 +346,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
 
       // Generate facets with large selector arrays
       for (let i = 1; i <= 50; i++) {
-        const selectors = [];
+        const selectors: string[] = [];
         for (let j = 1; j <= 20; j++) {
           selectors.push(`0x${i.toString(16).padStart(2, '0')}${j.toString(16).padStart(6, '0')}`);
         }
@@ -374,7 +374,7 @@ describe('Integration: Defender Advanced Scenarios', function () {
       const initialMemory = process.memoryUsage();
 
       const diamond = new Diamond(config, repository);
-      diamond.setProvider((hre as any).ethers.provider);
+      diamond.setProvider(hre.ethers.provider);
       diamond.setSigner(signers[0]);
 
       const loadMemory = process.memoryUsage();

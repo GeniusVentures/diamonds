@@ -1,17 +1,18 @@
 import { Artifact } from 'hardhat/types';
+import { Diamond } from '../core/Diamond';
 /**
  * Maps logical facet names to actual contract names available in artifacts.
  * This handles both production contracts and mock contracts for testing.
  */
-export declare function getContractName(logicalName: string): Promise<string>;
+export declare function getContractName(logicalName: string, diamond?: Diamond): Promise<string>;
 /**
  * Maps logical diamond name to actual contract name available in artifacts.
  */
-export declare function getDiamondContractName(diamondName: string): Promise<string>;
+export declare function getDiamondContractName(diamondName: string, diamond?: Diamond): Promise<string>;
 /**
  * Gets the contract artifact for a logical name, trying both production and mock versions
  */
-export declare function getContractArtifact(logicalName: string): Promise<Artifact>;
+export declare function getContractArtifact(logicalName: string, diamond?: Diamond): Promise<Artifact>;
 /**
  * Standard mapping for common facet types
  */

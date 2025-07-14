@@ -1,7 +1,8 @@
-import { ProxyDiamond } from "../../../typechain-types";
+import { ExampleDiamond } from "../../../typechain-types";
+import "@nomicfoundation/hardhat-ethers";
 import {
   CallbackArgs,
-} from "@gnus.ai/diamonds";
+} from "diamonds";
 import hre from "hardhat";
 
 export async function createXMPLToken(CallbackArgs: CallbackArgs) {

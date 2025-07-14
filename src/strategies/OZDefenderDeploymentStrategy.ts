@@ -192,7 +192,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       let diamondCutFacetFunctionSelectors: string[] = [];
       try {
         const diamondCutContractName = await getContractName("DiamondCutFacet", diamond);
-        const diamondCutFactory = await (hre as any).ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
+        const diamondCutFactory = await hre.ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
         diamondCutFacetFunctionSelectors = [];
         diamondCutFactory.interface.forEachFunction((func: any) => {
           diamondCutFacetFunctionSelectors.push(func.selector);
@@ -235,7 +235,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         // Get facet interface for function selectors
         let facetSelectors: string[] = [];
         try {
-          const facetFactory = await (hre as any).ethers.getContractFactory(facetName, diamond.getSigner()!);
+          const facetFactory = await hre.ethers.getContractFactory(facetName, diamond.getSigner()!);
           facetSelectors = [];
           facetFactory.interface.forEachFunction((func: any) => {
             facetSelectors.push(func.selector);

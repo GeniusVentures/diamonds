@@ -1,6 +1,6 @@
 # Test Setup and Execution Guide
 
-This guide walks through setting up and running the test suite for the `@gnus.ai/diamonds` module.
+This guide walks through setting up and running the test suite for the `diamonds` module.
 
 ## Prerequisites
 

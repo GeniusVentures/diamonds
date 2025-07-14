@@ -37,7 +37,7 @@ class DiamondAbiGenerator {
     constructor(options) {
         this.diamond = options.diamond;
         this.options = {
-            outputDir: 'artifacts/diamond-abi',
+            outputDir: options.outputDir || this.diamond.getDiamondAbiPath(),
             includeSourceInfo: true,
             validateSelectors: true,
             verbose: false,
@@ -162,7 +162,7 @@ class DiamondAbiGenerator {
             // Get the contract artifact
             let artifact;
             try {
-                artifact = await (0, contractMapping_1.getContractArtifact)(facetName);
+                artifact = await (0, contractMapping_1.getContractArtifact)(facetName, this.diamond);
             }
             catch (artifactError) {
                 if (this.options.verbose) {
@@ -334,10 +334,10 @@ class DiamondAbiGenerator {
                 }
             };
             // Write the combined artifact
-            const outputPath = (0, path_1.join)(this.options.outputDir, `${this.diamond.diamondName}.json`);
+            const outputPath = (0, path_1.join)(this.options.outputDir, `${this.diamond.getDiamondAbiFileName()}.json`);
             (0, fs_1.writeFileSync)(outputPath, JSON.stringify(diamondArtifact, null, 2));
             // Write a TypeScript interface file
-            const interfacePath = (0, path_1.join)(this.options.outputDir, `${this.diamond.diamondName}.d.ts`);
+            const interfacePath = (0, path_1.join)(this.options.outputDir, `${this.diamond.getDiamondAbiFileName()}.d.ts`);
             this.generateTypeScriptInterface(interfacePath);
             result.outputPath = outputPath;
             if (this.options.verbose) {

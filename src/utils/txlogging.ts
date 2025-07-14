@@ -5,6 +5,7 @@
 import chalk from "chalk";
 import { ContractTransactionResponse, Interface, Provider, TransactionReceipt, LogDescription, InterfaceAbi } from "ethers";
 import hre from "hardhat";
+import "@nomicfoundation/hardhat-ethers";
 
 
 /**
@@ -47,7 +48,7 @@ export async function logTx(
     "Block Hash": receipt.blockHash,
     "Confirmations": receipt.confirmations,
     "Timestamp": receipt.blockNumber
-      ? new Date((await tx.wait().then(() => (hre as any).ethers.provider.getBlock(receipt.blockNumber))).timestamp * 1000).toLocaleString()
+      ? new Date(((await tx.wait().then(() => hre.ethers.provider.getBlock(receipt.blockNumber))) || { timestamp: 0 }).timestamp * 1000).toLocaleString()
       : "N/A",
     "Created Contract": receipt.contractAddress ?? "N/A",
     "Created By": receipt.from,

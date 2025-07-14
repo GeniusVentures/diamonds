@@ -54,7 +54,7 @@ describe('Integration: Defender Deployment', function () {
     await fs.copy(callbackSourcePath, callbackDestPath);
 
     // Get hardhat signers
-    signers = await (hre as any).ethers.getSigners();
+    signers = await hre.ethers.getSigners();
 
     // Stub console.log for cleaner test output
     sinon.stub(console, 'log');
@@ -124,7 +124,7 @@ describe('Integration: Defender Deployment', function () {
     diamond = new Diamond(config, repository);
 
     // Setup the diamond
-    diamond.setProvider((hre as any).ethers.provider);
+    diamond.setProvider(hre.ethers.provider);
     diamond.setSigner(signers[0]);
 
     // Create the strategy with the mocked client
@@ -266,7 +266,7 @@ describe('Integration: Defender Deployment', function () {
       // Create new deployer with updated configuration
       const newRepository = new FileDeploymentRepository(diamond.getDiamondConfig());
       const newDiamond = new Diamond(diamond.getDiamondConfig(), newRepository);
-      newDiamond.setProvider((hre as any).ethers.provider);
+      newDiamond.setProvider(hre.ethers.provider);
       newDiamond.setSigner(signers[0]);
       newDiamond.updateDeployedDiamondData(existingDeployedData);
 

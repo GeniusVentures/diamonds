@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Diamond = void 0;
+const path_1 = require("path");
 const CallbackManager_1 = require("./CallbackManager");
 const types_1 = require("../types");
 class Diamond {
@@ -10,6 +11,8 @@ class Diamond {
     chainId;
     deploymentsPath;
     contractsPath;
+    diamondAbiPath;
+    diamondAbiFileName;
     deploymentId;
     facetSelectors = [];
     callbackManager;
@@ -29,6 +32,17 @@ class Diamond {
         this.chainId = config.chainId || 31337;
         this.deploymentsPath = config.deploymentsPath || "diamonds";
         this.contractsPath = config.contractsPath || "contracts";
+        this.diamondAbiFileName = config.diamondAbiFileName || config.diamondName;
+        // Set diamond ABI path - default to diamond-abi subdirectory of configFilePath directory
+        if (config.diamondAbiPath) {
+            this.diamondAbiPath = config.diamondAbiPath;
+        }
+        else {
+            const configDir = config.configFilePath
+                ? config.configFilePath.replace(/\/[^\/]*$/, '') // Remove filename from path
+                : (0, path_1.join)(this.deploymentsPath, config.diamondName);
+            this.diamondAbiPath = (0, path_1.join)(configDir, 'diamond-abi');
+        }
         this.repository = repository;
         this.deploymentId = repository.getDeploymentId();
         // Load existing deployment info
@@ -116,6 +130,15 @@ class Diamond {
     }
     getInitAddress() {
         return this.initAddress;
+    }
+    getDiamondAbiPath() {
+        return this.diamondAbiPath;
+    }
+    getDiamondAbiFileName() {
+        return this.diamondAbiFileName;
+    }
+    getDiamondAbiFilePath() {
+        return (0, path_1.join)(this.diamondAbiPath, `${this.diamondAbiFileName}.json`);
     }
 }
 exports.Diamond = Diamond;

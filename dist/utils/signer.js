@@ -9,6 +9,7 @@ exports.setEtherBalance = setEtherBalance;
 exports.impersonateAndFundSigner = impersonateAndFundSigner;
 const hardhat_1 = __importDefault(require("hardhat"));
 const common_1 = require("./common");
+require("@nomicfoundation/hardhat-ethers");
 /**
  * Impersonates a signer account. This is primarily used in Hardhat's testing environment
  * to simulate actions from accounts that are not part of the default test accounts.

@@ -1,3 +1,4 @@
+import "@nomicfoundation/hardhat-ethers";
 import { Interface } from "ethers";
 import { CreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client";
 import { DeployedDiamondData } from "../schemas";

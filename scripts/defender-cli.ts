@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import hre from 'hardhat';
+import "@nomicfoundation/hardhat-ethers";
 
 import { Diamond } from '../src/core/Diamond';
 import { DiamondDeployer } from '../src/core/DiamondDeployer';
@@ -99,10 +100,10 @@ async function createDiamond(config: CLIConfig): Promise<Diamond> {
   const diamond = new Diamond(diamondConfig, repository);
 
   // Setup provider and signer
-  diamond.setProvider((hre as any).ethers.provider);
+  diamond.setProvider(hre.ethers.provider);
 
   // Get signer from environment or use default
-  const signers = await (hre as any).ethers.getSigners();
+  const signers = await hre.ethers.getSigners();
   diamond.setSigner(signers[0]);
 
   return diamond;

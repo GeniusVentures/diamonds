@@ -18,7 +18,7 @@ describe('Diamond Setup Test', function () {
 
   before(async function () {
     await fs.ensureDir(TEMP_DIR);
-    signers = await (hre as any).ethers.getSigners();
+    signers = await hre.ethers.getSigners();
   });
 
   after(async function () {
@@ -83,7 +83,7 @@ module.exports = {
     const diamond = new Diamond(config, repository);
 
     // Setup the diamond
-    diamond.setProvider((hre as any).ethers.provider);
+    diamond.setProvider(hre.ethers.provider);
     diamond.setSigner(signers[0]);
 
     // Test basic functionality

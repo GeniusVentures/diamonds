@@ -11,6 +11,7 @@ exports.logTx = logTx;
 const chalk_1 = __importDefault(require("chalk"));
 const ethers_1 = require("ethers");
 const hardhat_1 = __importDefault(require("hardhat"));
+require("@nomicfoundation/hardhat-ethers");
 /**
  * Pretty‑prints a transaction receipt **and** decodes its logs.
  *

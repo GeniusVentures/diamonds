@@ -5,12 +5,12 @@ import {
   DeploymentRepository,
   DiamondConfig,
   cutKey
-} from '@gnus.ai/diamonds';
+} from 'diamonds';
 
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { OZDefenderDeploymentStrategy } from '@gnus.ai/diamonds'; // Adjust based on your export path
+import { OZDefenderDeploymentStrategy } from 'diamonds'; // Adjust based on your export path
 import { join } from 'path';
 
 export interface OZDiamondDeployerConfig extends DiamondConfig {

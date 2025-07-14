@@ -8,7 +8,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { multichain } from 'hardhat-multichain';
 import { getInterfaceID } from '../../scripts/utils/helpers';
 import { LocalDiamondDeployer, LocalDiamondDeployerConfig } from '../../scripts/setup/LocalDiamondDeployer';
-import { Diamond, deleteDeployInfo } from '@gnus.ai/diamonds';
+import { Diamond, deleteDeployInfo } from 'diamonds';
 import {
   ProxyDiamond,
   IERC20Upgradeable__factory,

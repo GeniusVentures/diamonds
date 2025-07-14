@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.logDiamondLoupe = logDiamondLoupe;
 exports.getDeployedFacets = getDeployedFacets;
 const ethers_1 = require("ethers");
+require("@nomicfoundation/hardhat-ethers");
 const chalk_1 = __importDefault(require("chalk"));
 const hardhat_1 = __importDefault(require("hardhat"));
 const txlogging_1 = require("./txlogging");

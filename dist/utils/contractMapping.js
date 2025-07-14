@@ -10,7 +10,14 @@ const hardhat_1 = require("hardhat");
  * Maps logical facet names to actual contract names available in artifacts.
  * This handles both production contracts and mock contracts for testing.
  */
-async function getContractName(logicalName) {
+async function getContractName(logicalName, diamond) {
+    // If diamond is provided, check for diamond-specific contract mappings
+    if (diamond) {
+        // Try to load diamond-specific ABI first
+        const diamondAbiFilePath = diamond.getDiamondAbiFilePath();
+        // For now, we'll still fall back to the standard mapping logic
+        // but this provides a hook for future diamond-specific mappings
+    }
     // Special diamond mappings for test environments
     const testDiamondMappings = {
         'TestDiamond': 'MockDiamond',
@@ -118,7 +125,7 @@ async function getContractName(logicalName) {
 /**
  * Maps logical diamond name to actual contract name available in artifacts.
  */
-async function getDiamondContractName(diamondName) {
+async function getDiamondContractName(diamondName, diamond) {
     // Special mappings for test environments
     const testMappings = {
         'TestDiamond': 'MockDiamond',
@@ -163,9 +170,9 @@ async function getDiamondContractName(diamondName) {
 /**
  * Gets the contract artifact for a logical name, trying both production and mock versions
  */
-async function getContractArtifact(logicalName) {
+async function getContractArtifact(logicalName, diamond) {
     // Use the same mapping logic as getContractName
-    const mappedName = await getContractName(logicalName);
+    const mappedName = await getContractName(logicalName, diamond);
     return await hardhat_1.artifacts.readArtifact(mappedName);
 }
 /**

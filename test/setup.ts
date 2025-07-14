@@ -9,25 +9,25 @@ import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
  * Test setup helper that deploys mock contracts for diamond testing
  */
 export async function setupMockContracts() {
-  const [deployer, ...accounts] = await (hre as any).ethers.getSigners();
+  const [deployer, ...accounts] = await hre.ethers.getSigners();
 
   // Deploy mock diamond cut facet
-  const DiamondCutFacet: ContractFactory = await (hre as any).ethers.getContractFactory('MockDiamondCutFacet');
+  const DiamondCutFacet: ContractFactory = await hre.ethers.getContractFactory('MockDiamondCutFacet');
   const diamondCutFacet = await DiamondCutFacet.deploy();
   await diamondCutFacet.waitForDeployment();
 
   // Deploy mock diamond loupe facet
-  const DiamondLoupeFacet: ContractFactory = await (hre as any).ethers.getContractFactory('MockDiamondLoupeFacet');
+  const DiamondLoupeFacet: ContractFactory = await hre.ethers.getContractFactory('MockDiamondLoupeFacet');
   const diamondLoupeFacet = await DiamondLoupeFacet.deploy();
   await diamondLoupeFacet.waitForDeployment();
 
   // Deploy mock test facet
-  const TestFacet: ContractFactory = await (hre as any).ethers.getContractFactory('MockTestFacet');
+  const TestFacet: ContractFactory = await hre.ethers.getContractFactory('MockTestFacet');
   const testFacet = await TestFacet.deploy();
   await testFacet.waitForDeployment();
 
   // Deploy mock diamond
-  const Diamond: ContractFactory = await (hre as any).ethers.getContractFactory('MockDiamond');
+  const Diamond: ContractFactory = await hre.ethers.getContractFactory('MockDiamond');
   const diamond = await Diamond.deploy(deployer.address, await diamondCutFacet.getAddress());
   await diamond.waitForDeployment();
 

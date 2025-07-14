@@ -105,13 +105,13 @@ describe('Integration: Dual Configuration Support', function () {
       const diamond = new Diamond(resolvedConfig, repository);
 
       // Set provider and signer
-      diamond.setProvider((hre as any).ethers.provider);
+      diamond.setProvider(hre.ethers.provider);
       diamond.setSigner(deployer);
 
       // Mock ethers.getContractFactory for this test
-      const originalGetContractFactory = (hre as any).ethers.getContractFactory;
+      const originalGetContractFactory = hre.ethers.getContractFactory;
       // @ts-ignore
-      (hre as any).ethers.getContractFactory = async (name: string) => {
+      hre.ethers.getContractFactory = async (name: string) => {
         // Simple mock that returns a deployable contract
         return {
           deploy: async () => {
@@ -165,7 +165,7 @@ describe('Integration: Dual Configuration Support', function () {
 
       } finally {
         // Restore original function
-        (hre as any).ethers.getContractFactory = originalGetContractFactory;
+        hre.ethers.getContractFactory = originalGetContractFactory;
       }
     });
   });

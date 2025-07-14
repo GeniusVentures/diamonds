@@ -65,7 +65,7 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
     setupSuccessfulDeploymentMocks(mocks);
 
     // Mock ethers.getContractFactory to avoid artifact lookup issues in tests
-    (sinon.stub((hre as any).ethers, 'getContractFactory') as any).callsFake((...args: any[]) => {
+    (sinon.stub(hre.ethers, 'getContractFactory') as any).callsFake((...args: any[]) => {
       // Return a mock factory with a minimal interface
       return Promise.resolve({
         interface: {
@@ -119,7 +119,7 @@ describe("Integration: OZDefenderDeploymentStrategy", function () {
     diamond = new Diamond(config, repository);
 
     // Set provider and signer
-    diamond.setProvider((hre as any).ethers.provider);
+    diamond.setProvider(hre.ethers.provider);
     diamond.setSigner(deployer);
   });
 

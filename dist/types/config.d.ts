@@ -5,6 +5,7 @@ export interface DiamondPathsConfig {
     configFilePath?: string;
     deployedDiamondDataFilePath?: string;
     writeDeployedDiamondData?: boolean;
+    diamondAbiPath?: string;
 }
 export interface DiamondsPathsConfig {
     paths: Record<string, DiamondPathsConfig>;
@@ -13,6 +14,7 @@ export interface DiamondConfig extends DiamondPathsConfig {
     diamondName: string;
     networkName?: string;
     chainId?: number;
+    diamondAbiFileName?: string;
 }
 export interface FileRepositoryConfig extends DiamondConfig {
     chainId: number;
