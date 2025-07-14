@@ -2,6 +2,7 @@ import hre from 'hardhat';
 import { toWei } from './common';
 import { JsonRpcProvider, Signer } from 'ethers';
 import '@nomicfoundation/hardhat-ethers';
+import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider';
 
 /**
  * Impersonates a signer account. This is primarily used in Hardhat's testing environment
@@ -37,7 +38,7 @@ export async function setEtherBalance(address: string, amount: bigint, provider:
  * @param deployerAddress - The address of the deployer account.
  * @param balance - The balance to set for the deployer account (in hex format).
  */
-export async function impersonateAndFundSigner(deployerAddress: string, provider: JsonRpcProvider): Promise<Signer> {
+export async function impersonateAndFundSigner(deployerAddress: string, provider: JsonRpcProvider | HardhatEthersProvider): Promise<Signer> {
   try {
     await provider.send('hardhat_impersonateAccount', [deployerAddress]);
     const signer = provider.getSigner(deployerAddress);

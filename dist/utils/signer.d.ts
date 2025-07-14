@@ -1,5 +1,6 @@
 import { JsonRpcProvider, Signer } from 'ethers';
 import '@nomicfoundation/hardhat-ethers';
+import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider';
 /**
  * Impersonates a signer account. This is primarily used in Hardhat's testing environment
  * to simulate actions from accounts that are not part of the default test accounts.
@@ -23,7 +24,7 @@ export declare function setEtherBalance(address: string, amount: bigint, provide
  * @param deployerAddress - The address of the deployer account.
  * @param balance - The balance to set for the deployer account (in hex format).
  */
-export declare function impersonateAndFundSigner(deployerAddress: string, provider: JsonRpcProvider): Promise<Signer>;
+export declare function impersonateAndFundSigner(deployerAddress: string, provider: JsonRpcProvider | HardhatEthersProvider): Promise<Signer>;
 /**
  * Updates the owner of the contract at the specified root address for testing purposes.
  * This involves transferring ownership from the current owner to the default signer in the Hardhat environment.

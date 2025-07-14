@@ -19,9 +19,10 @@ import "@nomicfoundation/hardhat-ethers";
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 import { join } from 'path';
 import 'hardhat-diamonds';
+import { HardhatEthersProvider } from '@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider';
 
 export interface LocalDiamondDeployerConfig extends DiamondConfig {
-  provider?: JsonRpcProvider;
+  provider?: JsonRpcProvider | HardhatEthersProvider;
   signer?: SignerWithAddress;
   localDiamondDeployerKey?: string;
 }
@@ -33,11 +34,11 @@ export class LocalDiamondDeployer {
   private diamond: Diamond | undefined;
   private verbose: boolean = true;
   private config: LocalDiamondDeployerConfig;
-  private provider: JsonRpcProvider;
+  private provider: JsonRpcProvider | HardhatEthersProvider;
   private signer: SignerWithAddress;
   private diamondName: string;
   private networkName: string = 'hardhat';
-  private chainId: number = 31337;
+  private chainId: bigint | number = 31337;
   private repository: DeploymentRepository;
 
   constructor(config: LocalDiamondDeployerConfig, repository: DeploymentRepository) {
@@ -67,9 +68,9 @@ export class LocalDiamondDeployer {
 
   public static async getInstance(config: LocalDiamondDeployerConfig): Promise<LocalDiamondDeployer> {
     if (!config.provider) {
-      config.provider = ethers.provider;
+      config.provider = hre.ethers.provider;
     } else {
-      ethers.provider = config.provider;
+      hre.ethers.provider = config.provider as any;
     }
     if (!config.networkName) {
       const networkName = (await config.provider?.getNetwork()).name || 'hardhat';
@@ -79,7 +80,11 @@ export class LocalDiamondDeployer {
       config.chainId = (await config.provider.getNetwork()).chainId || 31337;
     }
 
-    const key = config.localDiamondDeployerKey || await (cutKey(config.diamondName, config.networkName, config.chainId.toString()));
+    const key = config.localDiamondDeployerKey || await (cutKey(
+      config.diamondName,
+      config.networkName,
+      (config.chainId ?? 31337).toString()
+    ));
 
     if (!this.instances.has(key)) {
       const hardhatDiamonds: DiamondPathsConfig = hre.diamonds?.getDiamondConfig(config.diamondName);
@@ -112,13 +117,13 @@ export class LocalDiamondDeployer {
       repository.setWriteDeployedDiamondData(config.writeDeployedDiamondData || hardhatDiamonds?.writeDeployedDiamondData || false);
       const deployedDiamondData = repository.loadDeployedDiamondData();
 
-      const [signer0] = await ethers.getSigners();
+      const [signer0] = await hre.ethers.getSigners();
       // ethers.provider = config.provider;
       if (!deployedDiamondData.DeployerAddress) {
         config.signer = signer0;
       } else {
-        config.signer = await ethers.getSigner(deployedDiamondData.DeployerAddress);
-        await impersonateAndFundSigner(deployedDiamondData.DeployerAddress, config.provider);
+        config.signer = await hre.ethers.getSigner(deployedDiamondData.DeployerAddress);
+        await impersonateAndFundSigner(deployedDiamondData.DeployerAddress, config.provider as any);
       }
 
       const instance = new LocalDiamondDeployer(config, repository);

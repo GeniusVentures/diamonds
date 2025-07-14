@@ -1,4 +1,4 @@
-import { ContractTransactionResponse, Interface, Signer, JsonRpcProvider, TransactionReceipt, InterfaceAbi } from "ethers";
+import { ContractTransactionResponse, Interface, Signer, TransactionReceipt, InterfaceAbi, Provider } from "ethers";
 import '@nomicfoundation/hardhat-ethers';
 /** Optional convenience type for TS consumers (no TypeChain) */
 export interface FacetStruct {
@@ -40,5 +40,5 @@ export declare function logDiamondLoupe(tx: ContractTransactionResponse, diamond
  *                       (address + functionSelectors)
  *                       (see DiamondLoupeFacet.sol)
  */
-export declare function getDeployedFacets(diamondAddress: string, signerOrProvider?: Signer | JsonRpcProvider, receiptToDecode?: TransactionReceipt, logDeployedFacets?: boolean): Promise<FacetStruct[]>;
+export declare function getDeployedFacets(diamondAddress: string, signerOrProvider?: Signer | Provider, receiptToDecode?: TransactionReceipt, logDeployedFacets?: boolean): Promise<FacetStruct[]>;
 //# sourceMappingURL=loupe.d.ts.map

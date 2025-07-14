@@ -1,14 +1,15 @@
 import { DeployedDiamondData, DeployConfig, FacetsConfig } from "../schemas";
 import { CallbackManager } from "./CallbackManager";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { JsonRpcProvider, Provider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { DeploymentRepository } from "../repositories/DeploymentRepository";
 import { DiamondConfig, FunctionSelectorRegistryEntry, NewDeployedFacets, NewDeployedFacet } from "../types";
+import { HardhatEthersProvider } from "@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider";
 export declare class Diamond {
     private static instances;
     diamondName: string;
     networkName: string;
-    chainId: number;
+    chainId: number | bigint;
     deploymentsPath: string;
     contractsPath: string;
     diamondAbiPath: string;
@@ -21,7 +22,7 @@ export declare class Diamond {
     private facetsConfig;
     private repository;
     signer: Signer | undefined;
-    provider: JsonRpcProvider | undefined;
+    provider: JsonRpcProvider | Provider | HardhatEthersProvider | undefined;
     deployConfig: DeployConfig;
     newDeployment: boolean;
     initAddress: string | undefined;
@@ -40,8 +41,8 @@ export declare class Diamond {
     getDiamondConfig(): DiamondConfig;
     getDeployConfig(): DeployConfig;
     getFacetsConfig(): FacetsConfig;
-    setProvider(provider: JsonRpcProvider): void;
-    getProvider(): JsonRpcProvider | undefined;
+    setProvider(provider: JsonRpcProvider | Provider | HardhatEthersProvider): void;
+    getProvider(): JsonRpcProvider | Provider | HardhatEthersProvider | undefined;
     setSigner(signer: Signer): void;
     getSigner(): Signer | undefined;
     isUpgradeDeployment(): boolean;

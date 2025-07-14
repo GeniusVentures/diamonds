@@ -7,7 +7,7 @@ import {
   FacetsConfig
 } from "../schemas";
 import { CallbackManager } from "./CallbackManager";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { JsonRpcProvider, Provider } from "@ethersproject/providers";
 import { Signer } from "ethers";
 import { DeploymentRepository } from "../repositories/DeploymentRepository";
 import {
@@ -18,13 +18,14 @@ import {
   NewDeployedFacet
 } from "../types";
 import { ethers } from "ethers";
+import { HardhatEthersProvider } from "@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider";
 
 export class Diamond {
   private static instances: Map<string, Diamond> = new Map();
 
   public diamondName: string;
   public networkName: string;
-  public chainId: number;
+  public chainId: number | bigint;
   public deploymentsPath: string;
   public contractsPath: string;
   public diamondAbiPath: string;
@@ -37,7 +38,7 @@ export class Diamond {
   private facetsConfig: FacetsConfig;
   private repository: DeploymentRepository;
   public signer: Signer | undefined;
-  public provider: JsonRpcProvider | undefined;
+  public provider: JsonRpcProvider | Provider | HardhatEthersProvider | undefined;
   public deployConfig: DeployConfig;
   public newDeployment: boolean = true;
   public initAddress: string | undefined;
@@ -147,11 +148,11 @@ export class Diamond {
     return this.facetsConfig;
   }
 
-  public setProvider(provider: JsonRpcProvider): void {
+  public setProvider(provider: JsonRpcProvider | Provider | HardhatEthersProvider): void {
     this.provider = provider;
   }
 
-  public getProvider(): JsonRpcProvider | undefined {
+  public getProvider(): JsonRpcProvider | Provider | HardhatEthersProvider | undefined {
     return this.provider;
   }
 

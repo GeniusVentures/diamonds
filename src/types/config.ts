@@ -20,7 +20,7 @@ export interface DiamondsPathsConfig {
 export interface DiamondConfig extends DiamondPathsConfig {
   diamondName: string;
   networkName?: string;
-  chainId?: number;
+  chainId?: bigint | number;
   diamondAbiFileName?: string;
 }
 

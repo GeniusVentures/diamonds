@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// scripts/defender-cli.ts
 
 import { Command } from 'commander';
 import * as dotenv from 'dotenv';
@@ -100,7 +99,7 @@ async function createDiamond(config: CLIConfig): Promise<Diamond> {
   const diamond = new Diamond(diamondConfig, repository);
 
   // Setup provider and signer
-  diamond.setProvider(hre.ethers.provider);
+  diamond.setProvider(hre.ethers.provider as any);
 
   // Get signer from environment or use default
   const signers = await hre.ethers.getSigners();
