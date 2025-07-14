@@ -29,7 +29,7 @@ program
     .option('-d, --diamond <name>', 'Diamond name', 'GeniusDiamond')
     .option('-n, --network <name>', 'Network name', 'localhost')
     .option('-c, --chain-id <id>', 'Chain ID', '31337')
-    .option('-o, --output <dir>', 'Output directory', 'artifacts/diamond-abi')
+    .option('-o, --output <dir>', 'Output directory (overrides diamond config)', undefined)
     .option('--deployments-path <path>', 'Deployments path', './diamonds')
     .option('--contracts-path <path>', 'Contracts path', './contracts')
     .option('--include-source', 'Include source information in ABI', false)
@@ -62,9 +62,9 @@ program
             // Set provider and signer if available
             await setupDiamondConnection(diamond, options.verbose);
             
-            // Generate ABI
+            // Generate ABI using Diamond's configured paths
             const result = await generateDiamondAbi(diamond, {
-                outputDir: options.output,
+                outputDir: options.output || diamond.getDiamondAbiPath(),
                 includeSourceInfo: options.includeSource,
                 validateSelectors: options.validateSelectors,
                 verbose: options.verbose
