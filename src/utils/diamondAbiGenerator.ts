@@ -74,7 +74,7 @@ export class DiamondAbiGenerator {
   constructor(options: DiamondAbiGenerationOptions) {
     this.diamond = options.diamond;
     this.options = {
-      outputDir: 'artifacts/diamond-abi',
+      outputDir: options.outputDir || this.diamond.getDiamondAbiPath(),
       includeSourceInfo: true,
       validateSelectors: true,
       verbose: false,
@@ -216,7 +216,7 @@ export class DiamondAbiGenerator {
       // Get the contract artifact
       let artifact;
       try {
-        artifact = await getContractArtifact(facetName);
+        artifact = await getContractArtifact(facetName, this.diamond);
       } catch (artifactError) {
         if (this.options.verbose) {
           console.log(chalk.yellow(`⚠️  Artifact loading failed for ${facetName}: ${artifactError}`));
@@ -413,11 +413,11 @@ export class DiamondAbiGenerator {
       };
 
       // Write the combined artifact
-      const outputPath = join(this.options.outputDir, `${this.diamond.diamondName}.json`);
+      const outputPath = join(this.options.outputDir, `${this.diamond.getDiamondAbiFileName()}.json`);
       writeFileSync(outputPath, JSON.stringify(diamondArtifact, null, 2));
       
       // Write a TypeScript interface file
-      const interfacePath = join(this.options.outputDir, `${this.diamond.diamondName}.d.ts`);
+      const interfacePath = join(this.options.outputDir, `${this.diamond.getDiamondAbiFileName()}.d.ts`);
       this.generateTypeScriptInterface(interfacePath);
       
       result.outputPath = outputPath;

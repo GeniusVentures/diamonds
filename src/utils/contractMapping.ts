@@ -1,12 +1,21 @@
 import { artifacts } from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Artifact } from 'hardhat/types';
+import { Diamond } from '../core/Diamond';
 
 /**
  * Maps logical facet names to actual contract names available in artifacts.
  * This handles both production contracts and mock contracts for testing.
  */
-export async function getContractName(logicalName: string): Promise<string> {
+export async function getContractName(logicalName: string, diamond?: Diamond): Promise<string> {
+  // If diamond is provided, check for diamond-specific contract mappings
+  if (diamond) {
+    // Try to load diamond-specific ABI first
+    const diamondAbiFilePath = diamond.getDiamondAbiFilePath();
+    
+    // For now, we'll still fall back to the standard mapping logic
+    // but this provides a hook for future diamond-specific mappings
+  }
   // Special diamond mappings for test environments
   const testDiamondMappings: Record<string, string> = {
     'TestDiamond': 'MockDiamond',
@@ -110,7 +119,7 @@ export async function getContractName(logicalName: string): Promise<string> {
 /**
  * Maps logical diamond name to actual contract name available in artifacts.
  */
-export async function getDiamondContractName(diamondName: string): Promise<string> {
+export async function getDiamondContractName(diamondName: string, diamond?: Diamond): Promise<string> {
   // Special mappings for test environments
   const testMappings: Record<string, string> = {
     'TestDiamond': 'MockDiamond',
@@ -155,9 +164,9 @@ export async function getDiamondContractName(diamondName: string): Promise<strin
 /**
  * Gets the contract artifact for a logical name, trying both production and mock versions
  */
-export async function getContractArtifact(logicalName: string): Promise<Artifact> {
+export async function getContractArtifact(logicalName: string, diamond?: Diamond): Promise<Artifact> {
   // Use the same mapping logic as getContractName
-  const mappedName = await getContractName(logicalName);
+  const mappedName = await getContractName(logicalName, diamond);
   return await artifacts.readArtifact(mappedName);
 }
 

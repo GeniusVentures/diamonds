@@ -27,13 +27,20 @@ describe('DiamondAbiGenerator', () => {
             networkName: 'test',
             chainId: 31337,
             deploymentsPath: './test-diamonds',
-            contractsPath: './contracts'
+            contractsPath: './contracts',
+            diamondAbiFileName: 'TestDiamond',
+            diamondAbiPath: './test-output/diamond-abi'
         };
 
         // Create the deployment directory and config file
         const deploymentDir = join('./test-diamonds', 'TestDiamond');
         if (!existsSync(deploymentDir)) {
             mkdirSync(deploymentDir, { recursive: true });
+        }
+
+        // Create the diamond ABI directory
+        if (!existsSync('./test-output/diamond-abi')) {
+            mkdirSync('./test-output/diamond-abi', { recursive: true });
         }
 
         // Create a minimal deployment config file
@@ -77,6 +84,82 @@ describe('DiamondAbiGenerator', () => {
         if (existsSync('./test-diamonds')) {
             rmSync('./test-diamonds', { recursive: true, force: true });
         }
+    });
+
+    describe('Diamond Configuration', () => {
+        it('should use configured diamond ABI path and filename', () => {
+            expect(diamond.getDiamondAbiPath()).to.include('test-output/diamond-abi');
+            expect(diamond.getDiamondAbiFileName()).to.equal('TestDiamond');
+            expect(diamond.getDiamondAbiFilePath()).to.include('TestDiamond.json');
+        });
+
+        it('should default diamond ABI filename to diamond name when not specified', async () => {
+            const defaultConfig = {
+                diamondName: 'MyCustomDiamond',
+                networkName: 'test',
+                chainId: 31337,
+                deploymentsPath: './test-diamonds',
+                contractsPath: './contracts'
+            };
+
+            // Create the deployment directory and config file for this test
+            const deploymentDir = join('./test-diamonds', 'MyCustomDiamond');
+            if (!existsSync(deploymentDir)) {
+                mkdirSync(deploymentDir, { recursive: true });
+            }
+
+            const configFilePath = join(deploymentDir, 'mycustomdiamond.config.json');
+            const minimalConfig = {
+                protocolVersion: 1,
+                facets: {
+                    DiamondCutFacet: {
+                        priority: 0,
+                        libraries: []
+                    }
+                }
+            };
+            writeFileSync(configFilePath, JSON.stringify(minimalConfig, null, 2));
+
+            const defaultRepository = new FileDeploymentRepository(defaultConfig);
+            const defaultDiamond = new Diamond(defaultConfig, defaultRepository);
+
+            expect(defaultDiamond.getDiamondAbiFileName()).to.equal('MyCustomDiamond');
+        });
+
+        it('should use custom diamond ABI filename when specified', async () => {
+            const customConfig = {
+                diamondName: 'MyDiamond',
+                networkName: 'test',
+                chainId: 31337,
+                deploymentsPath: './test-diamonds',
+                contractsPath: './contracts',
+                diamondAbiFileName: 'CustomAbiName'
+            };
+
+            // Create the deployment directory and config file for this test
+            const deploymentDir = join('./test-diamonds', 'MyDiamond');
+            if (!existsSync(deploymentDir)) {
+                mkdirSync(deploymentDir, { recursive: true });
+            }
+
+            const configFilePath = join(deploymentDir, 'mydiamond.config.json');
+            const minimalConfig = {
+                protocolVersion: 1,
+                facets: {
+                    DiamondCutFacet: {
+                        priority: 0,
+                        libraries: []
+                    }
+                }
+            };
+            writeFileSync(configFilePath, JSON.stringify(minimalConfig, null, 2));
+
+            const customRepository = new FileDeploymentRepository(customConfig);
+            const customDiamond = new Diamond(customConfig, customRepository);
+
+            expect(customDiamond.getDiamondAbiFileName()).to.equal('CustomAbiName');
+            expect(customDiamond.getDiamondAbiFilePath()).to.include('CustomAbiName.json');
+        });
     });
 
     describe('Basic ABI Generation', () => {

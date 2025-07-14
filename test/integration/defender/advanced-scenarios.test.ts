@@ -47,7 +47,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         chainId: 1,
         deploymentsPath: TEMP_DIR,
         contractsPath: 'contracts',
-        writeDeployedDiamondData: true
+        writeDeployedDiamondData: true,
+        diamondAbiFileName: DIAMOND_NAME,
+        diamondAbiPath: path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi')
       };
 
       // Create configuration with 15 facets (simulating large deployment)
@@ -133,7 +135,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         chainId: 137,
         deploymentsPath: TEMP_DIR,
         contractsPath: 'contracts',
-        writeDeployedDiamondData: true
+        writeDeployedDiamondData: true,
+        diamondAbiFileName: DIAMOND_NAME,
+        diamondAbiPath: path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi')
       };
 
       // Setup existing deployment data
@@ -208,7 +212,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         chainId: 1,
         deploymentsPath: TEMP_DIR,
         contractsPath: 'contracts',
-        writeDeployedDiamondData: true
+        writeDeployedDiamondData: true,
+        diamondAbiFileName: DIAMOND_NAME,
+        diamondAbiPath: path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi')
       };
 
       // Setup config
@@ -265,7 +271,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         chainId: 31337,
         deploymentsPath: TEMP_DIR,
         contractsPath: 'contracts',
-        writeDeployedDiamondData: true
+        writeDeployedDiamondData: true,
+        diamondAbiFileName: DIAMOND_NAME,
+        diamondAbiPath: path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi')
       };
 
       // Setup basic config
@@ -322,7 +330,9 @@ describe('Integration: Defender Advanced Scenarios', function () {
         chainId: 31337,
         deploymentsPath: TEMP_DIR,
         contractsPath: 'contracts',
-        writeDeployedDiamondData: true
+        writeDeployedDiamondData: true,
+        diamondAbiFileName: DIAMOND_NAME,
+        diamondAbiPath: path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi')
       };
 
       // Create large existing deployment data

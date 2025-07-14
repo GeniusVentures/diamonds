@@ -41,13 +41,13 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     console.log(chalk.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName}`));
 
     // Deploy the DiamondCutFacet - use contract mapping to get correct name
-    const diamondCutContractName = await getContractName("DiamondCutFacet");
+    const diamondCutContractName = await getContractName("DiamondCutFacet", diamond);
     const diamondCutFactory = await (hre as any).ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
     const diamondCutFacet = await diamondCutFactory.deploy();
     await diamondCutFacet.waitForDeployment();
 
     // Deploy the Diamond - use contract mapping to get correct name
-    const diamondContractName = await getDiamondContractName(diamond.diamondName);
+    const diamondContractName = await getDiamondContractName(diamond.diamondName, diamond);
     const diamondFactory = await (hre as any).ethers.getContractFactory(diamondContractName, diamond.getSigner()!);
     const diamondContract = await diamondFactory.deploy(await diamond.getSigner()!.getAddress(), await diamondCutFacet.getAddress());
     await diamondContract.waitForDeployment();
@@ -148,7 +148,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         }
         // Deploy the facet contract - use contract mapping to get correct name
         const signer = diamond.getSigner()!;
-        const facetContractName = await getContractName(facetName);
+        const facetContractName = await getContractName(facetName, diamond);
         const facetFactory = await (hre as any).ethers.getContractFactory(facetContractName, { signer });
         const facetContract = await facetFactory.deploy();
         await facetContract.waitForDeployment();
@@ -449,7 +449,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
       console.log(chalk.blueBright(`▶ Running ${initFunction} from the ${facetName} facet`));
       // const contract = await ethers.getContractAt(facetName, diamondSignerAddress!);
-      const facetContractName = await getContractName(facetName);
+      const facetContractName = await getContractName(facetName, diamond);
       const initContract = await (hre as any).ethers.getContractAt(facetContractName, diamond.getDeployedDiamondData().DiamondAddress!);
       const signerDiamondContract = initContract.connect(signer);
 

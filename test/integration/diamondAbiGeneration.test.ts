@@ -26,13 +26,20 @@ describe('Diamond ABI Integration Tests', () => {
             networkName: 'hardhat',
             chainId: 31337,
             deploymentsPath: './test-diamonds-integration',
-            contractsPath: './contracts'
+            contractsPath: './contracts',
+            diamondAbiFileName: 'IntegrationTestDiamond',
+            diamondAbiPath: './test-output-integration/diamond-abi'
         };
 
         // Create the deployment directory and config file
         const deploymentDir = join('./test-diamonds-integration', 'IntegrationTestDiamond');
         if (!existsSync(deploymentDir)) {
             mkdirSync(deploymentDir, { recursive: true });
+        }
+
+        // Create the diamond ABI directory
+        if (!existsSync('./test-output-integration/diamond-abi')) {
+            mkdirSync('./test-output-integration/diamond-abi', { recursive: true });
         }
 
         // Create a minimal deployment config file
@@ -65,13 +72,13 @@ describe('Diamond ABI Integration Tests', () => {
         const signers = await (hre as any).ethers.getSigners();
         diamond.setSigner(signers[0]);
 
-        testOutputDir = './test-output/diamond-abi-integration';
+        testOutputDir = './test-output-integration/diamond-abi';
     });
 
     after(() => {
         // Clean up test output
-        if (existsSync(testOutputDir)) {
-            rmSync(testOutputDir, { recursive: true, force: true });
+        if (existsSync('./test-output-integration')) {
+            rmSync('./test-output-integration', { recursive: true, force: true });
         }
         if (existsSync('./test-diamonds-integration')) {
             rmSync('./test-diamonds-integration', { recursive: true, force: true });

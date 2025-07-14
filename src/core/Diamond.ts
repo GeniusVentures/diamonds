@@ -27,6 +27,8 @@ export class Diamond {
   public chainId: number;
   public deploymentsPath: string;
   public contractsPath: string;
+  public diamondAbiPath: string;
+  public diamondAbiFileName: string;
   public deploymentId: string;
   public facetSelectors: string[] = [];
   public callbackManager: CallbackManager;
@@ -47,6 +49,18 @@ export class Diamond {
     this.chainId = config.chainId || 31337;
     this.deploymentsPath = config.deploymentsPath || "diamonds";
     this.contractsPath = config.contractsPath || "contracts";
+    this.diamondAbiFileName = config.diamondAbiFileName || config.diamondName;
+    
+    // Set diamond ABI path - default to diamond-abi subdirectory of configFilePath directory
+    if (config.diamondAbiPath) {
+      this.diamondAbiPath = config.diamondAbiPath;
+    } else {
+      const configDir = config.configFilePath 
+        ? config.configFilePath.replace(/\/[^\/]*$/, '') // Remove filename from path
+        : join(this.deploymentsPath, config.diamondName);
+      this.diamondAbiPath = join(configDir, 'diamond-abi');
+    }
+    
     this.repository = repository;
     this.deploymentId = repository.getDeploymentId();
 
@@ -164,6 +178,18 @@ export class Diamond {
   }
   public getInitAddress(): string | undefined {
     return this.initAddress;
+  }
+
+  public getDiamondAbiPath(): string {
+    return this.diamondAbiPath;
+  }
+
+  public getDiamondAbiFileName(): string {
+    return this.diamondAbiFileName;
+  }
+
+  public getDiamondAbiFilePath(): string {
+    return join(this.diamondAbiPath, `${this.diamondAbiFileName}.json`);
   }
 }
 

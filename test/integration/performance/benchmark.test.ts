@@ -465,7 +465,7 @@ module.exports = {
       const initialMemory = process.memoryUsage();
 
       // Create multiple diamond instances
-      const diamonds = [];
+      const diamonds: Diamond[] = [];
       for (let i = 0; i < 20; i++) {
         const repository = new FileDeploymentRepository(config);
         const diamond = new Diamond(config, repository);
@@ -552,7 +552,7 @@ module.exports = {
         { facets: 20, selectorsPerFacet: 40 }
       ];
 
-      const results = [];
+      const results: any[] = [];
 
       for (const level of complexityLevels) {
         const config = createBenchmarkConfig(level.facets);
@@ -565,7 +565,7 @@ module.exports = {
 
         // Add complex selector configurations
         Object.values(complexConfig.facets).forEach((facet: any, index) => {
-          const selectors = [];
+          const selectors: string[] = [];
           for (let i = 0; i < level.selectorsPerFacet; i++) {
             selectors.push(`0x${index.toString(16).padStart(2, '0')}${i.toString(16).padStart(6, '0')}`);
           }

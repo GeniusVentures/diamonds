@@ -191,7 +191,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       // Get DiamondCutFacet interface for function selectors
       let diamondCutFacetFunctionSelectors: string[] = [];
       try {
-        const diamondCutContractName = await getContractName("DiamondCutFacet");
+        const diamondCutContractName = await getContractName("DiamondCutFacet", diamond);
         const diamondCutFactory = await (hre as any).ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
         diamondCutFacetFunctionSelectors = [];
         diamondCutFactory.interface.forEachFunction((func: any) => {
@@ -313,8 +313,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const stepNameCut = 'deploy-diamondcutfacet';
     const cutStep = store.getStep(stepNameCut);
     if (!cutStep || (cutStep.status !== 'executed' && cutStep.status !== 'failed')) {
-      const diamondCutContractName = await getContractName('DiamondCutFacet');
-      const diamondCutArtifact = await getContractArtifact('DiamondCutFacet');
+      const diamondCutContractName = await getContractName('DiamondCutFacet', diamond);
+      const diamondCutArtifact = await getContractArtifact('DiamondCutFacet', diamond);
       const cutRequest: DeployContractRequest = {
         network,
         contractName: diamondCutContractName,
@@ -345,8 +345,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const stepNameDiamond = 'deploy-diamond';
     const diamondStep = store.getStep(stepNameDiamond);
     if (!diamondStep || (diamondStep.status !== 'executed' && diamondStep.status !== 'failed')) {
-      const diamondContractName = await getDiamondContractName(diamond.diamondName);
-      const diamondArtifact = await getContractArtifact(diamond.diamondName);
+      const diamondContractName = await getDiamondContractName(diamond.diamondName, diamond);
+      const diamondArtifact = await getContractArtifact(diamond.diamondName, diamond);
       const diamondRequest: DeployContractRequest = {
         network,
         contractName: diamondContractName,
@@ -421,8 +421,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
       console.log(chalk.cyan(`🔧 Deploying facet ${facetName} to version ${targetVersion}...`));
 
-      const facetContractName = await getContractName(facetName);
-      const facetArtifact = await getContractArtifact(facetName);
+      const facetContractName = await getContractName(facetName, diamond);
+      const facetArtifact = await getContractArtifact(facetName, diamond);
       const deployRequest: DeployContractRequest = {
         network,
         contractName: facetContractName,

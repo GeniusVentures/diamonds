@@ -46,6 +46,7 @@ describe('Integration: Defender Deployment', function () {
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'deployments'));
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', 'defender'));
     await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'));
+    await fs.ensureDir(path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi'));
 
     // Copy callback files to the test directory
     const callbackSourcePath = path.join(__dirname, '../../mocks/callbacks/TestFacet.js');
@@ -114,7 +115,9 @@ describe('Integration: Defender Deployment', function () {
       contractsPath: 'test/mocks/contracts',
       callbacksPath: path.join(TEMP_DIR, DIAMOND_NAME, 'callbacks'),
       configFilePath: path.join(TEMP_DIR, DIAMOND_NAME, `${DIAMOND_NAME.toLowerCase()}.config.json`),
-      deployedDiamondDataFilePath: path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', `${DIAMOND_NAME.toLowerCase()}-${NETWORK_NAME}-${CHAIN_ID}.json`)
+      deployedDiamondDataFilePath: path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', `${DIAMOND_NAME.toLowerCase()}-${NETWORK_NAME}-${CHAIN_ID}.json`),
+      diamondAbiFileName: DIAMOND_NAME,
+      diamondAbiPath: path.join(TEMP_DIR, DIAMOND_NAME, 'diamond-abi')
     };
 
     repository = new FileDeploymentRepository(config);
