@@ -101,9 +101,6 @@ class BaseDeploymentStrategy {
         const deployedDiamondData = diamond.getDeployedDiamondData();
         const deployedFacets = deployedDiamondData.DeployedFacets || {};
         const facetCuts = [];
-        // const sortedFacetNames = Object.keys(facetsConfig).sort((a, b) => {
-        //   return (facetsConfig[a].priority || 1000) - (facetsConfig[b].priority || 1000);
-        // });
         const sortedFacetNames = Object.keys(deployConfig.facets)
             .sort((a, b) => {
             return (deployConfig.facets[a].priority || 1000) - (deployConfig.facets[b].priority || 1000);
@@ -359,7 +356,6 @@ class BaseDeploymentStrategy {
             }
         }
         /* -------------------------- Perform the diamond cut -----------------------*/
-        const chainId = await hardhat_1.default.ethers.provider.getNetwork();
         const facetSelectorCutMap = facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors }));
         const tx = await signerDiamondContract.diamondCut(facetSelectorCutMap, initAddress, initCalldata);
         /* --------------------- Update the deployed diamond data ------------------ */

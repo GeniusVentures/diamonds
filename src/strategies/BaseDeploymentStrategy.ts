@@ -127,10 +127,6 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     const deployedFacets = deployedDiamondData.DeployedFacets || {};
     const facetCuts: FacetDeploymentInfo[] = [];
 
-    // const sortedFacetNames = Object.keys(facetsConfig).sort((a, b) => {
-    //   return (facetsConfig[a].priority || 1000) - (facetsConfig[b].priority || 1000);
-    // });
-
     const sortedFacetNames = Object.keys(deployConfig.facets)
       .sort((a, b) => {
         return (deployConfig.facets[a].priority || 1000) - (deployConfig.facets[b].priority || 1000);
@@ -423,7 +419,6 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     }
 
     /* -------------------------- Perform the diamond cut -----------------------*/
-    const chainId = await hre.ethers.provider.getNetwork();
     const facetSelectorCutMap = facetCuts.map(fc => ({ facetAddress: fc.facetAddress, action: fc.action, functionSelectors: fc.functionSelectors }));
     const tx = await (signerDiamondContract as any).diamondCut(
       facetSelectorCutMap,
