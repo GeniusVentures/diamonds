@@ -46,7 +46,7 @@ export declare function deleteDeployInfo(path: string): void;
 export declare function validateDeployFile(path: string): boolean;
 export declare function loadFacetsConfig(deploymentsPath: string, diamondName: string): DeployConfig;
 /**
- * Loads and validates the facets file.
+ * Loads and validates the facets config <diamondName>.config.json file.
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */

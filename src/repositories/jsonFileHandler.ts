@@ -158,7 +158,7 @@ export function loadFacetsConfig(
 }
 
 /**
- * Loads and validates the facets file.
+ * Loads and validates the facets config <diamondName>.config.json file.
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */
@@ -249,4 +249,4 @@ export const validateDeployConfig = (filePath: string): boolean => {
     console.error('Validation failed:', e);
     return false;
   }
-};
+}

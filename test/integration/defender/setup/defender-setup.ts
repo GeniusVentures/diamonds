@@ -86,6 +86,8 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
 
   // Standard deployment response pattern
   let deploymentCounter = 0;
+  const deploymentMap = new Map<string, any>(); // Track deployments
+  
   mockDeployClient.deployContract.callsFake(async (request: any) => {
     deploymentCounter++;
     console.log(`[MOCK] deployContract called ${deploymentCounter} times with:`, request.contractName);
@@ -93,7 +95,7 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    return {
+    const deployment = {
       deploymentId: `defender-deploy-id-${deploymentCounter}`,
       status: "pending",
       createdAt: new Date().toISOString(),
@@ -102,6 +104,12 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
       network: request.network || "sepolia",
       artifactPayload: request.artifactPayload || "",
     };
+    
+    // Store deployment for later retrieval
+    deploymentMap.set(deployment.deploymentId, deployment);
+    
+    console.log(`[MOCK] deployContract returning:`, deployment);
+    return deployment;
   });
 
   // Standard get deployed contract response pattern
@@ -120,16 +128,19 @@ export function setupSuccessfulDeploymentMocks(mocks: MockDefenderClients) {
     ];
 
     const index = parseInt(deploymentId.split("-").pop() || "1", 10) - 1;
+    const deployment = deploymentMap.get(deploymentId);
+    
     return {
       deploymentId,
       status: "completed",
-      contractAddress: contractAddresses[index] || contractAddresses[0],
+      address: contractAddresses[index] || contractAddresses[0], // Use 'address' instead of 'contractAddress'
+      contractAddress: contractAddresses[index] || contractAddresses[0], // Keep both for compatibility
       txHash: `0xabcdef${index.toString().padStart(58, "0")}`,
       createdAt: new Date().toISOString(),
-      contractName: `Contract${index + 1}`,
-      contractPath: `contracts/Contract${index + 1}.sol`,
-      network: "sepolia",
-      artifactPayload: "",
+      contractName: deployment?.contractName || `Contract${index + 1}`,
+      contractPath: deployment?.contractPath || `contracts/Contract${index + 1}.sol`,
+      network: deployment?.network || "sepolia",
+      artifactPayload: deployment?.artifactPayload || "",
     };
   });
 
@@ -231,7 +242,7 @@ export const DEFAULT_DEFENDER_CONFIG: DefenderTestConfig = {
   API_SECRET: "test-api-secret",
   RELAYER_ADDRESS: "0x1234567890123456789012345678901234567890",
   SAFE_ADDRESS: "0x0987654321098765432109876543210987654321",
-  AUTO_APPROVE: true,
+  AUTO_APPROVE: false, // Disable auto-approve to prevent timeout issues in tests
 };
 
 /**
@@ -414,10 +425,12 @@ export function setupBatchOperationMocks(): MockDefenderClients {
   // Setup get deployed contract mock
   mocks.mockDeployClient.getDeployedContract.callsFake(async (deploymentId: string) => {
     // Simulate deployment completion
+    const contractAddress = `0x${deployCounter.toString(16).padStart(40, '0')}`;
     return {
       deploymentId,
       status: 'completed',
-      contractAddress: `0x${deployCounter.toString(16).padStart(40, '0')}`,
+      address: contractAddress, // Add 'address' field for OZDefender compatibility
+      contractAddress: contractAddress, // Keep both for compatibility
     };
   });
 

@@ -127,7 +127,13 @@ describe('Integration: Defender Deployment', function () {
     diamond.setProvider(hre.ethers.provider);
     diamond.setSigner(signers[0]);
 
-    // Create the strategy with the mocked client
+  });
+
+  beforeEach(function () {
+    // Create fresh mocks for each test
+    mocks = createDefenderMocks();
+    
+    // Create the strategy with the fresh mocked client
     strategy = new OZDefenderDeploymentStrategy(
       DEFAULT_DEFENDER_CONFIG.API_KEY,
       DEFAULT_DEFENDER_CONFIG.API_SECRET,
@@ -141,11 +147,36 @@ describe('Integration: Defender Deployment', function () {
 
     // Create deployer
     deployer = new DiamondDeployer(diamond, strategy);
+    
+    // Clean up deployment state files to ensure fresh deployment
+    const deploymentStateDir = path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', 'defender');
+    const deploymentDataFile = path.join(TEMP_DIR, DIAMOND_NAME, 'deployments', `${DIAMOND_NAME.toLowerCase()}-${NETWORK_NAME}-${CHAIN_ID}.json`);
+    
+    // Remove existing deployment state files
+    if (fs.existsSync(deploymentStateDir)) {
+      fs.removeSync(deploymentStateDir);
+    }
+    if (fs.existsSync(deploymentDataFile)) {
+      fs.removeSync(deploymentDataFile);
+    }
+    
+    // Reset the diamond deployment state to ensure fresh deployment
+    const emptyDeployment = {
+      DiamondAddress: "",
+      DeployerAddress: "",
+      DeployedFacets: {},
+      ExternalLibraries: {},
+      protocolVersion: 0,
+    };
+    diamond.updateDeployedDiamondData(emptyDeployment);
+    
+    // Clear any cached diamond state
+    (diamond as any).isUpgradeDeployment = undefined;
   });
 
   afterEach(function () {
-    // Restore all mocks
-    sinon.restore();
+    // Reset mocks after each test
+    mocks.restore();
   });
 
   after(async function () {

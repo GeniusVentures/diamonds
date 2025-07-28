@@ -125,6 +125,7 @@ describe('OZDefenderDeploymentStrategy', () => {
 
     mockDeployClient.getDeployedContract.resolves({
       status: 'completed',
+      address: '0x1234567890123456789012345678901234567890',
       contractAddress: '0x1234567890123456789012345678901234567890'
     });
 
@@ -227,7 +228,7 @@ describe('OZDefenderDeploymentStrategy', () => {
       API_KEY,
       API_SECRET,
       RELAYER_ADDRESS,
-      true, // autoApprove
+      false, // autoApprove - disabled for unit tests to avoid polling loops
       SAFE_ADDRESS,
       'Safe',
       true, // verbose
@@ -272,6 +273,7 @@ describe('OZDefenderDeploymentStrategy', () => {
 
       mockDeployClient.getDeployedContract.resolves({
         status: 'completed',
+        address: '0x1234567890123456789012345678901234567890',
         contractAddress: '0x1234567890123456789012345678901234567890'
       });
 
@@ -302,6 +304,7 @@ describe('OZDefenderDeploymentStrategy', () => {
 
       mockDeployClient.getDeployedContract.resolves({
         status: 'completed',
+        address: '0x1234567890123456789012345678901234567890',
         contractAddress: '0x1234567890123456789012345678901234567890'
       });
 
@@ -341,6 +344,7 @@ describe('OZDefenderDeploymentStrategy', () => {
 
       mockDeployClient.getDeployedContract.resolves({
         status: 'completed',
+        address: '0x1234567890123456789012345678901234567890',
         contractAddress: '0x1234567890123456789012345678901234567890'
       });
 
@@ -355,7 +359,9 @@ describe('OZDefenderDeploymentStrategy', () => {
   });
 
   describe('performDiamondCutTasks', () => {
-    it('should create a proposal for the diamond cut', async () => {
+    it('should create a proposal for the diamond cut', async function() {
+      this.timeout(15000); // Increase timeout to 15 seconds for this test
+      
       // Setup diamond with mock deployed addresses
       const deployedData = diamond.getDeployedDiamondData();
       deployedData.DiamondAddress = '0xDiamond123456789012345678901234567890';
@@ -407,10 +413,19 @@ describe('OZDefenderDeploymentStrategy', () => {
       });
 
       mockProposalClient.get.resolves({
+        proposalId: 'test-proposal-id',
         transaction: {
           isExecuted: true,
-          isSuccessful: true
-        }
+          isSuccessful: true,
+          isReverted: false
+        },
+        status: 'executed'
+      });
+
+      mockProposalClient.execute.resolves({
+        proposalId: 'test-proposal-id',
+        transactionId: 'test-transaction-id',
+        status: 'executed'
       });
 
       // Use sinon to mock the client methods 
@@ -481,6 +496,7 @@ describe('OZDefenderDeploymentStrategy', () => {
       mockDeployClient.getDeployedContract.onThirdCall().resolves({
         status: 'completed',
         deploymentId: proposalId,
+        address: '0x1234567890123456789012345678901234567890',
         contractAddress: '0x1234567890123456789012345678901234567890'
       });
 

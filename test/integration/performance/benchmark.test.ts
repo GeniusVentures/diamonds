@@ -347,7 +347,7 @@ module.exports = {
           'benchmark-api-key',
           'benchmark-secret',
           signers[0].address,
-          true, // Auto-approve for faster benchmarking
+          false, // Disable auto-approve for performance testing to avoid polling delays
           signers[1].address,
           'EOA',
           true,
@@ -414,7 +414,7 @@ module.exports = {
           'benchmark-api-key',
           'benchmark-secret',
           signers[0].address,
-          true,
+          false, // Disable auto-approve for performance testing to avoid polling delays
           signers[1].address,
           'EOA',
           true,

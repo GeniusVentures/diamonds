@@ -135,7 +135,7 @@ function loadFacetsConfig(deploymentsPath, diamondName) {
     return facets;
 }
 /**
- * Loads and validates the facets file.
+ * Loads and validates the facets config <diamondName>.config.json file.
  * @param filePath - The path to the facets file.
  * @returns The parsed and validated facets object.
  */

@@ -3,9 +3,10 @@ import { Diamond } from '../core';
 import { FacetCutAction, PollOptions } from '../types';
 import chalk from 'chalk';
 import hre from 'hardhat';
-import { ethers } from 'ethers';
+import { AbiCoder, ethers } from 'ethers';
 import { Artifact } from 'hardhat/types';
 import { join } from 'path';
+import * as fs from 'fs';
 import { object } from 'zod';
 import { DeployClient } from '@openzeppelin/defender-sdk-deploy-client';
 import { Network } from '@openzeppelin/defender-sdk-base-client';
@@ -96,7 +97,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     options: PollOptions = {}
   ): Promise<DeploymentResponse | null> {
     const {
-      maxAttempts = process.env.NODE_ENV === 'test' ? 1 : 10,
+      maxAttempts = process.env.NODE_ENV === 'test' ? 1 : 30, // Increase for manual approval workflows
       // Use shorter delays in test environments
       initialDelayMs = process.env.NODE_ENV === 'test' ? 100 : 8000,
       maxDelayMs = process.env.NODE_ENV === 'test' ? 1000 : 60000,
@@ -119,7 +120,9 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
     while (attempt < maxAttempts) {
       try {
+        console.log(chalk.blue(`🔍 Polling deployment status for ${stepName} (ID: ${step.proposalId})...`));
         const deployment = await this.client.deploy.getDeployedContract(step.proposalId);
+        console.log(chalk.gray(`📊 Deployment response:`, JSON.stringify(deployment, null, 2)));
         const status = deployment.status;
 
         if (status === 'completed') {
@@ -142,7 +145,21 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
           throw error;
         }
 
-        console.log(chalk.yellow(`⏳ Deployment ${stepName} still ${status}. Retrying in ${delay}ms...`));
+        if (status === 'submitted') {
+          const approvalProcessId = (deployment as any).approvalProcessId;
+          const safeTxHash = (deployment as any).safeTxHash;
+          if (approvalProcessId) {
+            console.log(chalk.yellow(`⏳ Deployment ${stepName} is submitted and waiting for approval.`));
+            console.log(chalk.blue(`🔗 Please approve in Defender dashboard: https://defender.openzeppelin.com/`));
+            if (safeTxHash) {
+              console.log(chalk.blue(`📋 Safe Transaction Hash: ${safeTxHash}`));
+            }
+          } else {
+            console.log(chalk.yellow(`⏳ Deployment ${stepName} is submitted and processing...`));
+          }
+        } else {
+          console.log(chalk.yellow(`⏳ Deployment ${stepName} still ${status}. Retrying in ${delay}ms...`));
+        }
       } catch (err) {
         // Only catch network/API errors, not deployment failures
         if (err instanceof Error && err.message.includes('Deployment failed')) {
@@ -168,6 +185,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     }
 
     console.warn(chalk.red(`⚠️ Deployment for ${stepName} did not complete after ${maxAttempts} attempts.`));
+    console.log(chalk.blue(`🔗 Please check the Defender dashboard for pending approvals: https://defender.openzeppelin.com/`));
+    console.log(chalk.yellow(`📋 Deployment ID: ${step.proposalId}`));
     return null;
   }
 
@@ -180,7 +199,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     deployment: DeploymentResponse
   ): Promise<void> {
     const deployedDiamondData = diamond.getDeployedDiamondData();
-    const contractAddress = (deployment as any).contractAddress;
+    const contractAddress = deployment.address;
 
     if (!contractAddress) {
       console.warn(chalk.yellow(`⚠️ No contract address found in deployment response for ${stepName}`));
@@ -315,20 +334,29 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     if (!cutStep || (cutStep.status !== 'executed' && cutStep.status !== 'failed')) {
       const diamondCutContractName = await getContractName('DiamondCutFacet', diamond);
       const diamondCutArtifact = await getContractArtifact('DiamondCutFacet', diamond);
+      
+      // Format artifact for Defender SDK - need build-info format, not individual artifact
+      const buildInfo = await this.getBuildInfoForContract('DiamondCutFacet', diamond);
+      
       const cutRequest: DeployContractRequest = {
         network,
         contractName: diamondCutContractName,
-        contractPath: `${diamond.contractsPath}/${diamondCutContractName}.sol`,
+        contractPath: diamondCutArtifact.sourceName, // Use the actual source name from artifact
         constructorInputs: [],
         verifySourceCode: true, // TODO Verify this should be true or optional
-        artifactPayload: JSON.stringify({
-          contracts: {
-            [diamondCutContractName]: diamondCutArtifact
-          }
-        }), // Format for Defender SDK
+        artifactPayload: JSON.stringify(buildInfo), // Use build-info format for Defender SDK
+        salt: ethers.hexlify(ethers.randomBytes(32)), // Add salt for CREATE2 deployment as required by Defender
       };
 
-      const cutDeployment = await this.client.deploy.deployContract(cutRequest);
+      let cutDeployment;
+      try {
+        cutDeployment = await this.client.deploy.deployContract(cutRequest);
+        console.log(chalk.blue(`📊 Initial deployment response:`, JSON.stringify(cutDeployment, null, 2)));
+      } catch (error) {
+        console.log(chalk.red("❌ Error deploying DiamondCutFacet via Defender:"), error);
+        throw error;
+      }
+      
       store.saveStep({
         stepName: stepNameCut,
         proposalId: cutDeployment.deploymentId,
@@ -345,22 +373,116 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const stepNameDiamond = 'deploy-diamond';
     const diamondStep = store.getStep(stepNameDiamond);
     if (!diamondStep || (diamondStep.status !== 'executed' && diamondStep.status !== 'failed')) {
+      // First, ensure DiamondCutFacet is fully completed and data is updated
+      const cutStep = store.getStep(stepNameCut);
+      if (cutStep?.status === 'executed') {
+        console.log(chalk.blue(`🔍 Ensuring DiamondCutFacet data is up to date...`));
+        
+        // Force update DiamondCutFacet data if needed
+        try {
+          const cutDeployment = await this.client.deploy.getDeployedContract(cutStep.proposalId!);
+          if (cutDeployment.status === 'completed' && cutDeployment.address) {
+            await this.updateDiamondWithDeployment(diamond, stepNameCut, cutDeployment);
+            console.log(chalk.green(`✅ DiamondCutFacet data updated: ${cutDeployment.address}`));
+          }
+        } catch (error) {
+          console.warn(chalk.yellow(`⚠️ Could not update DiamondCutFacet data: ${error}`));
+        }
+      }
+      
+      // Get the deployed DiamondCutFacet address
+      const deployedDiamondData = diamond.getDeployedDiamondData();
+      const diamondCutFacetAddress = deployedDiamondData.DeployedFacets?.['DiamondCutFacet']?.address;
+      
+      // If still not found, try to get from Defender directly
+      if (!diamondCutFacetAddress) {
+        console.log(chalk.yellow(`⚠️ DiamondCutFacet address not found in deployment data, checking Defender...`));
+        const cutStep = store.getStep(stepNameCut);
+        if (cutStep?.proposalId) {
+          try {
+            const cutDeployment = await this.client.deploy.getDeployedContract(cutStep.proposalId);
+            if (cutDeployment.status === 'completed' && cutDeployment.address) {
+              console.log(chalk.blue(`🔍 Found DiamondCutFacet address from Defender: ${cutDeployment.address}`));
+              // Use this address directly for the Diamond constructor
+              const directDiamondCutFacetAddress = cutDeployment.address;
+              
+              const diamondContractName = await getDiamondContractName(diamond.diamondName, diamond);
+              const diamondArtifact = await getContractArtifact(diamond.diamondName, diamond);        
+              const buildInfo = await this.getBuildInfoForContract(diamond.diamondName, diamond);
+
+              console.log(chalk.blue(`🏗️ Diamond deployment configuration (direct Defender lookup):`));
+              console.log(chalk.blue(`   Contract Name: ${diamondContractName}`));
+              console.log(chalk.blue(`   Contract Path: ${diamondArtifact.sourceName}`));
+              console.log(chalk.blue(`   Constructor Params:`));
+              console.log(chalk.blue(`     Owner: ${deployerAddress}`));
+              console.log(chalk.blue(`     DiamondCutFacet: ${directDiamondCutFacetAddress}`));
+
+              const diamondRequest: DeployContractRequest = {
+                network,
+                contractName: diamondContractName,
+                contractPath: diamondArtifact.sourceName,
+                constructorInputs: [deployerAddress, directDiamondCutFacetAddress], // Use address from Defender
+                verifySourceCode: true,
+                artifactPayload: JSON.stringify(buildInfo),
+                salt: ethers.hexlify(ethers.randomBytes(32)),
+              };
+
+              const diamondDeployment = await this.client.deploy.deployContract(diamondRequest);
+              console.log(chalk.blue(`📊 Diamond deployment response:`, JSON.stringify(diamondDeployment, null, 2)));
+              
+              store.saveStep({
+                stepName: stepNameDiamond,
+                proposalId: diamondDeployment.deploymentId,
+                status: 'pending',
+                description: 'Diamond deployed via Defender DeployClient',
+                timestamp: Date.now()
+              });
+              await this.pollUntilComplete(stepNameDiamond, diamond);
+
+              console.log(chalk.blue(`📡 Submitted Diamond deploy to Defender: ${diamondDeployment.deploymentId}`));
+              return; // Exit early since we handled the deployment
+            }
+          } catch (error) {
+            console.error(chalk.red(`❌ Could not get DiamondCutFacet from Defender: ${error}`));
+          }
+        }
+        
+        throw new Error('DiamondCutFacet must be deployed before Diamond contract. DiamondCutFacet address not found.');
+      }
+      
+      console.log(chalk.blue(`🔗 Using DiamondCutFacet address: ${diamondCutFacetAddress}`));
+      
       const diamondContractName = await getDiamondContractName(diamond.diamondName, diamond);
-      const diamondArtifact = await getContractArtifact(diamond.diamondName, diamond);
+      const diamondArtifact = await getContractArtifact(diamond.diamondName, diamond);        
+      const buildInfo = await this.getBuildInfoForContract(diamond.diamondName, diamond);
+
+      // Validate the build info structure
+      if (!buildInfo.output?.contracts?.[diamondArtifact.sourceName]?.[diamondContractName]) {
+        console.warn(chalk.yellow(`⚠️ Build info validation warning for ${diamondContractName}`));
+        console.warn(chalk.yellow(`   Expected path: output.contracts["${diamondArtifact.sourceName}"]["${diamondContractName}"]`));
+        console.warn(chalk.yellow(`   Available contracts:`, Object.keys(buildInfo.output?.contracts || {})));
+      }
+
+      console.log(chalk.blue(`🏗️ Diamond deployment configuration:`));
+      console.log(chalk.blue(`   Contract Name: ${diamondContractName}`));
+      console.log(chalk.blue(`   Contract Path: ${diamondArtifact.sourceName}`));
+      console.log(chalk.blue(`   Constructor Params:`));
+      console.log(chalk.blue(`     Owner: ${deployerAddress}`));
+      console.log(chalk.blue(`     DiamondCutFacet: ${diamondCutFacetAddress}`));
+
       const diamondRequest: DeployContractRequest = {
         network,
         contractName: diamondContractName,
-        contractPath: `${diamond.contractsPath}/${diamondContractName}.sol`,
-        constructorInputs: [deployerAddress, ethers.ZeroAddress], // Make sure constructor matches
+        contractPath: diamondArtifact.sourceName,
+        constructorInputs: [deployerAddress, diamondCutFacetAddress], // Use actual DiamondCutFacet address instead of ZeroAddress
         verifySourceCode: true, // TODO Verify this should be true or optional
-        artifactPayload: JSON.stringify({
-          contracts: {
-            [diamondContractName]: diamondArtifact
-          }
-        }), // Format for Defender SDK
+        artifactPayload: JSON.stringify(buildInfo), // Use build-info format for Defender SDK
+        salt: ethers.hexlify(ethers.randomBytes(32)), // Add salt for CREATE2 deployment as required by Defender
       };
 
       const diamondDeployment = await this.client.deploy.deployContract(diamondRequest);
+      console.log(chalk.blue(`📊 Diamond deployment response:`, JSON.stringify(diamondDeployment, null, 2)));
+      
       store.saveStep({
         stepName: stepNameDiamond,
         proposalId: diamondDeployment.deploymentId,
@@ -423,17 +545,15 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
       const facetContractName = await getContractName(facetName, diamond);
       const facetArtifact = await getContractArtifact(facetName, diamond);
+      const buildInfo = await this.getBuildInfoForContract(facetName, diamond);
       const deployRequest: DeployContractRequest = {
         network,
         contractName: facetContractName,
-        contractPath: `${diamond.contractsPath}/${facetContractName}.sol`,
+        contractPath: facetArtifact.sourceName,
         constructorInputs: [],
         verifySourceCode: true, // TODO Verify this should be true or optional
-        artifactPayload: JSON.stringify({
-          contracts: {
-            [facetContractName]: facetArtifact
-          }
-        }), // Format for Defender SDK
+        artifactPayload: JSON.stringify(buildInfo), // Use build-info format for Defender SDK
+        salt: ethers.hexlify(ethers.randomBytes(32)), // Add salt for CREATE2 deployment as required by Defender // Fixed format to match contracts wrapper structure
       };
 
       const deployResult = await this.client.deploy.deployContract(deployRequest);
@@ -456,6 +576,11 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
    * Performs the diamond cut tasks using OpenZeppelin Defender.
    * @param diamond The diamond instance.
    */
+  
+  /**
+   * Performs the diamond cut tasks using OpenZeppelin Defender with batching support.
+   * @param diamond The diamond instance.
+   */
   protected async performDiamondCutTasks(diamond: Diamond): Promise<void> {
     const deployedDiamondData = diamond.getDeployedDiamondData();
     const diamondAddress = deployedDiamondData.DiamondAddress!;
@@ -466,6 +591,43 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     const facetCuts = await this.getFacetCuts(diamond);
 
     await this.validateNoOrphanedSelectors(facetCuts);
+
+    // If no cuts needed, skip
+    if (facetCuts.length === 0) {
+      if (this.verbose) {
+        console.log(chalk.yellow('⏩ No DiamondCut operations needed - all facets already deployed and up to date'));
+      }
+      return;
+    }
+
+    // Check for batch size limits
+    const MAX_BATCH_SIZE = 10; // Conservative limit for gas and transaction size
+    const needsBatching = facetCuts.length > MAX_BATCH_SIZE;
+
+    if (needsBatching) {
+      console.log(chalk.yellow(`⚠️ Large DiamondCut detected (${facetCuts.length} cuts). Splitting into batches...`));
+      await this.performBatchedDiamondCut(diamond, facetCuts, initCalldata, initAddress);
+      return;
+    }
+
+    // Single batch execution
+    await this.performSingleDiamondCut(diamond, facetCuts, initCalldata, initAddress);
+  }
+
+  /**
+   * Perform a single DiamondCut operation
+   */
+  private async performSingleDiamondCut(
+    diamond: Diamond, 
+    facetCuts: any[], 
+    initCalldata: string, 
+    initAddress: string
+  ): Promise<void> {
+    const deployedDiamondData = diamond.getDeployedDiamondData();
+    const diamondAddress = deployedDiamondData.DiamondAddress!;
+    const deployConfig = diamond.getDeployConfig();
+    const diamondConfig = diamond.getDiamondConfig();
+    const network = diamondConfig.networkName!;
 
     if (this.verbose) {
       console.log(chalk.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
@@ -515,71 +677,183 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       viaType: this.viaType,
     };
 
-    const { proposalId, url } = await this.client.proposal.create({ proposal });
+    try {
+      const { proposalId, url } = await this.client.proposal.create({ proposal });
+      console.log(chalk.blue(`📡 Defender Proposal created: ${url}`));
 
-    console.log(chalk.blue(`📡 Defender Proposal created: ${url}`));
+      // Store the proposal
+      const store = new DefenderDeploymentStore(diamond.diamondName, `${diamond.diamondName}-${network}-${diamondConfig.chainId}`, diamondConfig.deploymentsPath);
+      store.saveStep({
+        stepName: 'diamond-cut',
+        proposalId,
+        status: 'pending',
+        description: `DiamondCut proposal with ${facetCuts.length} facets`,
+        timestamp: Date.now()
+      });
 
-    // Store the proposal
-    const store = new DefenderDeploymentStore(diamond.diamondName, `${diamond.diamondName}-${network}-${diamondConfig.chainId}`, diamondConfig.deploymentsPath);
-    store.saveStep({
-      stepName: 'diamond-cut',
-      proposalId,
-      status: 'pending',
-      description: `DiamondCut proposal with ${facetCuts.length} facets`,
-      timestamp: Date.now()
-    });
-
-    if (this.autoApprove) {
-      console.log(chalk.yellow(`⏳ Auto-approval enabled. Waiting for proposal to be ready for execution...`));
-      let attempts = 0;
-      const maxAttempts = 20;
-      // Use shorter delay in test environments
-      const delayMs = process.env.NODE_ENV === 'test' ? 1000 : 15000;
-
-      while (attempts < maxAttempts) {
-        try {
-          const proposalData = await this.client.proposal.get(proposalId);
-
-          // Check if proposal has execution data - API structure may vary
-          // Using optional chaining to handle different API versions
-          const isExecuted = (proposalData as any)?.transaction?.isExecuted ?? false;
-          const isReverted = (proposalData as any)?.transaction?.isReverted ?? false;
-
-          if (isExecuted && !isReverted) {
-            console.log(chalk.green(`✅ Proposal executed successfully.`));
-            store.updateStatus('diamond-cut', 'executed');
-            return;
-          }
-
-          if (isExecuted && isReverted) {
-            console.error(chalk.red(`❌ Proposal execution reverted.`));
-            store.updateStatus('diamond-cut', 'failed');
-            throw new Error(`Proposal execution reverted: ${proposalId}`);
-          }
-
-          // For auto-approval, we'll just log the status
-          // Note: The actual execution method may vary by Defender API version
-          console.log(chalk.gray(`⌛ Proposal status check ${attempts + 1}/${maxAttempts}. Manual execution may be required.`));
-
-        } catch (err: any) {
-          console.error(chalk.red(`⚠️ Error checking proposal status:`), err);
-          if (attempts >= maxAttempts - 1) {
-            throw err;
-          }
-        }
-
-        await new Promise((res) => setTimeout(res, delayMs));
-        attempts++;
+      if (this.autoApprove) {
+        await this.handleAutoApproval(proposalId, url);
+      } else {
+        console.log(chalk.blue(`🔗 Manual approval required: ${url}`));
       }
-
-      if (attempts >= maxAttempts) {
-        console.warn(chalk.red(`⚠️ Proposal polling completed after ${maxAttempts} attempts.`));
-        console.log(chalk.blue(`🔗 Manual execution may be required: ${url}`));
+    } catch (error: any) {
+      if (error.response?.status === 402) {
+        throw new Error('Defender account billing issue. Please check your Defender account subscription and billing status.');
+      } else if (error.response?.status === 400) {
+        throw new Error(`DiamondCut request invalid. This may be due to gas limits with ${facetCuts.length} cuts. Consider reducing batch size.`);
       }
-    } else {
-      console.log(chalk.blue(`🔗 Manual approval required: ${url}`));
+      throw error;
+    }
+  }
+
+  /**
+   * Perform batched DiamondCut operations
+   */
+  private async performBatchedDiamondCut(
+    diamond: Diamond, 
+    allFacetCuts: any[], 
+    initCalldata: string, 
+    initAddress: string
+  ): Promise<void> {
+    const MAX_BATCH_SIZE = 10;
+    const batches = [];
+    
+    // Split into batches
+    for (let i = 0; i < allFacetCuts.length; i += MAX_BATCH_SIZE) {
+      batches.push(allFacetCuts.slice(i, i + MAX_BATCH_SIZE));
     }
 
+    console.log(chalk.blue(`📦 Splitting ${allFacetCuts.length} cuts into ${batches.length} batches`));
+
+    // Execute batches sequentially
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      const isLastBatch = batchIndex === batches.length - 1;
+      
+      // Only use init on the last batch
+      const batchInitCalldata = isLastBatch ? initCalldata : '0x';
+      const batchInitAddress = isLastBatch ? initAddress : ethers.ZeroAddress;
+
+      console.log(chalk.blue(`🔄 Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} cuts)`));
+      
+      try {
+        await this.performSingleDiamondCut(diamond, batch, batchInitCalldata, batchInitAddress);
+        console.log(chalk.green(`✅ Batch ${batchIndex + 1} completed successfully`));
+        
+        // Wait between batches to avoid rate limiting
+        if (batchIndex < batches.length - 1) {
+          console.log(chalk.gray('⏳ Waiting 5 seconds before next batch...'));
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      } catch (error) {
+        console.error(chalk.red(`❌ Batch ${batchIndex + 1} failed:`), error);
+        throw new Error(`DiamondCut batch ${batchIndex + 1} failed: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+
+    console.log(chalk.green(`🎉 All ${batches.length} DiamondCut batches completed successfully!`));
+  }
+
+  /**
+   * Handle auto-approval for proposals
+   */
+  private async handleAutoApproval(proposalId: string, url: string): Promise<void> {
+    const maxAttempts = 30;
+    const delayMs = 8000;
+    let attempts = 0;
+
+    console.log(chalk.blue(`⚡ Auto-approving proposal ${proposalId}...`));
+
+    while (attempts < maxAttempts) {
+      try {
+        // For auto-approval, we'll just log the status
+        // Note: The actual execution method may vary by Defender API version
+        console.log(chalk.gray(`⌛ Proposal status check ${attempts + 1}/${maxAttempts}. Manual execution may be required.`));
+
+      } catch (err: any) {
+        console.error(chalk.red(`⚠️ Error checking proposal status:`), err);
+        if (attempts >= maxAttempts - 1) {
+          throw err;
+        }
+      }
+
+      await new Promise((res) => setTimeout(res, delayMs));
+      attempts++;
+    }
+
+    if (attempts >= maxAttempts) {
+      console.warn(chalk.red(`⚠️ Proposal polling completed after ${maxAttempts} attempts.`));
+      console.log(chalk.blue(`🔗 Manual execution may be required: ${url}`));
+    }
+  }
+
+  /**
+   * Get build-info format for a contract that Defender SDK expects
+   */
+  private async getBuildInfoForContract(contractName: string, diamond: Diamond): Promise<any> {
+    try {
+      // Get the contract artifact first to determine the source path
+      const artifact = await getContractArtifact(contractName, diamond);
+      const sourceName = artifact.sourceName;
+      
+      // Try to find the build-info file that contains this contract
+      const buildInfoPath = join(process.cwd(), 'artifacts', 'build-info');
+      const buildInfoFiles = fs.readdirSync(buildInfoPath);
+      
+      for (const fileName of buildInfoFiles) {
+        if (!fileName.endsWith('.json')) continue;
+        
+        const filePath = join(buildInfoPath, fileName);
+        const buildInfo = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        
+        // Check if this build-info contains our contract
+        if (buildInfo.output?.contracts?.[sourceName]?.[contractName]) {
+          return buildInfo;
+        }
+      }
+      
+      // Fallback: create a minimal build-info structure
+      console.warn(`⚠️ Could not find build-info for ${contractName}, creating minimal structure`);
+      return {
+        input: {
+          language: 'Solidity',
+          sources: {
+            [sourceName]: {
+              content: '// Source not available'
+            }
+          },
+          settings: {
+            optimizer: { enabled: true, runs: 1000 },
+            outputSelection: {
+              '*': {
+                '*': ['abi', 'evm.bytecode', 'evm.deployedBytecode']
+              }
+            }
+          }
+        },
+        output: {
+          contracts: {
+            [sourceName]: {
+              [contractName]: artifact
+            }
+          }
+        }
+      };
+      
+    } catch (error) {
+      console.warn(`⚠️ Error getting build info for ${contractName}:`, error);
+      // Return a minimal structure as fallback
+      const artifact = await getContractArtifact(contractName, diamond);
+      return {
+        output: {
+          contracts: {
+            [artifact.sourceName]: {
+              [contractName]: artifact
+            }
+          }
+        }
+      };
+    }
   }
 
 }

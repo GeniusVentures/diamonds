@@ -74,3 +74,4 @@ coverage/
 *.tsbuildinfo
 cache/
 artifacts/
+test/.tmp-defender-advanced/

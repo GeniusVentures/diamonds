@@ -37,6 +37,26 @@ export declare class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy
      * Performs the diamond cut tasks using OpenZeppelin Defender.
      * @param diamond The diamond instance.
      */
+    /**
+     * Performs the diamond cut tasks using OpenZeppelin Defender with batching support.
+     * @param diamond The diamond instance.
+     */
     protected performDiamondCutTasks(diamond: Diamond): Promise<void>;
+    /**
+     * Perform a single DiamondCut operation
+     */
+    private performSingleDiamondCut;
+    /**
+     * Perform batched DiamondCut operations
+     */
+    private performBatchedDiamondCut;
+    /**
+     * Handle auto-approval for proposals
+     */
+    private handleAutoApproval;
+    /**
+     * Get build-info format for a contract that Defender SDK expects
+     */
+    private getBuildInfoForContract;
 }
 //# sourceMappingURL=OZDefenderDeploymentStrategy.d.ts.map
