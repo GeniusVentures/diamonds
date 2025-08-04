@@ -11,6 +11,7 @@ import { JsonRpcProvider, Signer } from 'ethers';
 import { join } from 'path';
 import chalk from 'chalk';
 import { z } from 'zod';
+import { Provider } from 'ethers';
 
 /**
  * Configuration schema for RPC Diamond Deployer
@@ -86,7 +87,8 @@ export class RPCDiamondDeployer {
 
     // Create diamond instance
     this.diamond = new Diamond(config, repository);
-    this.diamond.setProvider(this.strategy.getProvider());
+    // Cast to any to satisfy the expected provider type
+    this.diamond.setProvider(this.strategy.getProvider() as any);
     this.diamond.setSigner(this.strategy.getSigner());
 
     if (this.verbose) {
@@ -385,7 +387,7 @@ export class RPCDiamondDeployer {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        errors.push(...error.errors.map(e => `${e.path.join('.')}: ${e.message}`));
+        errors.push(...error.issues.map(e => `${e.path.join('.')}: ${e.message}`));
       } else {
         errors.push(`Configuration validation error: ${(error as Error).message}`);
       }
@@ -413,18 +415,21 @@ export class RPCDiamondDeployer {
     const provider = this.strategy.getProvider();
     const signer = this.strategy.getSigner();
     
-    const [network, balance, gasPrice] = await Promise.all([
+    const signerAddress = await signer.getAddress();
+    const [network, balance, feeData] = await Promise.all([
       provider.getNetwork(),
-      provider.getBalance(signer.address),
-      provider.getGasPrice()
+      provider.getBalance(signerAddress),
+      provider.getFeeData()
     ]);
+
+    const gasPrice = feeData.gasPrice?.toString() ?? '0';
 
     return {
       networkName: network.name,
       chainId: Number(network.chainId),
-      signerAddress: signer.address,
+      signerAddress: signerAddress,
       balance: balance.toString(),
-      gasPrice: gasPrice.toString()
+      gasPrice: gasPrice
     };
   }
 }
