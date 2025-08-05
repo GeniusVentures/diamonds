@@ -31,4 +31,5 @@ __exportStar(require("./contractMapping"), exports);
 __exportStar(require("./configurationResolver"), exports);
 __exportStar(require("./workspaceSetup"), exports);
 __exportStar(require("./diamondAbiGenerator"), exports);
+__exportStar(require("./rpcStore"), exports);
 //# sourceMappingURL=index.js.map

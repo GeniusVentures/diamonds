@@ -180,7 +180,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
         diamond.updateNewDeployedFacets(facetName, newFacetData);
 
-        console.log(chalk.cyan(`⛵ Deployed at ${await facetContract.getAddress()} with ${facetSelectors.length} selectors.`));
+        console.log(chalk.cyan(`⛵ ${facetName} deployed at ${await facetContract.getAddress()} with ${facetSelectors.length} selectors.`));
         // Log the deployment transaction and selectors
         if (this.verbose) {
           console.log(chalk.gray(`  Selectors:`), facetSelectors);

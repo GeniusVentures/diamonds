@@ -17,4 +17,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./deployments"), exports);
 __exportStar(require("./config"), exports);
 __exportStar(require("./defender"), exports);
+__exportStar(require("./rpc"), exports);
 //# sourceMappingURL=index.js.map

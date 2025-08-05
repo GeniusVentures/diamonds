@@ -37,6 +37,7 @@ export declare class RPCDeploymentStrategy extends BaseDeploymentStrategy {
     private gasLimitMultiplier;
     private maxRetries;
     private retryDelayMs;
+    private store?;
     /**
      * Creates a new RPC Deployment Strategy
      *
@@ -48,6 +49,30 @@ export declare class RPCDeploymentStrategy extends BaseDeploymentStrategy {
      * @param verbose - Enable verbose logging (default: false)
      */
     constructor(rpcUrl: string, privateKey: string, gasLimitMultiplier?: number, maxRetries?: number, retryDelayMs?: number, verbose?: boolean);
+    /**
+     * Initialize step tracking store for deployment
+     */
+    private initializeStore;
+    /**
+     * Save a deployment step with tracking
+     */
+    private saveStep;
+    /**
+     * Update step status with transaction details
+     */
+    private updateStepStatus;
+    /**
+     * Check if a step is already completed
+     */
+    private isStepCompleted;
+    /**
+     * Skip a step that's already completed
+     */
+    private skipCompletedStep;
+    /**
+     * Resolve diamond contract name handling multiple artifacts issue
+     */
+    private resolveDiamondContractName;
     /**
      * Validates constructor inputs
      */

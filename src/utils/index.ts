@@ -12,3 +12,4 @@ export * from './contractMapping';
 export * from './configurationResolver';
 export * from './workspaceSetup';
 export * from './diamondAbiGenerator';
+export * from './rpcStore';

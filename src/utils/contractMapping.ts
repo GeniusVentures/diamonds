@@ -149,6 +149,36 @@ export async function getDiamondContractName(diamondName: string, diamond?: Diam
     await artifacts.readArtifact(diamondName);
     return diamondName;
   } catch (error) {
+    // If there are multiple artifacts with the same name, try to resolve using fully qualified names
+    if ((error as any).code === 'HH701' && (error as any).message.includes('multiple artifacts')) {
+      // Extract the fully qualified names from the error message
+      const errorMessage = (error as any).message;
+      const fqnMatches = errorMessage.match(/contracts\/[^:\s]+\.sol:[^\s]+/g);
+      
+      if (fqnMatches && fqnMatches.length > 0) {
+        // Prefer the one from gnus-ai directory
+        const gnusAiFqn = fqnMatches.find((fqn: string) => fqn.includes('gnus-ai'));
+        if (gnusAiFqn) {
+          try {
+            await artifacts.readArtifact(gnusAiFqn);
+            return gnusAiFqn.split(':')[1]; // Return just the contract name part
+          } catch (fqnError) {
+            // Continue to fallback
+          }
+        }
+        
+        // If no gnus-ai version, try the first available
+        for (const fqn of fqnMatches) {
+          try {
+            await artifacts.readArtifact(fqn);
+            return fqn.split(':')[1]; // Return just the contract name part
+          } catch (fqnError) {
+            // Continue to next option
+          }
+        }
+      }
+    }
+    
     // If diamond name fails, try Mock prefixed version (for testing)
     const mockName = `Mock${diamondName}`;
     try {

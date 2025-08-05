@@ -146,7 +146,7 @@ class BaseDeploymentStrategy {
                     verified: false,
                 };
                 diamond.updateNewDeployedFacets(facetName, newFacetData);
-                console.log(chalk_1.default.cyan(`⛵ Deployed at ${await facetContract.getAddress()} with ${facetSelectors.length} selectors.`));
+                console.log(chalk_1.default.cyan(`⛵ ${facetName} deployed at ${await facetContract.getAddress()} with ${facetSelectors.length} selectors.`));
                 // Log the deployment transaction and selectors
                 if (this.verbose) {
                     console.log(chalk_1.default.gray(`  Selectors:`), facetSelectors);

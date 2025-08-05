@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -40,10 +7,8 @@ exports.RPCDeploymentStrategy = exports.ContractDeploymentError = exports.GasEst
 const BaseDeploymentStrategy_1 = require("./BaseDeploymentStrategy");
 const types_1 = require("../types");
 const ethers_1 = require("ethers");
-const path_1 = require("path");
 const chalk_1 = __importDefault(require("chalk"));
 const utils_1 = require("../utils");
-const fs = __importStar(require("fs"));
 /**
  * Error classes for RPC-specific failures
  */
@@ -102,6 +67,7 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
     gasLimitMultiplier;
     maxRetries;
     retryDelayMs;
+    store;
     /**
      * Creates a new RPC Deployment Strategy
      *
@@ -127,6 +93,105 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
         if (this.verbose) {
             console.log(chalk_1.default.blue(`🔗 RPC Strategy initialized with endpoint: ${rpcUrl}`));
             console.log(chalk_1.default.blue(`👤 Deployer address: ${this.signer.getAddress()}`));
+        }
+    }
+    /**
+     * Initialize step tracking store for deployment
+     */
+    async initializeStore(diamond) {
+        const diamondConfig = diamond.getDiamondConfig();
+        const network = await this.provider.getNetwork();
+        const deploymentId = `${diamond.diamondName}-${diamondConfig.networkName}-${Number(network.chainId)}`;
+        this.store = new utils_1.RPCDeploymentStore(diamond.diamondName, deploymentId, diamondConfig.deploymentsPath);
+        // Initialize deployment metadata
+        this.store.initializeDeployment(diamondConfig.networkName || 'unknown', Number(network.chainId), this.rpcUrl, await this.signer.getAddress());
+        if (this.verbose) {
+            console.log(chalk_1.default.blue(`📊 Step tracking initialized: ${deploymentId}`));
+        }
+    }
+    /**
+     * Save a deployment step with tracking
+     */
+    saveStep(stepName, description, status = 'pending') {
+        if (!this.store)
+            return;
+        const step = {
+            stepName,
+            description,
+            status,
+            timestamp: Date.now()
+        };
+        this.store.saveStep(step);
+        if (this.verbose) {
+            const statusColor = status === 'completed' ? 'green' : status === 'failed' ? 'red' : 'blue';
+            console.log(chalk_1.default[statusColor](`📝 Step ${status}: ${stepName} - ${description}`));
+        }
+    }
+    /**
+     * Update step status with transaction details
+     */
+    updateStepStatus(stepName, status, txHash, contractAddress, gasUsed, error) {
+        if (!this.store)
+            return;
+        this.store.updateStatus(stepName, status, txHash, contractAddress, error);
+        const step = this.store.getStep(stepName);
+        if (step && txHash) {
+            step.txHash = txHash;
+            step.gasUsed = gasUsed;
+            this.store.saveStep(step);
+        }
+        if (this.verbose) {
+            const statusColor = status === 'completed' ? 'green' : status === 'failed' ? 'red' : 'yellow';
+            console.log(chalk_1.default[statusColor](`🔄 Updated ${stepName}: ${status}${txHash ? ` (${txHash})` : ''}${error ? ` - ${error}` : ''}`));
+        }
+    }
+    /**
+     * Check if a step is already completed
+     */
+    isStepCompleted(stepName) {
+        return this.store?.isStepCompleted(stepName) || false;
+    }
+    /**
+     * Skip a step that's already completed
+     */
+    skipCompletedStep(stepName, description) {
+        if (this.isStepCompleted(stepName)) {
+            if (this.verbose) {
+                console.log(chalk_1.default.gray(`⏭️  Skipping completed step: ${stepName} - ${description}`));
+            }
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Resolve diamond contract name handling multiple artifacts issue
+     */
+    async resolveDiamondContractName(diamondName, diamond) {
+        // For GeniusDiamond, specifically use the gnus-ai version to avoid artifact conflicts
+        if (diamondName === 'GeniusDiamond') {
+            const gnusAiFqn = `contracts/gnus-ai/${diamondName}.sol:${diamondName}`;
+            try {
+                // Test if this fully qualified name exists by trying to get the artifact
+                const { artifacts } = require('hardhat');
+                await artifacts.readArtifact(gnusAiFqn);
+                return gnusAiFqn;
+            }
+            catch (error) {
+                if (this.verbose) {
+                    console.log(chalk_1.default.yellow(`⚠️  Could not resolve ${gnusAiFqn}, falling back to simple name`));
+                }
+            }
+        }
+        // For other diamonds or if the specific resolution fails, try the original approach
+        try {
+            // Try the diamond name first
+            const { artifacts } = require('hardhat');
+            await artifacts.readArtifact(diamondName);
+            return diamondName;
+        }
+        catch (error) {
+            // If there are multiple artifacts and it's not GeniusDiamond, fall back to original logic
+            return await (0, utils_1.getDiamondContractName)(diamondName, diamond);
         }
     }
     /**
@@ -208,11 +273,12 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
             }
             else {
                 // Fallback for networks that don't support getFeeData
-                const gasPrice = await this.provider.getGasPrice();
+                const gasPrice = await this.provider.send('eth_gasPrice', []);
+                const gasPriceBigInt = BigInt(gasPrice);
                 if (this.verbose) {
-                    console.log(chalk_1.default.gray(`⛽ Gas price (fallback): ${ethers_1.ethers.formatUnits(gasPrice, "gwei")} gwei`));
+                    console.log(chalk_1.default.gray(`⛽ Gas price (fallback): ${ethers_1.ethers.formatUnits(gasPriceBigInt, "gwei")} gwei`));
                 }
-                return gasPrice;
+                return gasPriceBigInt;
             }
         }
         catch (error) {
@@ -225,16 +291,18 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
     async deployContract(contractName, constructorArgs = [], diamond) {
         return await this.withRetry(async () => {
             try {
-                // Get contract artifact
-                const artifactPath = (0, path_1.join)(diamond.contractsPath, `${contractName}.sol`, `${contractName}.json`);
-                if (!fs.existsSync(artifactPath)) {
-                    throw new ContractDeploymentError(`Contract artifact not found: ${artifactPath}`, contractName);
-                }
-                const artifact = JSON.parse(fs.readFileSync(artifactPath, 'utf8'));
+                // Get contract artifact using Hardhat's artifact resolution
+                // This will find artifacts in all configured paths (contracts-starter, gnus-ai, etc.)
+                const artifact = await (0, utils_1.getContractArtifact)(contractName, diamond);
                 // Create contract factory
                 const factory = new ethers_1.ContractFactory(artifact.abi, artifact.bytecode, this.signer);
-                // Estimate gas
-                const gasLimit = await factory.getDeployTransaction(...constructorArgs).then(tx => BigInt(Math.floor(Number(tx.gasLimit || 0) * this.gasLimitMultiplier)));
+                // Estimate gas for deployment
+                const deployTransaction = await factory.getDeployTransaction(...constructorArgs);
+                const estimatedGas = await this.provider.estimateGas({
+                    data: deployTransaction.data,
+                    from: await this.signer.getAddress()
+                });
+                const gasLimit = BigInt(Math.floor(Number(estimatedGas) * this.gasLimitMultiplier));
                 // Get gas price
                 const gasPrice = await this.getGasPrice();
                 if (this.verbose) {
@@ -269,24 +337,50 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
      * Override deployDiamondTasks to use RPC instead of Hardhat
      */
     async deployDiamondTasks(diamond) {
+        // Initialize step tracking store
+        await this.initializeStore(diamond);
         if (this.verbose) {
             console.log(chalk_1.default.blueBright(`🚀 Explicitly deploying DiamondCutFacet and Diamond for ${diamond.diamondName} via RPC`));
         }
         try {
-            // Deploy the DiamondCutFacet
+            // Step 1: Deploy DiamondCutFacet
+            const diamondCutStepName = 'deploy-diamondcutfacet';
+            if (!this.skipCompletedStep(diamondCutStepName, 'Deploy DiamondCutFacet')) {
+                this.saveStep(diamondCutStepName, 'Deploy DiamondCutFacet', 'in_progress');
+                const diamondCutContractName = await (0, utils_1.getContractName)("DiamondCutFacet", diamond);
+                const diamondCutFacet = await this.deployContract(diamondCutContractName, [], diamond);
+                const diamondCutFacetAddress = await diamondCutFacet.getAddress();
+                const diamondCutTxHash = diamondCutFacet.deploymentTransaction()?.hash;
+                this.updateStepStatus(diamondCutStepName, 'completed', diamondCutTxHash, diamondCutFacetAddress);
+            }
+            // Step 2: Deploy Diamond contract
+            const diamondStepName = 'deploy-diamond';
+            if (!this.skipCompletedStep(diamondStepName, 'Deploy Diamond contract')) {
+                this.saveStep(diamondStepName, 'Deploy Diamond contract', 'in_progress');
+                // Get DiamondCutFacet address from completed step or deploy
+                const diamondCutStep = this.store?.getStep(diamondCutStepName);
+                const diamondCutFacetAddress = diamondCutStep?.contractAddress;
+                if (!diamondCutFacetAddress) {
+                    throw new Error('DiamondCutFacet address not found from previous step');
+                }
+                const diamondContractName = await this.resolveDiamondContractName(diamond.diamondName, diamond);
+                const diamondContract = await this.deployContract(diamondContractName, [await this.signer.getAddress(), diamondCutFacetAddress], diamond);
+                const diamondContractAddress = await diamondContract.getAddress();
+                const diamondTxHash = diamondContract.deploymentTransaction()?.hash;
+                this.updateStepStatus(diamondStepName, 'completed', diamondTxHash, diamondContractAddress);
+            }
+            // Step 3: Register DiamondCutFacet selectors
+            this.saveStep('register-diamondcut-selectors', 'Register DiamondCutFacet function selectors', 'in_progress');
+            // Re-create DiamondCutFacet instance to get selectors
             const diamondCutContractName = await (0, utils_1.getContractName)("DiamondCutFacet", diamond);
-            const diamondCutFacet = await this.deployContract(diamondCutContractName, [], diamond);
-            // Deploy the Diamond contract
-            const diamondContractName = await (0, utils_1.getDiamondContractName)(diamond.diamondName, diamond);
-            const diamondContract = await this.deployContract(diamondContractName, [this.signer.getAddress(), await diamondCutFacet.getAddress()], diamond);
+            const diamondCutArtifact = await (0, utils_1.getContractArtifact)(diamondCutContractName, diamond);
+            const diamondCutFacetAddress = this.store?.getStep(diamondCutStepName)?.contractAddress;
+            const diamondCutFacet = new ethers_1.Contract(diamondCutFacetAddress, diamondCutArtifact.abi, this.signer);
             // Get function selectors for DiamondCutFacet
             const diamondCutFacetFunctionSelectors = [];
             diamondCutFacet.interface.forEachFunction((func) => {
                 diamondCutFacetFunctionSelectors.push(func.selector);
             });
-            // Get addresses for later use
-            const diamondCutFacetAddress = await diamondCutFacet.getAddress();
-            const diamondContractAddress = await diamondContract.getAddress();
             // Register the DiamondCutFacet function selectors
             const diamondCutFacetSelectorsRegistry = diamondCutFacetFunctionSelectors.reduce((acc, selector) => {
                 acc[selector] = {
@@ -298,22 +392,32 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
                 return acc;
             }, {});
             diamond.registerFunctionSelectors(diamondCutFacetSelectorsRegistry);
-            // Update deployed diamond data
+            this.updateStepStatus('register-diamondcut-selectors', 'completed');
+            // Step 4: Update deployed diamond data
+            this.saveStep('update-diamond-data', 'Update deployed diamond data', 'in_progress');
             const deployedDiamondData = diamond.getDeployedDiamondData();
+            const diamondContractAddress = this.store?.getStep('deploy-diamond')?.contractAddress;
             deployedDiamondData.DeployerAddress = await this.signer.getAddress();
             deployedDiamondData.DiamondAddress = diamondContractAddress;
             deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
             deployedDiamondData.DeployedFacets["DiamondCutFacet"] = {
                 address: diamondCutFacetAddress,
-                tx_hash: diamondCutFacet.deploymentTransaction()?.hash || "",
+                tx_hash: this.store?.getStep(diamondCutStepName)?.txHash || "",
                 version: 0,
                 funcSelectors: diamondCutFacetFunctionSelectors,
             };
             diamond.updateDeployedDiamondData(deployedDiamondData);
-            console.log(chalk_1.default.green(`✅ Diamond deployed at ${diamondContractAddress}, DiamondCutFacet at ${diamondCutFacetAddress}`));
+            this.updateStepStatus('update-diamond-data', 'completed');
+            if (this.verbose) {
+                console.log(chalk_1.default.green(`✅ Diamond deployed at ${diamondContractAddress}, DiamondCutFacet at ${diamondCutFacetAddress}`));
+            }
         }
         catch (error) {
-            console.error(chalk_1.default.red(`❌ Failed to deploy diamond via RPC: ${error.message}`));
+            const errorMessage = error.message;
+            if (this.store) {
+                this.store.markDeploymentFailed(errorMessage);
+            }
+            console.error(chalk_1.default.red(`❌ Failed to deploy diamond via RPC: ${errorMessage}`));
             throw error;
         }
     }
@@ -335,6 +439,11 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
             const availableVersions = Object.keys(facetConfig.versions || {}).map(Number);
             const upgradeVersion = Math.max(...availableVersions);
             if (upgradeVersion > deployedVersion || deployedVersion === -1) {
+                const facetStepName = `deploy-facet-${facetName.toLowerCase()}`;
+                if (this.skipCompletedStep(facetStepName, `Deploy ${facetName} facet`)) {
+                    continue;
+                }
+                this.saveStep(facetStepName, `Deploy ${facetName} facet v${upgradeVersion}`, 'in_progress');
                 if (this.verbose) {
                     console.log(chalk_1.default.blueBright(`🚀 Deploying facet: ${facetName} to version ${upgradeVersion} via RPC`));
                 }
@@ -342,6 +451,8 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
                     // Deploy the facet contract using RPC
                     const facetContractName = await (0, utils_1.getContractName)(facetName, diamond);
                     const facetContract = await this.deployContract(facetContractName, [], diamond);
+                    const facetAddress = await facetContract.getAddress();
+                    const facetTxHash = facetContract.deploymentTransaction()?.hash;
                     const facetSelectors = [];
                     facetContract.interface.forEachFunction((func) => {
                         facetSelectors.push(func.selector);
@@ -355,8 +466,8 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
                     }
                     const newFacetData = {
                         priority: facetConfig.priority || 1000,
-                        address: await facetContract.getAddress(),
-                        tx_hash: facetContract.deploymentTransaction()?.hash || "",
+                        address: facetAddress,
+                        tx_hash: facetTxHash || "",
                         version: upgradeVersion,
                         funcSelectors: facetSelectors,
                         deployInclude: facetConfig.versions?.[upgradeVersion]?.deployInclude || [],
@@ -365,13 +476,17 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
                         verified: false,
                     };
                     diamond.updateNewDeployedFacets(facetName, newFacetData);
-                    console.log(chalk_1.default.cyan(`⛵ Deployed at ${await facetContract.getAddress()} with ${facetSelectors.length} selectors.`));
+                    // Update step status with deployment info
+                    this.updateStepStatus(facetStepName, 'completed', facetTxHash, facetAddress);
+                    console.log(chalk_1.default.cyan(`⛵ ${facetName} deployed at ${facetAddress} with ${facetSelectors.length} selectors.`));
                     if (this.verbose) {
                         console.log(chalk_1.default.gray(`  Selectors:`), facetSelectors);
                     }
                 }
                 catch (error) {
-                    console.error(chalk_1.default.red(`❌ Failed to deploy facet ${facetName}: ${error.message}`));
+                    const errorMessage = error.message;
+                    this.updateStepStatus(facetStepName, 'failed', undefined, undefined, undefined, errorMessage);
+                    console.error(chalk_1.default.red(`❌ Failed to deploy facet ${facetName}: ${errorMessage}`));
                     throw error;
                 }
             }
@@ -383,15 +498,16 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
     async performDiamondCutTasks(diamond) {
         const deployConfig = diamond.getDeployConfig();
         const deployedDiamondData = diamond.getDeployedDiamondData();
+        const diamondCutStepName = 'perform-diamond-cut';
+        if (this.skipCompletedStep(diamondCutStepName, 'Perform diamond cut')) {
+            return;
+        }
+        this.saveStep(diamondCutStepName, 'Perform diamond cut to add facets', 'in_progress');
         try {
             // Get diamond contract using RPC
             const diamondAddress = deployedDiamondData.DiamondAddress;
-            // Load IDiamondCut ABI
-            const diamondCutArtifactPath = (0, path_1.join)(diamond.contractsPath, "interfaces", "IDiamondCut.sol", "IDiamondCut.json");
-            if (!fs.existsSync(diamondCutArtifactPath)) {
-                throw new Error(`IDiamondCut artifact not found at: ${diamondCutArtifactPath}`);
-            }
-            const diamondCutArtifact = JSON.parse(fs.readFileSync(diamondCutArtifactPath, 'utf8'));
+            // Load IDiamondCut ABI using Hardhat artifact resolution
+            const diamondCutArtifact = await (0, utils_1.getContractArtifact)("IDiamondCut", diamond);
             const diamondContract = new ethers_1.Contract(diamondAddress, diamondCutArtifact.abi, this.signer);
             // Setup initCallData with Atomic Protocol Initializer
             const [initCalldata, initAddress] = await this.getInitCalldata(diamond);
@@ -432,14 +548,25 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
                 console.log(chalk_1.default.gray(`   Gas used: ${receipt.gasUsed.toString()}`));
                 console.log(chalk_1.default.gray(`   Block number: ${receipt.blockNumber}`));
             }
+            // Update step status with transaction details
+            this.updateStepStatus(diamondCutStepName, 'completed', tx.hash, diamondAddress, receipt.gasUsed.toString());
             // Update the deployed diamond data
             const txHash = tx.hash;
             await this.postDiamondCutDeployedDataUpdate(diamond, txHash);
             console.log(chalk_1.default.green(`✅ DiamondCut executed: ${tx.hash}`));
             // Execute initializer functions
             await this.executeInitializerFunctions(diamond);
+            // Mark deployment as complete
+            if (this.store) {
+                this.store.markDeploymentComplete();
+            }
         }
         catch (error) {
+            const errorMessage = error.message;
+            this.updateStepStatus(diamondCutStepName, 'failed', undefined, undefined, undefined, errorMessage);
+            if (this.store) {
+                this.store.markDeploymentFailed(errorMessage);
+            }
             console.error(chalk_1.default.red(`❌ Failed to perform diamond cut via RPC: ${error.message}`));
             throw error;
         }
@@ -451,17 +578,18 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
         const deployedDiamondData = diamond.getDeployedDiamondData();
         const diamondAddress = deployedDiamondData.DiamondAddress;
         for (const [facetName, initFunction] of diamond.initializerRegistry.entries()) {
+            const initStepName = `init-${facetName.toLowerCase()}`;
+            if (this.skipCompletedStep(initStepName, `Initialize ${facetName} facet`)) {
+                continue;
+            }
+            this.saveStep(initStepName, `Execute ${initFunction} from ${facetName} facet`, 'in_progress');
             if (this.verbose) {
                 console.log(chalk_1.default.blueBright(`▶ Running ${initFunction} from the ${facetName} facet via RPC`));
             }
             try {
-                // Get facet contract name and load ABI
+                // Get facet contract name and load ABI using artifact resolution
                 const facetContractName = await (0, utils_1.getContractName)(facetName, diamond);
-                const facetArtifactPath = (0, path_1.join)(diamond.contractsPath, `${facetContractName}.sol`, `${facetContractName}.json`);
-                if (!fs.existsSync(facetArtifactPath)) {
-                    throw new Error(`Facet artifact not found: ${facetArtifactPath}`);
-                }
-                const facetArtifact = JSON.parse(fs.readFileSync(facetArtifactPath, 'utf8'));
+                const facetArtifact = await (0, utils_1.getContractArtifact)(facetContractName, diamond);
                 const initContract = new ethers_1.Contract(diamondAddress, facetArtifact.abi, this.signer);
                 // Estimate gas for initializer function
                 const gasLimit = await this.estimateGasWithMultiplier(initContract, initFunction);
@@ -477,10 +605,14 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
                     console.log(chalk_1.default.gray(`   Transaction hash: ${tx.hash}`));
                     console.log(chalk_1.default.gray(`   Gas used: ${receipt.gasUsed.toString()}`));
                 }
+                // Update step status with transaction details
+                this.updateStepStatus(initStepName, 'completed', tx.hash, diamondAddress, receipt.gasUsed.toString());
                 console.log(chalk_1.default.green(`✅ ${facetName}.${initFunction} executed`));
             }
             catch (error) {
-                console.error(chalk_1.default.red(`❌ Failed to execute ${facetName}.${initFunction}: ${error.message}`));
+                const errorMessage = error.message;
+                this.updateStepStatus(initStepName, 'failed', undefined, undefined, undefined, errorMessage);
+                console.error(chalk_1.default.red(`❌ Failed to execute ${facetName}.${initFunction}: ${errorMessage}`));
                 throw error;
             }
         }
