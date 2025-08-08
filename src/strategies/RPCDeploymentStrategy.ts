@@ -109,6 +109,12 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
     const network = await this.provider.getNetwork();
     const deploymentId = `${diamond.diamondName}-${diamondConfig.networkName}-${Number(network.chainId)}`;
     
+    console.log("🔍 DEBUG: Creating RPCDeploymentStore with:", {
+      diamondName: diamond.diamondName,
+      deploymentId,
+      deploymentsPath: diamondConfig.deploymentsPath
+    });
+
     this.store = new RPCDeploymentStore(diamond.diamondName, deploymentId, diamondConfig.deploymentsPath);
     
     // Initialize deployment metadata
@@ -118,6 +124,8 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
       this.rpcUrl,
       await this.signer.getAddress()
     );
+
+    console.log("🔍 DEBUG: Store created and initialized");
 
     if (this.verbose) {
       console.log(chalk.blue(`📊 Step tracking initialized: ${deploymentId}`));
@@ -533,6 +541,7 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
    * Override deployFacetsTasks to use RPC instead of Hardhat
    */
   protected async deployFacetsTasks(diamond: Diamond): Promise<void> {
+    console.log("🔍 DEBUG: RPCDeploymentStrategy.deployFacetsTasks called");
     const deployConfig = diamond.getDeployConfig();
     const facetsConfig = diamond.getDeployConfig().facets;
     const deployedDiamondData = diamond.getDeployedDiamondData();
@@ -848,13 +857,31 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
     await super.preDeployDiamond(diamond);
   }
 
-  async preDeployFacets(diamond: Diamond): Promise<void> {
+  protected async preDeployFacetsTasks(diamond: Diamond): Promise<void> {
+    console.log("🔍 DEBUG: preDeployFacetsTasks called for", diamond.diamondName);
+    // Initialize step tracking store for both new deployments and upgrades
+    if (!this.store) {
+      console.log("🔍 DEBUG: Initializing store...");
+      await this.initializeStore(diamond);
+      console.log("🔍 DEBUG: Store initialized:", !!this.store);
+    } else {
+      console.log("🔍 DEBUG: Store already exists:", !!this.store);
+    }
     await this.validateConnection();
-    await super.preDeployFacets(diamond);
+    await super.preDeployFacetsTasks(diamond);
   }
 
-  async prePerformDiamondCut(diamond: Diamond): Promise<void> {
+  protected async prePerformDiamondCutTasks(diamond: Diamond): Promise<void> {
+    console.log("🔍 DEBUG: prePerformDiamondCutTasks called for", diamond.diamondName);
     await this.validateConnection();
-    await super.prePerformDiamondCut(diamond);
+    // Initialize step tracking store for both new deployments and upgrades
+    if (!this.store) {
+      console.log("🔍 DEBUG: Initializing store...");
+      await this.initializeStore(diamond);
+      console.log("🔍 DEBUG: Store initialized:", !!this.store);
+    } else {
+      console.log("🔍 DEBUG: Store already exists:", !!this.store);
+    }
+    await super.prePerformDiamondCutTasks(diamond);
   }
 }

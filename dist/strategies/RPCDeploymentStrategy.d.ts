@@ -133,7 +133,7 @@ export declare class RPCDeploymentStrategy extends BaseDeploymentStrategy {
         verbose: boolean;
     };
     preDeployDiamond(diamond: Diamond): Promise<void>;
-    preDeployFacets(diamond: Diamond): Promise<void>;
-    prePerformDiamondCut(diamond: Diamond): Promise<void>;
+    protected preDeployFacetsTasks(diamond: Diamond): Promise<void>;
+    protected prePerformDiamondCutTasks(diamond: Diamond): Promise<void>;
 }
 //# sourceMappingURL=RPCDeploymentStrategy.d.ts.map

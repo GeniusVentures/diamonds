@@ -102,9 +102,15 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
         const diamondConfig = diamond.getDiamondConfig();
         const network = await this.provider.getNetwork();
         const deploymentId = `${diamond.diamondName}-${diamondConfig.networkName}-${Number(network.chainId)}`;
+        console.log("🔍 DEBUG: Creating RPCDeploymentStore with:", {
+            diamondName: diamond.diamondName,
+            deploymentId,
+            deploymentsPath: diamondConfig.deploymentsPath
+        });
         this.store = new utils_1.RPCDeploymentStore(diamond.diamondName, deploymentId, diamondConfig.deploymentsPath);
         // Initialize deployment metadata
         this.store.initializeDeployment(diamondConfig.networkName || 'unknown', Number(network.chainId), this.rpcUrl, await this.signer.getAddress());
+        console.log("🔍 DEBUG: Store created and initialized");
         if (this.verbose) {
             console.log(chalk_1.default.blue(`📊 Step tracking initialized: ${deploymentId}`));
         }
@@ -425,6 +431,7 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
      * Override deployFacetsTasks to use RPC instead of Hardhat
      */
     async deployFacetsTasks(diamond) {
+        console.log("🔍 DEBUG: RPCDeploymentStrategy.deployFacetsTasks called");
         const deployConfig = diamond.getDeployConfig();
         const facetsConfig = diamond.getDeployConfig().facets;
         const deployedDiamondData = diamond.getDeployedDiamondData();
@@ -670,13 +677,24 @@ class RPCDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrat
         await this.validateConnection();
         await super.preDeployDiamond(diamond);
     }
-    async preDeployFacets(diamond) {
+    async preDeployFacetsTasks(diamond) {
+        console.log("🔍 DEBUG: preDeployFacetsTasks called for", diamond.diamondName);
         await this.validateConnection();
-        await super.preDeployFacets(diamond);
+        await super.preDeployFacetsTasks(diamond);
     }
-    async prePerformDiamondCut(diamond) {
+    async prePerformDiamondCutTasks(diamond) {
+        console.log("🔍 DEBUG: prePerformDiamondCutTasks called for", diamond.diamondName);
         await this.validateConnection();
-        await super.prePerformDiamondCut(diamond);
+        // Initialize step tracking store for both new deployments and upgrades
+        if (!this.store) {
+            console.log("🔍 DEBUG: Initializing store...");
+            await this.initializeStore(diamond);
+            console.log("🔍 DEBUG: Store initialized:", !!this.store);
+        }
+        else {
+            console.log("🔍 DEBUG: Store already exists:", !!this.store);
+        }
+        await super.prePerformDiamondCutTasks(diamond);
     }
 }
 exports.RPCDeploymentStrategy = RPCDeploymentStrategy;
