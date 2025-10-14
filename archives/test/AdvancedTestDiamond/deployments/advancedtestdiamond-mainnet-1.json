@@ -1,0 +1,118 @@
+{
+  "DiamondAddress": "0x0000000000000000000000000000000000000002",
+  "DeployerAddress": "",
+  "DeployedFacets": {
+    "DiamondCutFacet": {
+      "address": "0x0000000000000000000000000000000000000001",
+      "tx_hash": "defender-deployment",
+      "version": 0,
+      "funcSelectors": [
+        "0x1f931c1c"
+      ]
+    },
+    "TestFacet1": {
+      "address": "0x0000000000000000000000000000000000000003",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet2": {
+      "address": "0x0000000000000000000000000000000000000004",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": [
+        "0x7979c4a1",
+        "0x8ada066e",
+        "0x1a4859d5",
+        "0x5b34b966",
+        "0x8c0eec7d",
+        "0xeebb1770",
+        "0xf54e39e1",
+        "0x35960105",
+        "0x01ffc9a7",
+        "0xe16b4a9b",
+        "0xb8fb063e"
+      ]
+    },
+    "TestFacet3": {
+      "address": "0x0000000000000000000000000000000000000005",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet4": {
+      "address": "0x0000000000000000000000000000000000000006",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet5": {
+      "address": "0x0000000000000000000000000000000000000007",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet6": {
+      "address": "0x0000000000000000000000000000000000000008",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet7": {
+      "address": "0x0000000000000000000000000000000000000009",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet8": {
+      "address": "0x000000000000000000000000000000000000000a",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet9": {
+      "address": "0x000000000000000000000000000000000000000b",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet10": {
+      "address": "0x000000000000000000000000000000000000000c",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet11": {
+      "address": "0x000000000000000000000000000000000000000d",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet12": {
+      "address": "0x000000000000000000000000000000000000000e",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet13": {
+      "address": "0x000000000000000000000000000000000000000f",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet14": {
+      "address": "0x0000000000000000000000000000000000000010",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    },
+    "TestFacet15": {
+      "address": "0x0000000000000000000000000000000000000011",
+      "tx_hash": "defender-deployment",
+      "version": 1,
+      "funcSelectors": []
+    }
+  },
+  "ExternalLibraries": {},
+  "protocolVersion": 0
+}

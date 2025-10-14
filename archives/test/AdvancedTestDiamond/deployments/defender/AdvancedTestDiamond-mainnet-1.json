@@ -1,0 +1,140 @@
+{
+  "diamondName": "AdvancedTestDiamond",
+  "deploymentId": "AdvancedTestDiamond-mainnet-1",
+  "network": "",
+  "steps": [
+    {
+      "stepName": "deploy-diamondcutfacet",
+      "proposalId": "batch-deployment-1",
+      "status": "executed",
+      "description": "DiamondCutFacet deployed via Defender DeployClient",
+      "timestamp": 1760453950214
+    },
+    {
+      "stepName": "deploy-diamond",
+      "proposalId": "batch-deployment-2",
+      "status": "executed",
+      "description": "Diamond deployed via Defender DeployClient",
+      "timestamp": 1760453950479
+    },
+    {
+      "stepName": "deploy-TestFacet1",
+      "proposalId": "batch-deployment-3",
+      "status": "executed",
+      "description": "Facet TestFacet1 deployment submitted",
+      "timestamp": 1760453950740
+    },
+    {
+      "stepName": "deploy-TestFacet2",
+      "proposalId": "batch-deployment-4",
+      "status": "executed",
+      "description": "Facet TestFacet2 deployment submitted",
+      "timestamp": 1760453951007
+    },
+    {
+      "stepName": "deploy-TestFacet3",
+      "proposalId": "batch-deployment-5",
+      "status": "executed",
+      "description": "Facet TestFacet3 deployment submitted",
+      "timestamp": 1760453951269
+    },
+    {
+      "stepName": "deploy-TestFacet4",
+      "proposalId": "batch-deployment-6",
+      "status": "executed",
+      "description": "Facet TestFacet4 deployment submitted",
+      "timestamp": 1760453951549
+    },
+    {
+      "stepName": "deploy-TestFacet5",
+      "proposalId": "batch-deployment-7",
+      "status": "executed",
+      "description": "Facet TestFacet5 deployment submitted",
+      "timestamp": 1760453951776
+    },
+    {
+      "stepName": "deploy-TestFacet6",
+      "proposalId": "batch-deployment-8",
+      "status": "executed",
+      "description": "Facet TestFacet6 deployment submitted",
+      "timestamp": 1760453952015
+    },
+    {
+      "stepName": "deploy-TestFacet7",
+      "proposalId": "batch-deployment-9",
+      "status": "executed",
+      "description": "Facet TestFacet7 deployment submitted",
+      "timestamp": 1760453952248
+    },
+    {
+      "stepName": "deploy-TestFacet8",
+      "proposalId": "batch-deployment-10",
+      "status": "executed",
+      "description": "Facet TestFacet8 deployment submitted",
+      "timestamp": 1760453952543
+    },
+    {
+      "stepName": "deploy-TestFacet9",
+      "proposalId": "batch-deployment-11",
+      "status": "executed",
+      "description": "Facet TestFacet9 deployment submitted",
+      "timestamp": 1760453952789
+    },
+    {
+      "stepName": "deploy-TestFacet10",
+      "proposalId": "batch-deployment-12",
+      "status": "executed",
+      "description": "Facet TestFacet10 deployment submitted",
+      "timestamp": 1760453953016
+    },
+    {
+      "stepName": "deploy-TestFacet11",
+      "proposalId": "batch-deployment-13",
+      "status": "executed",
+      "description": "Facet TestFacet11 deployment submitted",
+      "timestamp": 1760453953269
+    },
+    {
+      "stepName": "deploy-TestFacet12",
+      "proposalId": "batch-deployment-14",
+      "status": "executed",
+      "description": "Facet TestFacet12 deployment submitted",
+      "timestamp": 1760453953530
+    },
+    {
+      "stepName": "deploy-TestFacet13",
+      "proposalId": "batch-deployment-15",
+      "status": "executed",
+      "description": "Facet TestFacet13 deployment submitted",
+      "timestamp": 1760453953760
+    },
+    {
+      "stepName": "deploy-TestFacet14",
+      "proposalId": "batch-deployment-16",
+      "status": "executed",
+      "description": "Facet TestFacet14 deployment submitted",
+      "timestamp": 1760453953991
+    },
+    {
+      "stepName": "deploy-TestFacet15",
+      "proposalId": "batch-deployment-17",
+      "status": "executed",
+      "description": "Facet TestFacet15 deployment submitted",
+      "timestamp": 1760453954243
+    },
+    {
+      "stepName": "diamond-cut",
+      "proposalId": "timeout-proposal-1760453973865",
+      "status": "pending",
+      "description": "DiamondCut proposal with 10 facets",
+      "timestamp": 1760453973865
+    },
+    {
+      "stepName": "deploy-SlowFacet",
+      "proposalId": "timeout-deploy-1760453966354",
+      "status": "executed",
+      "description": "Facet SlowFacet deployment submitted",
+      "timestamp": 1760453967859
+    }
+  ]
+}

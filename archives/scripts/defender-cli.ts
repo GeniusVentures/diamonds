@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
+import "@nomicfoundation/hardhat-ethers";
+import chalk from 'chalk';
 import { Command } from 'commander';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs-extra';
-import * as path from 'path';
-import chalk from 'chalk';
 import hre from 'hardhat';
-import "@nomicfoundation/hardhat-ethers";
+import * as path from 'path';
 
-import { Diamond } from '../src/core/Diamond';
-import { DiamondDeployer } from '../src/core/DiamondDeployer';
-import { FileDeploymentRepository } from '../src/repositories/FileDeploymentRepository';
-import { OZDefenderDeploymentStrategy } from '../src/strategies/OZDefenderDeploymentStrategy';
-import { DiamondConfig } from '../src/types/config';
+import { Diamond } from '../../src/core/Diamond';
+import { DiamondDeployer } from '../../src/core/DiamondDeployer';
+import { FileDeploymentRepository } from '../../src/repositories/FileDeploymentRepository';
+import { OZDefenderDeploymentStrategy } from '../../src/strategies/OZDefenderDeploymentStrategy';
+import { DiamondConfig } from '../../src/types/config';
 
 // Load environment variables
 dotenv.config();

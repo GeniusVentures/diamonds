@@ -1,6 +1,9 @@
 // test/integration/ozDefenderDeployment.test.ts
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
-import hre from "hardhat";;
+import * as fs from "fs-extra";
+import hre from "hardhat";
+import * as path from "path";
 import sinon from "sinon";
 import { Diamond } from "../../src/core/Diamond";
 import { DiamondDeployer } from "../../src/core/DiamondDeployer";
@@ -8,18 +11,15 @@ import { FileDeploymentRepository } from "../../src/repositories/FileDeploymentR
 import { DeployConfig } from "../../src/schemas";
 import { OZDefenderDeploymentStrategy } from "../../src/strategies/OZDefenderDeploymentStrategy";
 import { DiamondConfig } from "../../src/types";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { Contract } from "ethers";
-import * as fs from "fs-extra";
-import * as path from "path";
-import { cleanupTestEnvironment, setupTestEnvironment, setupTestFiles } from "../setup";
+import { cleanupTestEnvironment, setupTestEnvironment, setupTestFiles } from "../../test/setup";
 import {
-  createDefenderMocks,
-  DEFAULT_DEFENDER_CONFIG,
-  MockDefenderClients,
-  setupFailedDeploymentMocks,
-  setupSuccessfulDeploymentMocks,
+    createDefenderMocks,
+    DEFAULT_DEFENDER_CONFIG,
+    MockDefenderClients,
+    setupFailedDeploymentMocks,
+    setupSuccessfulDeploymentMocks,
 } from "./defender/setup/defender-setup";
+;
 
 describe("Integration: OZDefenderDeploymentStrategy", function () {
   // This test might take longer due to complex operations

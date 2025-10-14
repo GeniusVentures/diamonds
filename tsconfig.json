@@ -23,7 +23,8 @@
   },
   "include": [
     "./src/**/*",
-    "./scripts/**/*"
+    "./scripts/**/*",
+    "archives/scripts/defender-cli.ts"
   ],
   "exclude": [
     "dist",

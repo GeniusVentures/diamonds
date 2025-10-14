@@ -1,22 +1,22 @@
 // test/integration/performance/benchmark.test.ts
-import { expect } from 'chai';
-import hre from "hardhat";;
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import { expect } from 'chai';
 import * as fs from 'fs-extra';
+import hre from "hardhat";
 import * as path from 'path';
 import sinon from 'sinon';
+;
 
 import { Diamond } from '../../../src/core/Diamond';
 import { DiamondDeployer } from '../../../src/core/DiamondDeployer';
 import { FileDeploymentRepository } from '../../../src/repositories/FileDeploymentRepository';
-import { OZDefenderDeploymentStrategy } from '../../../src/strategies/OZDefenderDeploymentStrategy';
 import { LocalDeploymentStrategy } from '../../../src/strategies/LocalDeploymentStrategy';
+import { OZDefenderDeploymentStrategy } from '../../../src/strategies/OZDefenderDeploymentStrategy';
 import { DiamondConfig } from '../../../src/types/config';
 
 import {
-  createDefenderMocks,
-  setupBatchOperationMocks,
-  MockDefenderClients
+    MockDefenderClients,
+    setupBatchOperationMocks
 } from '../defender/setup/defender-setup';
 
 interface BenchmarkResult {
