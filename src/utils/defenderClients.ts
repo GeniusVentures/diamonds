@@ -1,10 +1,9 @@
 // src/utils/defenderClients.ts
 import { Defender } from '@openzeppelin/defender-sdk';
 import { DeployClient } from '@openzeppelin/defender-sdk-deploy-client';
-import dotenv from 'dotenv';
 
 // Load environment variables from .env file
-dotenv.config();
+process.loadEnvFile('.env');
 
 const { DEFENDER_API_KEY, DEFENDER_API_SECRET } = process.env;
 
