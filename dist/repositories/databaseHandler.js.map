@@ -1,1 +1,1 @@
-{"version":3,"file":"databaseHandler.js","sourceRoot":"","sources":["../../src/repositories/databaseHandler.ts"],"names":[],"mappings":";AAAA,kEAAkE;AAElE,gFAAgF;AAChF,kHAAkH;AAClH,4BAA4B;AAC5B,IAAI;AAEJ,yHAAyH;AACzH,yBAAyB;AACzB,IAAI;AAEJ,wFAAwF;AACxF,wBAAwB;AACxB,IAAI"}
+{"version":3,"file":"databaseHandler.js","sourceRoot":"","sources":["../../src/repositories/databaseHandler.ts"],"names":[],"mappings":";AAAA,kEAAkE;;AAElE,gFAAgF;AAChF,kHAAkH;AAClH,4BAA4B;AAC5B,IAAI;AAEJ,yHAAyH;AACzH,yBAAyB;AACzB,IAAI;AAEJ,wFAAwF;AACxF,wBAAwB;AACxB,IAAI"}

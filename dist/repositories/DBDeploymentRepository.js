@@ -4,6 +4,7 @@
 //   saveDeploymentInfo,
 //   getDeployConfigData
 // } from './databaseHandler';
+Object.defineProperty(exports, "__esModule", { value: true });
 // import { DeploymentRepository } from './DeploymentRepository';
 // import { DeployedDiamondData, DeployConfig } from '../schemas';
 // export class DbDeploymentRepository implements DeploymentRepository {

@@ -2,11 +2,12 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "baseUrl": "./",
-    
     "target": "ES2022",
-    "module": "commonjs",
-    "lib": ["ES2022", "DOM"],
+    "module": "node16",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -18,10 +19,19 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node16"
   },
   "include": [
-    "./src/**/*", "./scripts/**/*"
+    "./src/**/*",
+    "./scripts/**/*"
   ],
-  "exclude": ["dist", "node_modules", "notes", "notes-local", ".tmp-*", "test", "scripts"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "notes",
+    "notes-local",
+    ".tmp-*",
+    "test",
+    "scripts"
+  ]
 }
