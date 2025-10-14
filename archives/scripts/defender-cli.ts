@@ -3,7 +3,6 @@
 import "@nomicfoundation/hardhat-ethers";
 import chalk from 'chalk';
 import { Command } from 'commander';
-import * as dotenv from 'dotenv';
 import * as fs from 'fs-extra';
 import hre from 'hardhat';
 import * as path from 'path';
@@ -15,7 +14,7 @@ import { OZDefenderDeploymentStrategy } from '../../src/strategies/OZDefenderDep
 import { DiamondConfig } from '../../src/types/config';
 
 // Load environment variables
-dotenv.config();
+process.loadEnvFile('.env');
 
 const program = new Command();
 

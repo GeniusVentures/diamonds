@@ -1,10 +1,11 @@
 // test/integration/defender/deployment.test.ts
-import { expect } from 'chai';
-import hre from "hardhat";;
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import { expect } from 'chai';
 import * as fs from 'fs-extra';
+import hre from "hardhat";
 import * as path from 'path';
 import sinon from 'sinon';
+;
 
 import { Diamond } from '../../../src/core/Diamond';
 import { DiamondDeployer } from '../../../src/core/DiamondDeployer';
@@ -14,11 +15,10 @@ import { DiamondConfig } from '../../../src/types/config';
 
 import {
   createDefenderMocks,
-  setupSuccessfulDeploymentMocks,
-  setupFailedDeploymentMocks,
-  addNetworkDelay,
   DEFAULT_DEFENDER_CONFIG,
-  MockDefenderClients
+  MockDefenderClients,
+  setupFailedDeploymentMocks,
+  setupSuccessfulDeploymentMocks
 } from './setup/defender-setup';
 
 describe('Integration: Defender Deployment', function () {

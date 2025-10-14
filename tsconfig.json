@@ -27,6 +27,7 @@
     "archives/scripts/defender-cli.ts"
   ],
   "exclude": [
+    "archives",
     "dist",
     "node_modules",
     "notes",
