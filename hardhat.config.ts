@@ -1,6 +1,7 @@
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-ethers/types";
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-diamonds";
 import { HardhatUserConfig } from "hardhat/config";
 
 // Load environment variables
