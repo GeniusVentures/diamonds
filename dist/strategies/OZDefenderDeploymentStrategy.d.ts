@@ -1,7 +1,7 @@
-import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
-import { Diamond } from '../core';
 import { Defender } from '@openzeppelin/defender-sdk';
 import { ExternalApiCreateProposalRequest } from "@openzeppelin/defender-sdk-proposal-client/lib/models/proposal";
+import { Diamond } from '../core';
+import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
 export declare class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
     private client;
     private relayerAddress;

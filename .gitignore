@@ -75,3 +75,4 @@ coverage/
 cache/
 artifacts/
 test/.tmp-defender-advanced/
+typechain-types/

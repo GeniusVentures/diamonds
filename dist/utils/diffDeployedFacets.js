@@ -7,9 +7,9 @@ exports.diffDeployedFacets = diffDeployedFacets;
 exports.printFacetSelectorFunctions = printFacetSelectorFunctions;
 exports.isProtocolInitRegistered = isProtocolInitRegistered;
 exports.compareFacetSelectors = compareFacetSelectors;
-const loupe_1 = require("./loupe");
 const abi_1 = require("@ethersproject/abi");
 const chalk_1 = __importDefault(require("chalk"));
+const loupe_1 = require("./loupe");
 async function diffDeployedFacets(deployedDiamondData, signerOrProvider, verboseGetDeployedFacets) {
     const diamondAddress = deployedDiamondData.DiamondAddress;
     const onChainFacets = await (0, loupe_1.getDeployedFacets)(diamondAddress, signerOrProvider, undefined, verboseGetDeployedFacets);

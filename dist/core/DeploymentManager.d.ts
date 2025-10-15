@@ -1,5 +1,5 @@
-import { Diamond } from "./Diamond";
 import { DeploymentStrategy } from "../strategies/DeploymentStrategy";
+import { Diamond } from "./Diamond";
 export declare class DeploymentManager {
     private diamond;
     private strategy;

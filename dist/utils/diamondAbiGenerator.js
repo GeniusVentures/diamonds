@@ -6,12 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DiamondAbiGenerator = void 0;
 exports.generateDiamondAbi = generateDiamondAbi;
 exports.previewDiamondAbi = previewDiamondAbi;
+const chalk_1 = __importDefault(require("chalk"));
+const ethers_1 = require("ethers");
 const fs_1 = require("fs");
 const path_1 = require("path");
-const ethers_1 = require("ethers");
 const types_1 = require("../types");
 const contractMapping_1 = require("../utils/contractMapping");
-const chalk_1 = __importDefault(require("chalk"));
 /**
  * Comprehensive Diamond ABI Generator
  *
@@ -366,7 +366,7 @@ ${Object.entries(this.selectorToFacet).map(([selector, facet]) => `    "${select
   readonly facetAddresses: string[];
   
   // ABI for ethers.js Contract instantiation
-  readonly abi: any[];
+  readonly abi: AbiItem[];
 }
 
 export const ${this.diamond.diamondName}ABI: ${this.diamond.diamondName}Interface;

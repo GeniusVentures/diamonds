@@ -7,19 +7,19 @@
  */
 
 import {
-  readJsonSync,
-  writeJsonSync,
-  pathExistsSync,
-  removeSync,
   ensureFileSync,
-  existsSync
+  existsSync,
+  pathExistsSync,
+  readJsonSync,
+  removeSync,
+  writeJsonSync
 } from "fs-extra";
 import { join, resolve } from "path";
 import {
+  DeployConfig,
   DeployConfigSchema,
-  DeployedDiamondDataSchema,
   DeployedDiamondData,
-  DeployConfig
+  DeployedDiamondDataSchema
 } from "../schemas/DeploymentSchema";
 
 export function readDeployFilePathDiamondNetwork(
@@ -42,7 +42,7 @@ export function readDeployFilePathDiamondNetwork(
  */
 export function readDeployFile(path: string, createNew: boolean = true)
   : DeployedDiamondData {
-  let raw: any;
+  let raw: unknown;
   if (!pathExistsSync(path) && createNew) {
     createNewDeployFile(path);
     raw = readJsonSync(path);

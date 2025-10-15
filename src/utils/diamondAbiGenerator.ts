@@ -1,12 +1,16 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
-import { glob } from 'glob';
-import { Interface } from 'ethers';
-import { Diamond } from '../core/Diamond';
-import { DeployedDiamondData } from '../schemas';
-import { FacetCuts, RegistryFacetCutAction } from '../types';
-import { getContractArtifact, getContractName } from '../utils/contractMapping';
 import chalk from 'chalk';
+import { Interface } from 'ethers';
+import { mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { Diamond } from '../core/Diamond';
+import { FacetCuts, RegistryFacetCutAction } from '../types';
+import { getContractArtifact } from '../utils/contractMapping';
+
+type AbiItem = {
+  type: string;
+  name?: string;
+  [key: string]: unknown;
+};
 
 /**
  * Interface for ABI generation options
@@ -31,7 +35,7 @@ export interface DiamondAbiGenerationOptions {
  */
 export interface DiamondAbiGenerationResult {
   /** Generated combined ABI */
-  abi: any[];
+  abi: AbiItem[];
   /** Function selector to facet mapping */
   selectorMap: Record<string, string>;
   /** Facet addresses included in the ABI */
@@ -62,7 +66,7 @@ export class DiamondAbiGenerator {
   private options: DiamondAbiGenerationOptions;
   private seenSelectors: Set<string> = new Set();
   private selectorToFacet: Record<string, string> = {};
-  private combinedAbi: any[] = [];
+  private combinedAbi: AbiItem[] = [];
   private stats = {
     totalFunctions: 0,
     totalEvents: 0,
@@ -245,7 +249,7 @@ export class DiamondAbiGenerator {
       
       // Process each ABI item
       for (const abiItem of artifact.abi) {
-        await this.processAbiItem(abiItem, facetName, facetInfo, iface);
+        await this.processAbiItem(abiItem as AbiItem, facetName, facetInfo, iface);
       }
 
       // For facets from the registry, add any selectors that weren't found in the ABI
@@ -277,7 +281,7 @@ export class DiamondAbiGenerator {
    * Process a single ABI item
    */
   private async processAbiItem(
-    abiItem: any,
+    abiItem: AbiItem,
     facetName: string,
     facetInfo: FacetInfo,
     iface: Interface
@@ -289,7 +293,7 @@ export class DiamondAbiGenerator {
 
     // Handle functions
     if (abiItem.type === 'function') {
-      const selector = iface.getFunction(abiItem.name!)?.selector;
+      const selector = iface.getFunction(abiItem.name as string)?.selector;
       
       if (!selector) {
         if (this.options.verbose) {
@@ -450,7 +454,7 @@ ${Object.entries(this.selectorToFacet).map(([selector, facet]) => `    "${select
   readonly facetAddresses: string[];
   
   // ABI for ethers.js Contract instantiation
-  readonly abi: any[];
+  readonly abi: AbiItem[];
 }
 
 export const ${this.diamond.diamondName}ABI: ${this.diamond.diamondName}Interface;

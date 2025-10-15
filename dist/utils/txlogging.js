@@ -8,10 +8,10 @@ exports.logTx = logTx;
 //  txLogging.ts
 //  Extra helpers for inspecting diamond‑cut transactions
 // ──────────────────────────────────────────────────────────────────────────────
+require("@nomicfoundation/hardhat-ethers");
 const chalk_1 = __importDefault(require("chalk"));
 const ethers_1 = require("ethers");
 const hardhat_1 = __importDefault(require("hardhat"));
-require("@nomicfoundation/hardhat-ethers");
 /**
  * Pretty‑prints a transaction receipt **and** decodes its logs.
  *
@@ -43,7 +43,7 @@ async function logTx(tx, description = "", interfaces = []) {
         "Block Hash": receipt.blockHash,
         "Confirmations": receipt.confirmations,
         "Timestamp": receipt.blockNumber
-            ? new Date(((await tx.wait().then(() => hardhat_1.default.ethers.provider.getBlock(receipt.blockNumber))) || { timestamp: 0 }).timestamp * 1000).toLocaleString()
+            ? new Date(((await tx.wait().then(() => hardhat_1.default.ethers.provider.getBlock(receipt.blockNumber))) ?? { timestamp: 0 }).timestamp * 1000).toLocaleString()
             : "N/A",
         "Created Contract": receipt.contractAddress ?? "N/A",
         "Created By": receipt.from,

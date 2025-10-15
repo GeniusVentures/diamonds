@@ -3,7 +3,7 @@
     "allowJs": true,
     "checkJs": false,
     "target": "ES2022",
-    "module": "node16",
+    "module": "commonjs",
     "lib": [
       "ES2022",
       "DOM"
@@ -19,7 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "moduleResolution": "node16"
+    "moduleResolution": "node"
   },
   "include": [
     "./src/**/*",

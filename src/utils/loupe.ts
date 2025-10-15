@@ -1,6 +1,6 @@
-import { ContractTransactionResponse, Interface, Contract, Signer, JsonRpcProvider, TransactionReceipt, LogDescription, Log, InterfaceAbi, Provider } from "ethers";
 import '@nomicfoundation/hardhat-ethers';
 import chalk from "chalk";
+import { Contract, ContractTransactionResponse, Interface, InterfaceAbi, Log, LogDescription, Provider, Signer, TransactionReceipt } from "ethers";
 import hre from "hardhat";
 import { logTx } from "./txlogging";
 
@@ -74,7 +74,7 @@ export async function logDiamondLoupe(
 
       if (parsed) {
         const argsPretty = parsed.args
-          .map((arg: any, i: number) => `${parsed?.fragment.inputs[i].name}: ${arg}`)
+          .map((arg: unknown, i: number) => `${parsed?.fragment.inputs[i].name}: ${arg}`)
           .join(", ");
 
         console.log(

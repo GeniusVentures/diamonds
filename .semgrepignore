@@ -1,0 +1,6 @@
+typechain-types/
+test/
+scripts/
+examples/
+contracts/
+dist/

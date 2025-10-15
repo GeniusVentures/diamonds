@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseDeploymentStrategy = void 0;
-const types_1 = require("../types");
-const chalk_1 = __importDefault(require("chalk"));
-const hardhat_1 = __importDefault(require("hardhat"));
 require("@nomicfoundation/hardhat-ethers");
+const chalk_1 = __importDefault(require("chalk"));
 const ethers_1 = require("ethers");
+const hardhat_1 = __importDefault(require("hardhat"));
+const types_1 = require("../types");
 const utils_1 = require("../utils");
 class BaseDeploymentStrategy {
     verbose;
@@ -343,7 +343,7 @@ class BaseDeploymentStrategy {
         const [initCalldata, initAddress] = await this.getInitCalldata(diamond);
         // extract facet cuts from the selector registry 
         const facetCuts = await this.getFacetCuts(diamond);
-        // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
+        // Validate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
         await this.validateNoOrphanedSelectors(facetCuts);
         if (this.verbose) {
             console.log(chalk_1.default.yellowBright(`\n🪓 Performing DiamondCut with ${facetCuts.length} cut(s):`));
@@ -440,7 +440,7 @@ class BaseDeploymentStrategy {
         return facetCuts;
     }
     async validateNoOrphanedSelectors(facetCuts) {
-        // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
+        // Validate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
         const orphanedSelectors = facetCuts.filter(facetCut => {
             return facetCuts.some(otherFacetCut => {
                 return (otherFacetCut.facetAddress !== facetCut.facetAddress &&

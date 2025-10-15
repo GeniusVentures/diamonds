@@ -2,10 +2,10 @@
 //  txLogging.ts
 //  Extra helpers for inspecting diamond‑cut transactions
 // ──────────────────────────────────────────────────────────────────────────────
-import chalk from "chalk";
-import { ContractTransactionResponse, Interface, Provider, TransactionReceipt, LogDescription, InterfaceAbi } from "ethers";
-import hre from "hardhat";
 import "@nomicfoundation/hardhat-ethers";
+import chalk from "chalk";
+import { ContractTransactionResponse, Interface, InterfaceAbi, Log, LogDescription, TransactionReceipt } from "ethers";
+import hre from "hardhat";
 
 
 /**
@@ -48,7 +48,7 @@ export async function logTx(
     "Block Hash": receipt.blockHash,
     "Confirmations": receipt.confirmations,
     "Timestamp": receipt.blockNumber
-      ? new Date(((await tx.wait().then(() => hre.ethers.provider.getBlock(receipt.blockNumber))) || { timestamp: 0 }).timestamp * 1000).toLocaleString()
+      ? new Date(((await tx.wait().then(() => hre.ethers.provider.getBlock(receipt.blockNumber))) ?? { timestamp: 0 }).timestamp * 1000).toLocaleString()
       : "N/A",
     "Created Contract": receipt.contractAddress ?? "N/A",
     "Created By": receipt.from,
@@ -59,7 +59,7 @@ export async function logTx(
   /* ----------------------------- decode events ------------------------------ */
   if (receipt.logs.length === 0) return receipt;
   console.log(chalk.cyan("\n📜 Decoded events:"));
-  receipt.logs.forEach((log: any, idx: number) => {
+  receipt.logs.forEach((log: Log, idx: number) => {
     let parsed: LogDescription | undefined;
     for (const iface of decoders) {
       try {
@@ -75,7 +75,7 @@ export async function logTx(
 
     if (parsed) {
       const argsPretty = parsed.args
-        .map((arg: any, i: number) => {
+        .map((arg: unknown, i: number) => {
           const key = parsed?.fragment.inputs[i].name;
           return `${key ? key + ": " : ""}${arg}`;
         })

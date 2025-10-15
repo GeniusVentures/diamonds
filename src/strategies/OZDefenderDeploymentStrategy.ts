@@ -1,31 +1,22 @@
-import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
-import { Diamond } from '../core';
-import { FacetCutAction, PollOptions } from '../types';
-import chalk from 'chalk';
-import hre from 'hardhat';
-import { AbiCoder, ethers } from 'ethers';
-import { Artifact } from 'hardhat/types';
-import { join } from 'path';
-import * as fs from 'fs';
-import { object } from 'zod';
-import { DeployClient } from '@openzeppelin/defender-sdk-deploy-client';
-import { Network } from '@openzeppelin/defender-sdk-base-client';
-import { VerificationRequest } from '@openzeppelin/defender-sdk-deploy-client/lib/models/verification';
 import { Defender } from '@openzeppelin/defender-sdk';
-import { DefenderDeploymentStore } from '../utils/defenderStore';
-import { deployClient } from '../utils/defenderClients';
-import { DeployContractRequest } from '@openzeppelin/defender-sdk-deploy-client';
-import { DeploymentStatus } from '@openzeppelin/defender-sdk-deploy-client';
-import { DeploymentResponse } from '@openzeppelin/defender-sdk-deploy-client';
+import { DeployContractRequest, DeploymentResponse, DeploymentStatus } from '@openzeppelin/defender-sdk-deploy-client';
 import {
-  ProposalClient,
   CreateProposalRequest
 } from '@openzeppelin/defender-sdk-proposal-client';
 import {
-  ExternalApiCreateProposalRequest,
-  ProposalTargetFunction
+  ExternalApiCreateProposalRequest
 } from "@openzeppelin/defender-sdk-proposal-client/lib/models/proposal";
-import { getContractName, getDiamondContractName, getContractArtifact } from '../utils/contractMapping';
+import chalk from 'chalk';
+import { randomInt } from 'crypto';
+import { ethers } from 'ethers';
+import * as fs from 'fs';
+import hre from 'hardhat';
+import { join } from 'path';
+import { Diamond } from '../core';
+import { FacetCutAction, FacetCuts, PollOptions } from '../types';
+import { getContractArtifact, getContractName, getDiamondContractName } from '../utils/contractMapping';
+import { DefenderDeploymentStore } from '../utils/defenderStore';
+import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
 
 export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
   private client: Defender;
@@ -174,9 +165,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
       attempt++;
 
       // Apply jitter
-      const sleep = jitter
-        ? delay + Math.floor(Math.random() * (delay / 2))
-        : delay;
+      const jitterValue = jitter ? await randomInt(Math.floor(delay / 2)) : 0;
+      const sleep = delay + jitterValue;
 
       await new Promise(res => setTimeout(res, sleep));
 
@@ -213,7 +203,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         const diamondCutContractName = await getContractName("DiamondCutFacet", diamond);
         const diamondCutFactory = await hre.ethers.getContractFactory(diamondCutContractName, diamond.getSigner()!);
         diamondCutFacetFunctionSelectors = [];
-        diamondCutFactory.interface.forEachFunction((func: any) => {
+        diamondCutFactory.interface.forEachFunction((func: ethers.FunctionFragment) => {
           diamondCutFacetFunctionSelectors.push(func.selector);
         });
       } catch (error) {
@@ -256,7 +246,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         try {
           const facetFactory = await hre.ethers.getContractFactory(facetName, diamond.getSigner()!);
           facetSelectors = [];
-          facetFactory.interface.forEachFunction((func: any) => {
+          facetFactory.interface.forEachFunction((func: ethers.FunctionFragment) => {
             facetSelectors.push(func.selector);
           });
         } catch (error) {
@@ -619,7 +609,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
    */
   private async performSingleDiamondCut(
     diamond: Diamond, 
-    facetCuts: any[], 
+    facetCuts: FacetCuts, 
     initCalldata: string, 
     initAddress: string
   ): Promise<void> {
@@ -711,7 +701,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
    */
   private async performBatchedDiamondCut(
     diamond: Diamond, 
-    allFacetCuts: any[], 
+    allFacetCuts: FacetCuts, 
     initCalldata: string, 
     initAddress: string
   ): Promise<void> {

@@ -5,7 +5,7 @@
  * gracefully in a way that allows for control by the caller, e.g. gives the caller the
  * ability to create an empty file on failure.
  */
-import { DeployedDiamondData, DeployConfig } from "../schemas/DeploymentSchema";
+import { DeployConfig, DeployedDiamondData } from "../schemas/DeploymentSchema";
 export declare function readDeployFilePathDiamondNetwork(networkName: string, diamondName: string, deploymentId: string, deploymentsPath: string, createNew?: boolean): DeployedDiamondData;
 /**
  * Reads and validates a JSON file as DeployedDiamondData

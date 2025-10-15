@@ -1,5 +1,10 @@
 import { Diamond } from '../core/Diamond';
 import { FacetCuts } from '../types';
+type AbiItem = {
+    type: string;
+    name?: string;
+    [key: string]: unknown;
+};
 /**
  * Interface for ABI generation options
  */
@@ -22,7 +27,7 @@ export interface DiamondAbiGenerationOptions {
  */
 export interface DiamondAbiGenerationResult {
     /** Generated combined ABI */
-    abi: any[];
+    abi: AbiItem[];
     /** Function selector to facet mapping */
     selectorMap: Record<string, string>;
     /** Facet addresses included in the ABI */
@@ -104,4 +109,5 @@ export declare function generateDiamondAbi(diamond: Diamond, options?: Partial<D
  * Preview what the ABI would look like after planned cuts
  */
 export declare function previewDiamondAbi(diamond: Diamond, plannedCuts: FacetCuts, options?: Partial<DiamondAbiGenerationOptions>): Promise<DiamondAbiGenerationResult>;
+export {};
 //# sourceMappingURL=diamondAbiGenerator.d.ts.map

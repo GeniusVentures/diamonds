@@ -1,22 +1,16 @@
-import { BaseDeploymentStrategy } from "./BaseDeploymentStrategy";
+import chalk from "chalk";
+import { Contract, ContractFactory, ethers, JsonRpcProvider, parseUnits, Signer } from "ethers";
 import { Diamond } from "../core/Diamond";
 import {
-  FacetDeploymentInfo,
-  DiamondConfig,
   FacetCutAction,
-  RegistryFacetCutAction,
-  CallbackArgs,
+  FacetCuts,
   FunctionSelectorRegistryEntry,
   NewDeployedFacet,
-  FacetCuts
+  RegistryFacetCutAction,
+  RPCStepRecord, RPCStepStatus
 } from "../types";
-import { DeployedDiamondData, DeployedFacet, DeployedFacets, FacetsConfig } from "../schemas";
-import { ethers, JsonRpcProvider, Signer, ContractFactory, Contract, parseUnits } from "ethers";
-import { join } from "path";
-import chalk from "chalk";
-import { logTx, logDiamondLoupe, getDeployedFacets, getDeployedFacetInterfaces, getContractName, getDiamondContractName, getContractArtifact, RPCDeploymentStore } from "../utils";
-import * as fs from "fs";
-import { RPCStepRecord, RPCStepStatus } from "../types";
+import { getContractArtifact, getContractName, getDiamondContractName, RPCDeploymentStore } from "../utils";
+import { BaseDeploymentStrategy } from "./BaseDeploymentStrategy";
 
 /**
  * Error classes for RPC-specific failures
@@ -309,7 +303,7 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
   private async estimateGasWithMultiplier(
     contract: Contract,
     methodName: string,
-    args: any[] = []
+    args: unknown[] = []
   ): Promise<bigint> {
     try {
       const estimatedGas = await contract[methodName].estimateGas(...args);
@@ -362,7 +356,7 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
    */
   private async deployContract(
     contractName: string,
-    constructorArgs: any[] = [],
+    constructorArgs: unknown[] = [],
     diamond: Diamond
   ): Promise<any> {
     return await this.withRetry(async () => {
@@ -487,7 +481,7 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
 
       // Get function selectors for DiamondCutFacet
       const diamondCutFacetFunctionSelectors: string[] = [];
-      diamondCutFacet.interface.forEachFunction((func: any) => {
+      diamondCutFacet.interface.forEachFunction((func: ethers.FunctionFragment) => {
         diamondCutFacetFunctionSelectors.push(func.selector);
       });
 
@@ -580,7 +574,7 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
           const facetTxHash = facetContract.deploymentTransaction()?.hash;
 
           const facetSelectors: string[] = [];
-          facetContract.interface.forEachFunction((func: any) => {
+          facetContract.interface.forEachFunction((func: ethers.FunctionFragment) => {
             facetSelectors.push(func.selector);
           });
 

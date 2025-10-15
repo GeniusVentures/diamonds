@@ -1,6 +1,5 @@
 "use strict";
 // import { DeployedDiamondData, DeployConfig } from "../schemas";
-Object.defineProperty(exports, "__esModule", { value: true });
 // // This would internally use your chosen DB driver (e.g. pg, Prisma, TypeORM)
 // export async function readDeployedDiamondData(network: string, diamond: string): Promise<DeployedDiamondData> {
 //   // SQL or ORM call here

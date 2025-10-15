@@ -1,7 +1,7 @@
-import { DeploymentStrategy } from "./DeploymentStrategy";
+import "@nomicfoundation/hardhat-ethers";
 import { Diamond } from "../core/Diamond";
 import { FacetCuts } from "../types";
-import "@nomicfoundation/hardhat-ethers";
+import { DeploymentStrategy } from "./DeploymentStrategy";
 export declare class BaseDeploymentStrategy implements DeploymentStrategy {
     protected verbose: boolean;
     constructor(verbose?: boolean);

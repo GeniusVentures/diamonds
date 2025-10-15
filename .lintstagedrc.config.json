@@ -2,5 +2,10 @@
   "concurrent": true,
   "chunkSize": 10,
   "subTaskConcurrency": 2,
-  "renderer": "verbose"
+  "renderer": "verbose",
+  "**/*.{js,ts}": [
+    "eslint --fix",
+    "prettier --write"
+  ],
+  "!dist/**/*": []
 }

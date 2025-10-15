@@ -1,10 +1,9 @@
-import { DeployedDiamondData } from "../schemas";
-import { getDeployedFacets } from "./loupe";
-import { JsonRpcProvider } from "ethers";
-import { Interface } from "@ethersproject/abi";
+import { Fragment, Interface, JsonFragment } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import chalk from "chalk";
-import { boolean } from "zod";
+import { JsonRpcProvider } from "ethers";
+import { DeployedDiamondData } from "../schemas";
+import { getDeployedFacets } from "./loupe";
 
 export async function diffDeployedFacets(
   deployedDiamondData: DeployedDiamondData,
@@ -14,7 +13,7 @@ export async function diffDeployedFacets(
   const diamondAddress = deployedDiamondData.DiamondAddress!;
   const onChainFacets = await getDeployedFacets(diamondAddress, signerOrProvider as any, undefined, verboseGetDeployedFacets);
 
-  const localFacets = deployedDiamondData.DeployedFacets || {};
+  const localFacets = deployedDiamondData.DeployedFacets ?? {};
 
   const seen = new Set<string>();
 
@@ -32,13 +31,13 @@ export async function diffDeployedFacets(
     const [name, meta] = match;
     seen.add(name);
 
-    const expected = meta.funcSelectors || [];
+    const expected = meta.funcSelectors ?? [];
     const actual = facet.functionSelectors;
 
     const added: string[] = actual.filter((sel: string) => !expected.includes(sel));
     const removed = expected.filter(sel => !actual.includes(sel));
 
-    if (added.length || removed.length) {
+    if (added.length ?? removed.length) {
       console.log(chalk.yellow(`  ⚠️ Mismatch in selectors for facet ${name} (${facet.facetAddress})`));
       if (added.length) console.log(chalk.green(`    + Added: ${added.join(", ")}`));
       if (removed.length) console.log(chalk.red(`    - Missing: ${removed.join(", ")}`));
@@ -61,7 +60,7 @@ export async function diffDeployedFacets(
   return pass;
 }
 
-export function printFacetSelectorFunctions(abi: any, selectors: string[]) {
+export function printFacetSelectorFunctions(abi: readonly (string | Fragment | JsonFragment)[], selectors: string[]) {
   const iface = new Interface(abi);
 
   console.log(chalk.cyan("\n🔎 Matching selectors to functions:"));
@@ -116,9 +115,9 @@ export function compareFacetSelectors(
 
   for (const { facetAddress, functionSelectors } of onChainFacets) {
     const lowerAddr = facetAddress.toLowerCase();
-    const name = addressToName[lowerAddr] || "unknown";
+    const name = addressToName[lowerAddr] ?? "unknown";
 
-    const expected = new Set(deployedFacetData[name]?.funcSelectors || []);
+    const expected = new Set(deployedFacetData[name]?.funcSelectors ?? []);
     const actual = new Set(functionSelectors);
 
     result[name] = {

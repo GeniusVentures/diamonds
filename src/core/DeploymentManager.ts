@@ -1,7 +1,5 @@
-import { Diamond } from "./Diamond";
 import { DeploymentStrategy } from "../strategies/DeploymentStrategy";
-import { CallbackArgs } from "../types";
-import chalk from "chalk";
+import { Diamond } from "./Diamond";
 
 export class DeploymentManager {
   private diamond: Diamond;

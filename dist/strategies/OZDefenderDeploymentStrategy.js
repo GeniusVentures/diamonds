@@ -37,16 +37,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OZDefenderDeploymentStrategy = void 0;
-const BaseDeploymentStrategy_1 = require("./BaseDeploymentStrategy");
-const types_1 = require("../types");
-const chalk_1 = __importDefault(require("chalk"));
-const hardhat_1 = __importDefault(require("hardhat"));
-const ethers_1 = require("ethers");
-const path_1 = require("path");
-const fs = __importStar(require("fs"));
 const defender_sdk_1 = require("@openzeppelin/defender-sdk");
-const defenderStore_1 = require("../utils/defenderStore");
+const chalk_1 = __importDefault(require("chalk"));
+const crypto_1 = require("crypto");
+const ethers_1 = require("ethers");
+const fs = __importStar(require("fs"));
+const hardhat_1 = __importDefault(require("hardhat"));
+const path_1 = require("path");
+const types_1 = require("../types");
 const contractMapping_1 = require("../utils/contractMapping");
+const defenderStore_1 = require("../utils/defenderStore");
+const BaseDeploymentStrategy_1 = require("./BaseDeploymentStrategy");
 class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeploymentStrategy {
     client;
     // private proposalClient: ProposalClient;
@@ -167,9 +168,8 @@ class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy_1.BaseDeployme
             }
             attempt++;
             // Apply jitter
-            const sleep = jitter
-                ? delay + Math.floor(Math.random() * (delay / 2))
-                : delay;
+            const jitterValue = jitter ? await (0, crypto_1.randomInt)(Math.floor(delay / 2)) : 0;
+            const sleep = delay + jitterValue;
             await new Promise(res => setTimeout(res, sleep));
             // Exponential backoff
             delay = Math.min(delay * 2, maxDelayMs);

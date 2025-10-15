@@ -1,23 +1,20 @@
-import { DeploymentStrategy } from "./DeploymentStrategy";
+import "@nomicfoundation/hardhat-ethers";
+import chalk from "chalk";
+import { ethers } from "ethers";
+import hre from "hardhat";
 import { Diamond } from "../core/Diamond";
+import { DeployedFacet } from "../schemas";
 import {
-  FacetDeploymentInfo,
-  DiamondConfig,
-  FacetCutAction,
-  RegistryFacetCutAction,
   CallbackArgs,
+  FacetCutAction,
+  FacetCuts,
+  FacetDeploymentInfo,
   FunctionSelectorRegistryEntry,
   NewDeployedFacet,
-  FacetCuts
+  RegistryFacetCutAction
 } from "../types";
-import { DeployedDiamondData, DeployedFacet, DeployedFacets, FacetsConfig } from "../schemas";
-import { ethers as ethersLib } from "ethers";
-import { join } from "path";
-import chalk from "chalk";
-import hre from "hardhat";
-import "@nomicfoundation/hardhat-ethers";
-import { ethers } from "ethers";
-import { logTx, logDiamondLoupe, getDeployedFacets, getDeployedFacetInterfaces, getContractName, getDiamondContractName } from "../utils";
+import { getContractName, getDeployedFacetInterfaces, getDiamondContractName, logTx } from "../utils";
+import { DeploymentStrategy } from "./DeploymentStrategy";
 
 export class BaseDeploymentStrategy implements DeploymentStrategy {
   constructor(protected verbose: boolean = false) { }
@@ -55,7 +52,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 
     // Get function selectors for DiamondCutFacet
     const diamondCutFacetFunctionSelectors: string[] = [];
-    diamondCutFacet.interface.forEachFunction((func: any) => {
+    diamondCutFacet.interface.forEachFunction((func: ethers.FunctionFragment) => {
       diamondCutFacetFunctionSelectors.push(func.selector);
     });
 
@@ -153,7 +150,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
         const deployedFacets = new Map<string, DeployedFacet>();
         const availableVersions = Object.keys(facetConfig.versions ?? {}).map(Number);
         const facetSelectors: string[] = [];
-        facetContract.interface.forEachFunction((func: any) => {
+        facetContract.interface.forEachFunction((func: ethers.FunctionFragment) => {
           facetSelectors.push(func.selector);
         });
 
@@ -404,7 +401,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
     // extract facet cuts from the selector registry 
     const facetCuts: FacetCuts = await this.getFacetCuts(diamond);
 
-    // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
+    // Validate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
     await this.validateNoOrphanedSelectors(facetCuts);
 
     if (this.verbose) {
@@ -524,7 +521,7 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
   }
 
   async validateNoOrphanedSelectors(facetCuts: FacetCuts): Promise<void> {
-    // Vaidate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
+    // Validate no orphaned selectors, i.e. 'Add', 'Replace' or 'Deployed' selectors with the same facetNames but different addresses
     const orphanedSelectors = facetCuts.filter(facetCut => {
       return facetCuts.some(otherFacetCut => {
         return (
