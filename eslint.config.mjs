@@ -50,6 +50,7 @@ export default [
   // TypeScript files configuration
   {
     files: ["**/*.ts"],
+    ignores: ["hardhat.config.ts"],
     languageOptions: {
       globals: {
         ...globals.mocha,
@@ -106,6 +107,35 @@ export default [
       "diamond-rules/diamond-storage-pattern": "error",
       "diamond-rules/diamond-selector-validation": "error",
       "diamond-rules/secure-external-calls": "warn",
+    },
+  },
+
+  // Hardhat config file - separate config without project parser
+  {
+    files: ["hardhat.config.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      parser: tsParser,
+      ecmaVersion: 2021,
+      sourceType: "module",
+      parserOptions: {
+        // Don't use project parser for hardhat.config.ts since it's not under rootDir
+      },
+    },
+    plugins: {
+      "@typescript-eslint": typescriptEslint,
+      prettier: prettier,
+    },
+    rules: {
+      // Prettier
+      ...prettierConfig.rules,
+      "prettier/prettier": "error",
+
+      // Relaxed rules for config files
+      "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
     },
   },
 ];

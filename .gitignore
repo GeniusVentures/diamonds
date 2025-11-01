@@ -76,3 +76,5 @@ cache/
 artifacts/
 test/.tmp-defender-advanced/
 typechain-types/
+dist/
+.yarn/

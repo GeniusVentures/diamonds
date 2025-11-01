@@ -32,20 +32,53 @@ function validateCommitMessageFile(filePath: string): string {
 	// Resolve the path to prevent directory traversal
 	const resolvedPath = path.resolve(filePath);
 
-	// Ensure the path is within the current working directory or .git directory
-	const cwd = process.cwd();
-	const gitDir = path.join(cwd, '.git');
+	console.error(`DEBUG: Validating path: ${filePath}`);
+	console.error(`DEBUG: Resolved path: ${resolvedPath}`);
+	console.error(`DEBUG: CWD: ${process.cwd()}`);
 
-	// Allow paths within current directory or .git directory
-	if (resolvedPath.startsWith(cwd) || resolvedPath.startsWith(gitDir)) {
-		// Path is within allowed directories, check for traversal within those
-		const relativePath = path.relative(
-			resolvedPath.startsWith(gitDir) ? gitDir : cwd,
-			resolvedPath,
-		);
+	// Find the git repository root by walking up the directory tree
+	function findGitRoot(startDir: string): string | null {
+		let currentDir = startDir;
+		while (currentDir !== path.dirname(currentDir)) {
+			// Stop at root
+			const gitPath = path.join(currentDir, '.git');
+			if (fs.existsSync(gitPath)) {
+				// Check if it's a .git file (submodule) or directory
+				const gitStat = fs.statSync(gitPath);
+				if (gitStat.isFile()) {
+					// Read the gitdir from the .git file
+					const gitFileContent = fs.readFileSync(gitPath, 'utf8').trim();
+					if (gitFileContent.startsWith('gitdir: ')) {
+						const gitDirPath = path.resolve(currentDir, gitFileContent.substring(8));
+						console.error(`DEBUG: Found submodule git dir: ${gitDirPath}`);
+						return currentDir; // Return the submodule root
+					}
+				} else if (gitStat.isDirectory()) {
+					console.error(`DEBUG: Found git dir: ${gitPath}`);
+					return currentDir;
+				}
+			}
+			currentDir = path.dirname(currentDir);
+		}
+		return null;
+	}
+
+	const gitRoot = findGitRoot(process.cwd());
+	const gitDir = gitRoot ? path.join(gitRoot, '.git') : null;
+
+	console.error(`DEBUG: Git root: ${gitRoot}`);
+	console.error(`DEBUG: Git dir: ${gitDir}`);
+
+	// Allow paths within git repository or .git directory
+	if (
+		gitRoot &&
+		(resolvedPath.startsWith(gitRoot) || (gitDir && resolvedPath.startsWith(gitDir)))
+	) {
+		// Path is within git repository, check for traversal
+		const relativePath = path.relative(gitRoot, resolvedPath);
 		if (relativePath.startsWith('..')) {
 			console.error(
-				'❌ Invalid commit message file path: path traversal detected within allowed directory',
+				'❌ Invalid commit message file path: path traversal detected within git repository',
 			);
 			process.exit(1);
 		}
@@ -53,9 +86,11 @@ function validateCommitMessageFile(filePath: string): string {
 		// Allow absolute paths in common temporary directories (Git uses these)
 		const allowedPrefixes = ['/tmp', '/var/tmp', '/private/tmp'];
 		const isAllowedTemp = allowedPrefixes.some((prefix) => resolvedPath.startsWith(prefix));
-
 		if (!isAllowedTemp) {
 			console.error('❌ Invalid commit message file path: not in allowed location');
+			console.error(`   Path: ${resolvedPath}`);
+			console.error(`   Git root: ${gitRoot || 'not found'}`);
+			console.error(`   CWD: ${process.cwd()}`);
 			process.exit(1);
 		}
 	}

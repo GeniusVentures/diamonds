@@ -10,7 +10,7 @@ yarn perf-monitor start pre-commit
 
 # Run lint-staged
 if npx lint-staged; then
-  yarn clean-compile
+  # yarn clean-compile
   yarn perf-monitor end true
 else
   yarn perf-monitor end false

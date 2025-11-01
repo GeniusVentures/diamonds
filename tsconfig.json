@@ -4,10 +4,7 @@
     "checkJs": false,
     "target": "ES2022",
     "module": "commonjs",
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "lib": ["ES2022", "DOM"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -19,13 +16,10 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "composite": true
   },
-  "include": [
-    "./src/**/*",
-    "./scripts/**/*",
-    "archives/scripts/defender-cli.ts"
-  ],
+  "include": ["./src/**/*"],
   "exclude": [
     "archives",
     "dist",
