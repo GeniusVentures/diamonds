@@ -157,46 +157,37 @@ export async function getDiamondContractName(
 		await artifacts.readArtifact(diamondName);
 		return diamondName;
 	} catch (error) {
-		// If there are multiple artifacts with the same name, try to resolve using fully qualified names
+		// If there are multiple artifacts with the same name, resolve using fully
+		// qualified names derived from compilation provenance (not error-message
+		// parsing). The Diamond ABI generator emits a synthetic, ABI-only artifact
+		// (e.g. `diamond-abi/<Name>.sol`) that shares the contract name but was never
+		// compiled — it has no build-info. The deployable artifact is the one that
+		// HAS build-info (produced by the compiler from a real source file).
 		const err = error as Error & { code?: string };
 		if (err.code === 'HH701' && err.message.includes('multiple artifacts')) {
-			// Extract the fully qualified names from the error message
-			const errorMessage = err.message;
-			const fqnMatches = errorMessage.match(/contracts\/[^:\s]+\.sol:[^\s]+/g);
+			const allFqns = await artifacts.getAllFullyQualifiedNames();
+			const candidates = allFqns.filter((fqn) => fqn.endsWith(`:${diamondName}`));
 
-			if (fqnMatches && fqnMatches.length > 0) {
-				// Prefer the one from gnus-ai directory
-				const gnusAiFqn = fqnMatches.find((fqn: string) => fqn.includes('gnus-ai'));
-				if (gnusAiFqn) {
-					try {
-						await artifacts.readArtifact(gnusAiFqn);
-						return gnusAiFqn; // Return the fully qualified name
-					} catch (fqnError) {
-						// Continue to fallback
-					}
-				}
-
-				// If no gnus-ai version, prefer non-diamond-abi artifacts for deployment
-				const nonDiamondAbiFqn = fqnMatches.find(
-					(fqn: string) => !fqn.includes('diamond-abi'),
-				);
-				if (nonDiamondAbiFqn) {
-					try {
-						await artifacts.readArtifact(nonDiamondAbiFqn);
-						return nonDiamondAbiFqn; // Return the fully qualified name
-					} catch (fqnError) {
-						// Continue to fallback
-					}
-				}
-
-				// Fallback: try the first available
-				for (const fqn of fqnMatches) {
-					try {
+			// Prefer the candidate that has build-info (a real compiled contract).
+			for (const fqn of candidates) {
+				try {
+					const buildInfo = await artifacts.getBuildInfo(fqn);
+					if (buildInfo !== undefined) {
 						await artifacts.readArtifact(fqn);
-						return fqn; // Return the fully qualified name
-					} catch (fqnError) {
-						// Continue to next option
+						return fqn;
 					}
+				} catch {
+					// Continue to next candidate
+				}
+			}
+
+			// Fallback: any readable candidate, in case none expose build-info.
+			for (const fqn of candidates) {
+				try {
+					await artifacts.readArtifact(fqn);
+					return fqn;
+				} catch {
+					// Continue to next option
 				}
 			}
 		}

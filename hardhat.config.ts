@@ -1,4 +1,4 @@
-import '@diamondslab/hardhat-diamonds';
+import '@geniusventures/hardhat-diamonds';
 import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-ethers/types';
 import '@nomicfoundation/hardhat-toolbox';
