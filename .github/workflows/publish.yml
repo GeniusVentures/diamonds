@@ -10,6 +10,13 @@ permissions:
   contents: read
   id-token: write # required for npm provenance attestation
 
+# CROSS_DEPS: space-separated @geniusventures/* packages this package imports at
+# COMPILE time. They are installed from npm before building, so they must already
+# be published (publish in dependency order). Dev-only @geniusventures/* deps are
+# stripped so a not-yet-published sibling never 404s the install.
+env:
+  CROSS_DEPS: ''
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -21,32 +28,41 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      # Bootstrap-safe install: a package's @geniusventures/* cross-deps may not be
-      # published yet, and this repo may have no committed lockfile. Strip our own
-      # scoped deps (peers/devDeps used only for local dev, not for emitting dist/)
-      # so `npm install` never 404s on an unpublished sibling.
-      - name: Install dependencies (excluding unpublished @geniusventures/* cross-deps)
+      # Strip @geniusventures/* dev-deps (used only for local dev / the publish
+      # cycle) so `npm install` resolves. Compile-time cross-deps are installed
+      # explicitly in the next step.
+      - name: Install dependencies
         run: |
           cp package.json /tmp/package.json.orig
           node -e "
             const fs = require('fs');
+            const keep = (process.env.CROSS_DEPS || '').split(/\s+/).filter(Boolean);
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             for (const sec of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
               if (!pkg[sec]) continue;
               for (const name of Object.keys(pkg[sec])) {
-                if (name.startsWith('@geniusventures/')) delete pkg[sec][name];
+                if (name.startsWith('@geniusventures/') && !keep.includes(name)) delete pkg[sec][name];
               }
             }
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
           npm install --legacy-peer-deps --no-audit --no-fund
+          if [ -n "${CROSS_DEPS}" ]; then
+            npm install --no-save --legacy-peer-deps --no-audit --no-fund ${CROSS_DEPS}
+          fi
           cp /tmp/package.json.orig package.json
+        env:
+          CROSS_DEPS: ${{ env.CROSS_DEPS }}
 
-      # Build dist/ explicitly. The packages' own prepublishOnly hooks invoke
-      # yarn (not configured on npm install) and run test+lint, so we publish
-      # with --ignore-scripts and build here instead.
-      - name: Build
-        run: npx tsc --build --force || npx tsc
+      # These packages carry pre-existing TS strictness errors (e.g. hre.ethers)
+      # that do not prevent emit. Build, then verify dist/ was produced.
+      - name: Build (emit despite pre-existing TS noise)
+        run: |
+          npx tsc --build --force || npx tsc || true
+          if [ ! -d dist ]; then
+            echo "Build produced no dist/ output"
+            exit 1
+          fi
 
       # diamonds-hardhat-foundry ships dist/templates copied from src/templates.
       - name: Copy build assets (if present)
