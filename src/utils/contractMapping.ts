@@ -152,45 +152,51 @@ export async function getDiamondContractName(
 		}
 	}
 
-	// Try the diamond name first (for production)
+	// Resolve to a fully qualified name up front. The Diamond ABI generator emits a
+	// synthetic, ABI-only artifact (e.g. `diamond-abi/<Name>.sol`) that shares the
+	// contract name but was never compiled — it has no build-info. When that stub is
+	// present in the artifacts index, passing the BARE name to
+	// `ethers.getContractFactory`/`getContractAt` throws HH701 ("multiple artifacts"),
+	// and whether the stub is registered at any moment is timing-dependent. So instead
+	// of reacting to a thrown HH701, proactively resolve to the candidate that HAS
+	// build-info (produced by the compiler from a real source file) whenever it is
+	// unambiguous — the returned FQN is then immune to the stub appearing later.
 	try {
-		await artifacts.readArtifact(diamondName);
-		return diamondName;
-	} catch (error) {
-		// If there are multiple artifacts with the same name, resolve using fully
-		// qualified names derived from compilation provenance (not error-message
-		// parsing). The Diamond ABI generator emits a synthetic, ABI-only artifact
-		// (e.g. `diamond-abi/<Name>.sol`) that shares the contract name but was never
-		// compiled — it has no build-info. The deployable artifact is the one that
-		// HAS build-info (produced by the compiler from a real source file).
-		const err = error as Error & { code?: string };
-		if (err.code === 'HH701' && err.message.includes('multiple artifacts')) {
-			const allFqns = await artifacts.getAllFullyQualifiedNames();
-			const candidates = allFqns.filter((fqn) => fqn.endsWith(`:${diamondName}`));
-
-			// Prefer the candidate that has build-info (a real compiled contract).
+		const allFqns = await artifacts.getAllFullyQualifiedNames();
+		const candidates = allFqns.filter((fqn) => fqn.endsWith(`:${diamondName}`));
+		if (candidates.length > 0) {
+			// Collect candidates that are backed by compilation build-info.
+			const compiled: string[] = [];
 			for (const fqn of candidates) {
 				try {
 					const buildInfo = await artifacts.getBuildInfo(fqn);
 					if (buildInfo !== undefined) {
-						await artifacts.readArtifact(fqn);
-						return fqn;
+						compiled.push(fqn);
 					}
 				} catch {
-					// Continue to next candidate
+					// Not a compiled artifact — ignore.
 				}
 			}
-
-			// Fallback: any readable candidate, in case none expose build-info.
-			for (const fqn of candidates) {
-				try {
-					await artifacts.readArtifact(fqn);
-					return fqn;
-				} catch {
-					// Continue to next option
-				}
+			// Exactly one compiled artifact: return its FQN (deterministic, stub-proof).
+			if (compiled.length === 1) {
+				await artifacts.readArtifact(compiled[0]);
+				return compiled[0];
+			}
+			// A single candidate total (no ambiguity): use it directly.
+			if (candidates.length === 1) {
+				await artifacts.readArtifact(candidates[0]);
+				return candidates[0];
 			}
 		}
+	} catch {
+		// Fall through to legacy bare-name handling below.
+	}
+
+	// Legacy fallback: try the bare diamond name, then the Mock-prefixed test name.
+	try {
+		await artifacts.readArtifact(diamondName);
+		return diamondName;
+	} catch (error) {
 
 		// If diamond name fails, try Mock prefixed version (for testing)
 		const mockName = `Mock${diamondName}`;
