@@ -95,3 +95,7 @@ jobs:
       # trusted publishing (npm/cli#8548).
       - name: Publish to npm (OIDC trusted publishing)
         run: npm publish --provenance --access public
+        env:
+          # 'prepare: husky' runs during publish and exits 1 when the husky
+          # binary can't be found in the stripped dev-dep tree.
+          HUSKY: 0
