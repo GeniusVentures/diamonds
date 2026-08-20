@@ -23,10 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Trusted publishing: no registry-url (avoids a stale NODE_AUTH_TOKEN
+      # .npmrc line overriding OIDC), no token env. Node 24 + npm >=11.5.1
+      # publish with GitHub OIDC via `npm publish --provenance`.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '24'
+
+      - name: Update npm for OIDC trusted publishing
+        run: npm install -g npm@^11.5.1
 
       # Strip @geniusventures/* dev-deps (used only for local dev / the publish
       # cycle) so `npm install` resolves. Compile-time cross-deps are installed
@@ -80,7 +85,8 @@ jobs:
             exit 1
           fi
 
-      - name: Publish to npm
-        run: npm publish --provenance --access public --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # NOTE: no --ignore-scripts — with it, npm's provenance path tries to
+      # create an access token (needs prior auth) instead of using OIDC
+      # trusted publishing (npm/cli#8548).
+      - name: Publish to npm (OIDC trusted publishing)
+        run: npm publish --provenance --access public
