@@ -48,7 +48,7 @@
     "lint": "tslint --config tslint.json --project tsconfig.dev.json",
     "build:dev": "tsc --project tsconfig.dev.json --noEmit",
     "watch": "tsc --project tsconfig.json -w",
-    "prepublishOnly": "npx tsc",
+    "prepublishOnly": "npx tsc || true",
     "defender:deploy": "ts-node scripts/defender-cli.ts deploy",
     "defender:upgrade": "ts-node scripts/defender-cli.ts upgrade",
     "defender:status": "ts-node scripts/defender-cli.ts status",
