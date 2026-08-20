@@ -93,8 +93,10 @@ jobs:
       # NOTE: no --ignore-scripts — with it, npm's provenance path tries to
       # create an access token (needs prior auth) instead of using OIDC
       # trusted publishing (npm/cli#8548).
+      # --tag latest: '-gv' versions are semver prereleases; npm >=11.5
+      # refuses to publish them to a dist-tag without an explicit --tag.
       - name: Publish to npm (OIDC trusted publishing)
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --tag latest
         env:
           # 'prepare: husky' runs during publish and exits 1 when the husky
           # binary can't be found in the stripped dev-dep tree.
