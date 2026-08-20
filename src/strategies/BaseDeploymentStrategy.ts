@@ -17,6 +17,7 @@ import {
 	getContractName,
 	getDeployedFacetInterfaces,
 	getDiamondContractName,
+	getVersionKey,
 	logTx,
 } from '../utils';
 import { DeploymentStrategy } from './DeploymentStrategy';
@@ -637,8 +638,11 @@ export class BaseDeploymentStrategy implements DeploymentStrategy {
 		const protocolFacetInfo = diamond.getNewDeployedFacets()[protocolInitFacet];
 
 		if (protocolInitFacet && protocolFacetInfo) {
+			const initFacetVersions = deployConfig.facets[protocolInitFacet]?.versions;
 			const versionCfg =
-				deployConfig.facets[protocolInitFacet]?.versions?.[protocolVersion];
+				initFacetVersions?.[
+					getVersionKey(initFacetVersions, protocolVersion) ?? ''
+				];
 			const initFn = diamond.newDeployment
 				? versionCfg?.deployInit
 				: versionCfg?.upgradeInit;

@@ -9,7 +9,7 @@ import {
   RegistryFacetCutAction,
   RPCStepRecord, RPCStepStatus
 } from "../types";
-import { getContractArtifact, getContractName, getDiamondContractName, RPCDeploymentStore } from "../utils";
+import { getContractArtifact, getContractName, getDiamondContractName, getVersionKey, RPCDeploymentStore } from "../utils";
 import { BaseDeploymentStrategy } from "./BaseDeploymentStrategy";
 
 /**
@@ -579,8 +579,9 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
           });
 
           // Initializer function Registry
-          const deployInit = facetConfig.versions?.[upgradeVersion]?.deployInit || "";
-          const upgradeInit = facetConfig.versions?.[upgradeVersion]?.upgradeInit || "";
+          const upgradeVersionKey = getVersionKey(facetConfig.versions, upgradeVersion) ?? "";
+          const deployInit = facetConfig.versions?.[upgradeVersionKey]?.deployInit || "";
+          const upgradeInit = facetConfig.versions?.[upgradeVersionKey]?.upgradeInit || "";
 
           const initFn = diamond.newDeployment ? deployInit : upgradeInit;
           if (initFn && facetName !== deployConfig.protocolInitFacet) {
@@ -593,8 +594,8 @@ export class RPCDeploymentStrategy extends BaseDeploymentStrategy {
             tx_hash: facetTxHash || "",
             version: upgradeVersion,
             funcSelectors: facetSelectors,
-            deployInclude: facetConfig.versions?.[upgradeVersion]?.deployInclude || [],
-            deployExclude: facetConfig.versions?.[upgradeVersion]?.deployExclude || [],
+            deployInclude: facetConfig.versions?.[upgradeVersionKey]?.deployInclude || [],
+            deployExclude: facetConfig.versions?.[upgradeVersionKey]?.deployExclude || [],
             initFunction: initFn,
             verified: false,
           };

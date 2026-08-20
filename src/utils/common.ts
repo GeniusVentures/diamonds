@@ -52,3 +52,27 @@ export function getDeployedFacetInterfaces(deployedInfo: DeployedDiamondData): I
 
   return interfaces;
 }
+
+/**
+ * Resolves a facet's version config entry by numeric version value.
+ *
+ * JSON object keys are strings, but `protocolVersion` and computed target
+ * versions are numbers. Indexing a versions map with a number relies on
+ * JS's numeric-to-string coercion, which drops trailing zeros for X.0
+ * versions (`String(3.0) === "3"`), silently missing config entries keyed
+ * "3.0". This resolves by numeric equality instead, so "3.0", "3", and
+ * 3.0 all match the same entry.
+ */
+export function getVersionKey(
+	versions: Record<string, unknown> | undefined,
+	version: number,
+): string | undefined {
+	if (!versions) {
+		return undefined;
+	}
+	const direct = String(version);
+	if (Object.prototype.hasOwnProperty.call(versions, direct)) {
+		return direct;
+	}
+	return Object.keys(versions).find((key) => Number(key) === version);
+}

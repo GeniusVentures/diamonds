@@ -15,6 +15,7 @@ import { join } from 'path';
 import { Diamond } from '../core';
 import { FacetCutAction, FacetCuts, PollOptions } from '../types';
 import { getContractArtifact, getContractName, getDiamondContractName } from '../utils/contractMapping';
+import { getVersionKey } from '../utils';
 import { DefenderDeploymentStore } from '../utils/defenderStore';
 import { BaseDeploymentStrategy } from './BaseDeploymentStrategy';
 
@@ -259,6 +260,7 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
         const facetConfig = deployConfig.facets[facetName];
         const availableVersions = Object.keys(facetConfig.versions ?? {}).map(Number);
         const targetVersion = Math.max(...availableVersions);
+        const targetVersionKey = getVersionKey(facetConfig.versions, targetVersion) ?? "";
 
         deployedDiamondData.DeployedFacets = deployedDiamondData.DeployedFacets || {};
         deployedDiamondData.DeployedFacets[facetName] = {
@@ -270,8 +272,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
 
         // Update new deployed facets for diamond cut preparation
         const initFn = diamond.newDeployment
-          ? facetConfig.versions?.[targetVersion]?.deployInit || ""
-          : facetConfig.versions?.[targetVersion]?.upgradeInit || "";
+          ? facetConfig.versions?.[targetVersionKey]?.deployInit || ""
+          : facetConfig.versions?.[targetVersionKey]?.upgradeInit || "";
 
         if (initFn && facetName !== deployConfig.protocolInitFacet) {
           diamond.initializerRegistry.set(facetName, initFn);
@@ -283,8 +285,8 @@ export class OZDefenderDeploymentStrategy extends BaseDeploymentStrategy {
           tx_hash: (deployment as any).txHash || 'defender-deployment',
           version: targetVersion,
           funcSelectors: facetSelectors,
-          deployInclude: facetConfig.versions?.[targetVersion]?.deployInclude || [],
-          deployExclude: facetConfig.versions?.[targetVersion]?.deployExclude || [],
+          deployInclude: facetConfig.versions?.[targetVersionKey]?.deployInclude || [],
+          deployExclude: facetConfig.versions?.[targetVersionKey]?.deployExclude || [],
           initFunction: initFn,
           verified: false,
         };
