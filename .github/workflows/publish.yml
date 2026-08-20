@@ -33,6 +33,11 @@ jobs:
       - name: Update npm for OIDC trusted publishing
         run: npm install -g npm@^11.5.1
 
+      # package.json pins yarn@4.10.3 via packageManager; publish lifecycle
+      # scripts (prepublishOnly: yarn build) need corepack to resolve it.
+      - name: Enable corepack
+        run: corepack enable
+
       # Strip @geniusventures/* dev-deps (used only for local dev / the publish
       # cycle) so `npm install` resolves. Compile-time cross-deps are installed
       # explicitly in the next step.
