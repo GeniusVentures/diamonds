@@ -1,6 +1,6 @@
 {
   "name": "@geniusventures/diamonds",
-  "version": "1.3.3-gv",
+  "version": "1.3.4-gv",
   "description": "Tools for deploying and interfacing with ERC-2535 Diamond Proxies",
   "repository": "github:GeniusVentures/diamonds",
   "main": "dist/index.js",
